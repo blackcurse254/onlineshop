@@ -1,39 +1,64 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Lock, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Lock, Plus, Trash2, Upload } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { apiFetch } from '../lib/api';
-import { formatToman, getOrderStatusLabel } from '../utils/commerce';
+import { formatToman, getOrderStatusLabel, getTotalStockFromSizes } from '../utils/commerce';
 import type {
   Banner,
+  Brand,
   Category,
   Discount,
   Order,
   Product,
+  ProductSizeStock,
+  Review,
   StoreSettings,
 } from '../types/store';
 
-type AdminTab = 'overview' | 'products' | 'categories' | 'orders' | 'discounts' | 'banners' | 'settings';
+type AdminTab =
+  | 'overview'
+  | 'products'
+  | 'categories'
+  | 'brands'
+  | 'orders'
+  | 'reviews'
+  | 'discounts'
+  | 'banners'
+  | 'settings';
 
 interface AdminOverviewData {
   stats: {
     totalOrders: number;
+    newOrdersCount: number;
     totalRevenue: number;
     lowStockCount: number;
     totalCustomers: number;
   };
   products: Product[];
   categories: Category[];
+  brands: Brand[];
   orders: Order[];
   discounts: Discount[];
   banners: Banner[];
+  reviews: Review[];
   settings: StoreSettings;
 }
+
+const DEFAULT_SIZE_INVENTORY: ProductSizeStock[] = [
+  { size: '39', stock: 2 },
+  { size: '40', stock: 4 },
+  { size: '41', stock: 5 },
+  { size: '42', stock: 4 },
+  { size: '43', stock: 3 },
+  { size: '44', stock: 2 },
+];
 
 export const AdminPage: React.FC = () => {
   const { user, loginWithEmail, loginWithGoogle, refreshStorefront } = useStore();
   const [tab, setTab] = useState<AdminTab>('overview');
   const [data, setData] = useState<AdminOverviewData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -43,20 +68,24 @@ export const AdminPage: React.FC = () => {
 
   // Product form state
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [sizeInventory, setSizeInventory] = useState<ProductSizeStock[]>(DEFAULT_SIZE_INVENTORY);
   const [prodForm, setProdForm] = useState({
     name: '',
     slug: '',
     sku: '',
+    brand: 'VERA Studio',
+    model: '',
     categoryId: '',
+    upperMaterial: 'چرم طبیعی گاوی',
+    soleMaterial: 'لاستیک طبیعی ضدسایش',
+    featuresText: 'کفی طبی قابل تعویض\nآستر تنفس‌پذیر',
     description: '',
-    fabricCare: '',
+    fabricCare: 'تمیزکاری با دستمال مرطوب و اسپری محافظ',
     price: '',
     discountPrice: '',
-    stock: '10',
-    sizes: 'S, M, L',
     colorName: 'مشکی زغالی',
     colorHex: '#18181B',
-    imageUrl: '/src/assets/images/cat_coats_blazers_1794595829730.jpg',
+    imageUrlsText: '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
     isNew: true,
     isBestseller: false,
     isFeatured: true,
@@ -64,10 +93,16 @@ export const AdminPage: React.FC = () => {
   });
 
   // Category form state
+  const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [catName, setCatName] = useState('');
   const [catSlug, setCatSlug] = useState('');
   const [catDesc, setCatDesc] = useState('');
-  const [catImg, setCatImg] = useState('/src/assets/images/cat_dresses_sets_1794595830804.jpg');
+  const [catImg, setCatImg] = useState('/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg');
+
+  // Brand form state
+  const [brandName, setBrandName] = useState('');
+  const [brandSlug, setBrandSlug] = useState('');
+  const [brandCountry, setBrandCountry] = useState('');
 
   // Discount form state
   const [discCode, setDiscCode] = useState('');
@@ -111,6 +146,34 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handleFileUpload = async (file: File, onUploaded: (url: string) => void) => {
+    setError(null);
+    if (file.size > 2 * 1024 * 1024) {
+      setError('حجم تصویر نباید بیشتر از ۲ مگابایت باشد.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('خواندن فایل ناموفق بود.'));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await apiFetch<{ url: string }>('/api/admin/upload', {
+        method: 'POST',
+        body: JSON.stringify({ dataUrl }),
+      });
+      onUploaded(res.url);
+      setFeedback('تصویر با موفقیت آپلود و تایید امنیتی شد.');
+    } catch (err: any) {
+      setError(err.message || 'خطا در آپلود تصویر.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!user || user.role !== 'admin') {
     return (
       <div className="max-w-md mx-auto px-4 py-14">
@@ -120,7 +183,7 @@ export const AdminPage: React.FC = () => {
             <h1 className="text-xl font-bold">ورود به پنل مدیریت</h1>
           </div>
           <p className="text-xs text-[#6B665F] leading-relaxed">
-            دسترسی به داشبورد، موجودی کالاها و تنظیمات برند تنها با احراز هویت مدیر در سمت سرور مجاز است.
+            دسترسی به داشبورد، موجودی سایز کفش‌ها و تنظیمات فروشگاه تنها با احراز هویت مدیر در سمت سرور مجاز است.
           </p>
 
           {(error || (user && user.role !== 'admin')) && (
@@ -141,7 +204,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@veraboutique.ir"
+                placeholder="admin@yourstore.ir"
                 className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>
@@ -186,22 +249,45 @@ export const AdminPage: React.FC = () => {
     setFeedback(null);
     setError(null);
 
+    const cleanedSizes = sizeInventory
+      .map((s) => ({ size: s.size.trim(), stock: Math.max(0, Math.floor(Number(s.stock) || 0)) }))
+      .filter((s) => s.size.length > 0);
+
+    if (cleanedSizes.length === 0) {
+      setError('حداقل یک سایز کفش وارد کنید.');
+      return;
+    }
+
+    const images = prodForm.imageUrlsText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (images.length === 0) {
+      setError('حداقل یک تصویر محصول وارد یا آپلود کنید.');
+      return;
+    }
+
     const payload = {
       name: prodForm.name,
-      slug: prodForm.slug || `product-${Date.now()}`,
-      sku: prodForm.sku || `VR-${Math.floor(100 + Math.random() * 899)}`,
+      slug: prodForm.slug || `shoe-${Date.now()}`,
+      sku: prodForm.sku || `VS-${Math.floor(100 + Math.random() * 899)}`,
+      brand: prodForm.brand.trim() || 'VERA Studio',
+      model: prodForm.model.trim(),
       categoryId: prodForm.categoryId ? Number(prodForm.categoryId) : null,
+      upperMaterial: prodForm.upperMaterial.trim(),
+      soleMaterial: prodForm.soleMaterial.trim(),
+      features: prodForm.featuresText
+        .split('\n')
+        .map((f) => f.trim())
+        .filter(Boolean),
       description: prodForm.description,
       fabricCare: prodForm.fabricCare,
       price: Number(prodForm.price),
       discountPrice: prodForm.discountPrice ? Number(prodForm.discountPrice) : null,
-      stock: Number(prodForm.stock),
-      sizes: prodForm.sizes
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
+      sizeInventory: cleanedSizes,
       colors: [{ name: prodForm.colorName.trim() || 'مشکی', hex: prodForm.colorHex }],
-      images: [prodForm.imageUrl.trim()],
+      images,
       isNew: prodForm.isNew,
       isBestseller: prodForm.isBestseller,
       isFeatured: prodForm.isFeatured,
@@ -214,7 +300,7 @@ export const AdminPage: React.FC = () => {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
-        setFeedback('محصول با موفقیت ویرایش شد.');
+        setFeedback('کفش با موفقیت ویرایش شد.');
       } else {
         await apiFetch('/api/admin/products', {
           method: 'POST',
@@ -223,11 +309,13 @@ export const AdminPage: React.FC = () => {
         setFeedback('محصول جدید با موفقیت اضافه شد.');
       }
       setEditingProductId(null);
+      setSizeInventory(DEFAULT_SIZE_INVENTORY);
       setProdForm({
         ...prodForm,
         name: '',
         slug: '',
         sku: '',
+        model: '',
         description: '',
         price: '',
         discountPrice: '',
@@ -240,20 +328,28 @@ export const AdminPage: React.FC = () => {
 
   const handleEditProduct = (p: Product) => {
     setEditingProductId(p.id);
+    setSizeInventory(
+      p.sizeInventory && p.sizeInventory.length > 0
+        ? p.sizeInventory
+        : p.sizes.map((s) => ({ size: s, stock: p.stock }))
+    );
     setProdForm({
       name: p.name,
       slug: p.slug,
       sku: p.sku,
+      brand: p.brand || 'VERA Studio',
+      model: p.model || '',
       categoryId: p.categoryId ? String(p.categoryId) : '',
+      upperMaterial: p.upperMaterial || '',
+      soleMaterial: p.soleMaterial || '',
+      featuresText: (p.features || []).join('\n'),
       description: p.description,
       fabricCare: p.fabricCare,
       price: String(p.price),
       discountPrice: p.discountPrice ? String(p.discountPrice) : '',
-      stock: String(p.stock),
-      sizes: p.sizes.join(', '),
       colorName: p.colors[0]?.name || 'مشکی',
       colorHex: p.colors[0]?.hex || '#18181B',
-      imageUrl: p.images[0] || '/src/assets/images/cat_coats_blazers_1794595829730.jpg',
+      imageUrlsText: (p.images || []).join('\n'),
       isNew: p.isNew,
       isBestseller: p.isBestseller,
       isFeatured: p.isFeatured,
@@ -286,25 +382,86 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      await apiFetch('/api/admin/categories', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: catName,
-          slug: catSlug,
-          description: catDesc,
-          imageUrl: catImg,
-          sortOrder: (data?.categories.length ?? 0) + 1,
-          isActive: true,
-        }),
-      });
+      if (editingCatId) {
+        const existing = data?.categories.find((c) => c.id === editingCatId);
+        await apiFetch(`/api/admin/categories/${editingCatId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: catName,
+            slug: catSlug,
+            description: catDesc,
+            imageUrl: catImg,
+            sortOrder: existing?.sortOrder ?? 1,
+            isActive: existing?.isActive ?? true,
+          }),
+        });
+        setFeedback('دسته‌بندی ویرایش شد.');
+      } else {
+        await apiFetch('/api/admin/categories', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: catName,
+            slug: catSlug,
+            description: catDesc,
+            imageUrl: catImg,
+            sortOrder: (data?.categories.length ?? 0) + 1,
+            isActive: true,
+          }),
+        });
+        setFeedback('دسته‌بندی جدید ایجاد شد.');
+      }
+      setEditingCatId(null);
       setCatName('');
       setCatSlug('');
       setCatDesc('');
-      setFeedback('دسته‌بندی جدید ایجاد شد.');
+      await Promise.all([loadAdminData(), refreshStorefront()]);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleMoveCategory = async (cat: Category, delta: number) => {
+    setError(null);
+    try {
+      await apiFetch(`/api/admin/categories/${cat.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: cat.name,
+          slug: cat.slug,
+          description: cat.description,
+          imageUrl: cat.imageUrl,
+          sortOrder: Math.max(0, cat.sortOrder + delta),
+          isActive: cat.isActive,
+        }),
+      });
+      await Promise.all([loadAdminData(), refreshStorefront()]);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleCreateBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await apiFetch('/api/admin/brands', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: brandName,
+          slug: brandSlug,
+          country: brandCountry,
+          sortOrder: (data?.brands.length ?? 0) + 1,
+          isActive: true,
+        }),
+      });
+      setBrandName('');
+      setBrandSlug('');
+      setBrandCountry('');
+      setFeedback('برند جدید ثبت شد.');
       await Promise.all([loadAdminData(), refreshStorefront()]);
     } catch (err: any) {
       setError(err.message);
@@ -369,12 +526,16 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const calculatedTotalStock = getTotalStockFromSizes(sizeInventory);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.08] pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#18181B]">پنل مدیریت فروشگاه</h1>
-          <p className="text-xs sm:text-sm text-[#6B665F]">مدیریت محصولات، موجودی، سفارش‌ها، بنرها و هویت برند</p>
+          <h1 className="text-2xl font-bold text-[#18181B]">پنل مدیریت فروشگاه کفش و کتونی</h1>
+          <p className="text-xs sm:text-sm text-[#6B665F]">
+            مدیریت کفش‌ها، موجودی مستقل هر سایز، دسته‌بندی‌ها، برندها، سفارش‌ها و هویت بصری برند
+          </p>
         </div>
       </div>
 
@@ -382,12 +543,14 @@ export const AdminPage: React.FC = () => {
       <div className="flex flex-wrap gap-1.5 p-1 bg-[#EFEAE0] rounded-lg">
         {[
           { id: 'overview' as const, label: 'داشبورد' },
-          { id: 'products' as const, label: 'محصولات و موجودی' },
+          { id: 'products' as const, label: 'محصولات و سایزبندی' },
           { id: 'categories' as const, label: 'دسته‌بندی‌ها' },
+          { id: 'brands' as const, label: 'برندها' },
           { id: 'orders' as const, label: 'سفارش‌ها' },
+          { id: 'reviews' as const, label: 'نظرات' },
           { id: 'discounts' as const, label: 'تخفیف‌ها' },
           { id: 'banners' as const, label: 'بنرها' },
-          { id: 'settings' as const, label: 'تنظیمات فروشگاه' },
+          { id: 'settings' as const, label: 'تنظیمات برند' },
         ].map((item) => (
           <button
             key={item.id}
@@ -424,7 +587,7 @@ export const AdminPage: React.FC = () => {
       {/* 1. Overview */}
       {data && tab === 'overview' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-1">
               <div className="text-xs text-[#6B665F]">کل سفارش‌ها</div>
               <div className="text-2xl font-bold text-[#18181B] tabular-nums">
@@ -432,19 +595,25 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
             <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-1">
-              <div className="text-xs text-[#6B665F]">ارزش کل سفارش‌ها</div>
-              <div className="text-xl sm:text-2xl font-bold text-[#18181B] tabular-nums">
+              <div className="text-xs text-[#6B665F]">سفارش‌های جدید</div>
+              <div className="text-2xl font-bold text-[#8F6E38] tabular-nums">
+                {new Intl.NumberFormat('fa-IR').format(data.stats.newOrdersCount)}
+              </div>
+            </div>
+            <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-1">
+              <div className="text-xs text-[#6B665F]">ارزش کل فروش</div>
+              <div className="text-lg sm:text-xl font-bold text-[#18181B] tabular-nums">
                 {formatToman(data.stats.totalRevenue)}
               </div>
             </div>
             <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-1">
-              <div className="text-xs text-[#6B665F]">محصولات کم‌موجودی (≤۵)</div>
-              <div className="text-2xl font-bold text-[#8F6E38] tabular-nums">
+              <div className="text-xs text-[#6B665F]">کفش‌های کم‌موجودی (≤۵)</div>
+              <div className="text-2xl font-bold text-red-700 tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.lowStockCount)}
               </div>
             </div>
             <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-1">
-              <div className="text-xs text-[#6B665F]">کاربران ثبت‌نام‌شده</div>
+              <div className="text-xs text-[#6B665F]">مشتریان ثبت‌نام‌شده</div>
               <div className="text-2xl font-bold text-[#18181B] tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.totalCustomers)}
               </div>
@@ -466,7 +635,9 @@ export const AdminPage: React.FC = () => {
                 <tbody className="divide-y divide-black/[0.05]">
                   {data.orders.slice(0, 6).map((o) => (
                     <tr key={o.id}>
-                      <td className="py-3 font-medium tabular-nums">{o.orderNumber}</td>
+                      <td dir="ltr" className="py-3 font-medium tabular-nums text-end">
+                        {o.orderNumber}
+                      </td>
                       <td className="py-3">{o.customerName}</td>
                       <td className="py-3 tabular-nums">{formatToman(o.totalAmount)}</td>
                       <td className="py-3 text-[#8F6E38]">{getOrderStatusLabel(o.orderStatus)}</td>
@@ -479,7 +650,7 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Products & Inventory */}
+      {/* 2. Footwear Products & Per-Size Stock Matrix */}
       {data && tab === 'products' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <form
@@ -487,19 +658,51 @@ export const AdminPage: React.FC = () => {
             className="lg:col-span-5 bg-white border border-black/[0.06] rounded-xl p-6 space-y-4"
           >
             <h2 className="text-base font-semibold text-[#18181B]">
-              {editingProductId ? 'ویرایش محصول' : 'افزودن محصول جدید'}
+              {editingProductId ? 'ویرایش کفش' : 'افزودن کفش / کتونی جدید'}
             </h2>
 
             <div className="space-y-1">
-              <label htmlFor="p-name" className="text-xs font-medium">نام محصول</label>
+              <label htmlFor="p-name" className="text-xs font-medium">نام کفش یا کتونی</label>
               <input
                 id="p-name"
                 type="text"
                 required
                 value={prodForm.name}
                 onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })}
+                placeholder="مثال: کتونی رانینگ مدل کورت"
                 className="w-full h-9 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label htmlFor="p-brand" className="text-xs font-medium">برند</label>
+                <input
+                  id="p-brand"
+                  type="text"
+                  required
+                  list="brand-suggestions"
+                  value={prodForm.brand}
+                  onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })}
+                  className="w-full h-9 px-3 text-xs bg-[#FAF7F2] border border-black/15 rounded"
+                />
+                <datalist id="brand-suggestions">
+                  {data.brands.map((b) => (
+                    <option key={b.id} value={b.name} />
+                  ))}
+                </datalist>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="p-model" className="text-xs font-medium">مدل</label>
+                <input
+                  id="p-model"
+                  type="text"
+                  value={prodForm.model}
+                  onChange={(e) => setProdForm({ ...prodForm, model: e.target.value })}
+                  placeholder="Court Classic 01"
+                  className="w-full h-9 px-3 text-xs bg-[#FAF7F2] border border-black/15 rounded"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -512,7 +715,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={prodForm.slug}
                   onChange={(e) => setProdForm({ ...prodForm, slug: e.target.value })}
-                  placeholder="camel-wool-coat"
+                  placeholder="vera-runner-pro"
                   className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
                 />
               </div>
@@ -525,7 +728,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={prodForm.sku}
                   onChange={(e) => setProdForm({ ...prodForm, sku: e.target.value })}
-                  placeholder="VR-601"
+                  placeholder="VS-105"
                   className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
                 />
               </div>
@@ -547,15 +750,45 @@ export const AdminPage: React.FC = () => {
                 </select>
               </div>
               <div className="space-y-1">
-                <label htmlFor="p-stock" className="text-xs font-medium">موجودی انبار</label>
+                <label htmlFor="p-color" className="text-xs font-medium">رنگ اصلی</label>
+                <div className="flex gap-1.5">
+                  <input
+                    id="p-color"
+                    type="text"
+                    value={prodForm.colorName}
+                    onChange={(e) => setProdForm({ ...prodForm, colorName: e.target.value })}
+                    className="flex-1 h-9 px-2 text-xs bg-[#FAF7F2] border border-black/15 rounded"
+                  />
+                  <input
+                    type="color"
+                    aria-label="کد رنگ"
+                    value={prodForm.colorHex}
+                    onChange={(e) => setProdForm({ ...prodForm, colorHex: e.target.value })}
+                    className="w-9 h-9 p-0.5 bg-[#FAF7F2] border border-black/15 rounded"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label htmlFor="p-upper" className="text-xs font-medium">جنس رویه</label>
                 <input
-                  id="p-stock"
-                  type="number"
-                  min={0}
-                  required
-                  value={prodForm.stock}
-                  onChange={(e) => setProdForm({ ...prodForm, stock: e.target.value })}
-                  className="w-full h-9 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded"
+                  id="p-upper"
+                  type="text"
+                  value={prodForm.upperMaterial}
+                  onChange={(e) => setProdForm({ ...prodForm, upperMaterial: e.target.value })}
+                  className="w-full h-9 px-3 text-xs bg-[#FAF7F2] border border-black/15 rounded"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="p-sole" className="text-xs font-medium">جنس زیره</label>
+                <input
+                  id="p-sole"
+                  type="text"
+                  value={prodForm.soleMaterial}
+                  onChange={(e) => setProdForm({ ...prodForm, soleMaterial: e.target.value })}
+                  className="w-full h-9 px-3 text-xs bg-[#FAF7F2] border border-black/15 rounded"
                 />
               </div>
             </div>
@@ -585,33 +818,111 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="p-sizes" className="text-xs font-medium">سایزها (با کاما جدا کنید)</label>
-              <input
-                id="p-sizes"
-                type="text"
-                dir="ltr"
-                value={prodForm.sizes}
-                onChange={(e) => setProdForm({ ...prodForm, sizes: e.target.value })}
-                className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
-              />
+            {/* Per-Size Independent Stock Matrix */}
+            <div className="space-y-2 p-3 bg-[#FAF7F2] border border-black/10 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#18181B]">
+                  موجودی مستقل هر سایز (مجموع: {new Intl.NumberFormat('fa-IR').format(calculatedTotalStock)} جفت)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSizeInventory((prev) => [...prev, { size: '45', stock: 1 }])}
+                  className="text-[11px] font-medium text-[#8F6E38] hover:underline"
+                >
+                  + افزودن سایز
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {sizeInventory.map((entry, idx) => (
+                  <div key={idx} className="flex items-center gap-1 bg-white p-1.5 rounded border border-black/10">
+                    <input
+                      type="text"
+                      aria-label={`سایز ${idx + 1}`}
+                      value={entry.size}
+                      onChange={(e) =>
+                        setSizeInventory((prev) =>
+                          prev.map((row, i) => (i === idx ? { ...row, size: e.target.value } : row))
+                        )
+                      }
+                      className="w-14 h-7 px-1.5 text-xs text-center border border-black/10 rounded tabular-nums"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      aria-label={`موجودی سایز ${entry.size}`}
+                      value={entry.stock}
+                      onChange={(e) =>
+                        setSizeInventory((prev) =>
+                          prev.map((row, i) => (i === idx ? { ...row, stock: Number(e.target.value) } : row))
+                        )
+                      }
+                      className="flex-1 min-w-0 h-7 px-1.5 text-xs text-center border border-black/10 rounded tabular-nums"
+                    />
+                    {sizeInventory.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeInventory((prev) => prev.filter((_, i) => i !== idx))}
+                        aria-label={`حذف سایز ${entry.size}`}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="p-img" className="text-xs font-medium">آدرس تصویر محصول</label>
-              <input
-                id="p-img"
-                type="text"
+            {/* Product Images + Secure Upload */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="p-imgs" className="text-xs font-medium">آدرس تصاویر (هر خط یک تصویر)</label>
+                <label className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-[#18181B] text-white rounded cursor-pointer hover:bg-[#2A2A2E]">
+                  <Upload className="w-3 h-3" />
+                  <span>{uploading ? 'در حال آپلود...' : 'آپلود تصویر'}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(file, (url) => {
+                          setProdForm((prev) => ({
+                            ...prev,
+                            imageUrlsText: prev.imageUrlsText ? `${prev.imageUrlsText}\n${url}` : url,
+                          }));
+                        });
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+              <textarea
+                id="p-imgs"
+                rows={2}
                 dir="ltr"
                 required
-                value={prodForm.imageUrl}
-                onChange={(e) => setProdForm({ ...prodForm, imageUrl: e.target.value })}
-                className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
+                value={prodForm.imageUrlsText}
+                onChange={(e) => setProdForm({ ...prodForm, imageUrlsText: e.target.value })}
+                className="w-full p-2 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="p-desc" className="text-xs font-medium">توضیحات</label>
+              <label htmlFor="p-feats" className="text-xs font-medium">ویژگی‌های کفش (هر خط یک مورد)</label>
+              <textarea
+                id="p-feats"
+                rows={2}
+                value={prodForm.featuresText}
+                onChange={(e) => setProdForm({ ...prodForm, featuresText: e.target.value })}
+                className="w-full p-2 text-xs bg-[#FAF7F2] border border-black/15 rounded"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="p-desc" className="text-xs font-medium">توضیحات کامل</label>
               <textarea
                 id="p-desc"
                 rows={3}
@@ -639,6 +950,22 @@ export const AdminPage: React.FC = () => {
                 />
                 <span>پرفروش</span>
               </label>
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={prodForm.isFeatured}
+                  onChange={(e) => setProdForm({ ...prodForm, isFeatured: e.target.checked })}
+                />
+                <span>ویژه</span>
+              </label>
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={prodForm.isActive}
+                  onChange={(e) => setProdForm({ ...prodForm, isActive: e.target.checked })}
+                />
+                <span>فعال</span>
+              </label>
             </div>
 
             <div className="flex gap-2">
@@ -646,12 +973,15 @@ export const AdminPage: React.FC = () => {
                 type="submit"
                 className="flex-1 py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
               >
-                {editingProductId ? 'ذخیره ویرایش' : 'ثبت محصول'}
+                {editingProductId ? 'ذخیره ویرایش' : 'ثبت کفش جدید'}
               </button>
               {editingProductId && (
                 <button
                   type="button"
-                  onClick={() => setEditingProductId(null)}
+                  onClick={() => {
+                    setEditingProductId(null);
+                    setSizeInventory(DEFAULT_SIZE_INVENTORY);
+                  }}
                   className="px-4 py-2.5 text-xs border border-black/15 rounded-md"
                 >
                   انصراف
@@ -664,9 +994,9 @@ export const AdminPage: React.FC = () => {
             <table className="w-full text-xs sm:text-sm">
               <thead className="border-b border-black/[0.08] text-[#6B665F]">
                 <tr>
-                  <th className="py-2 text-start font-medium">محصول</th>
+                  <th className="py-2 text-start font-medium">مدل و برند</th>
                   <th className="py-2 text-start font-medium">قیمت</th>
-                  <th className="py-2 text-start font-medium">موجودی</th>
+                  <th className="py-2 text-start font-medium">موجودی سایزها</th>
                   <th className="py-2 text-end font-medium">عملیات</th>
                 </tr>
               </thead>
@@ -675,11 +1005,16 @@ export const AdminPage: React.FC = () => {
                   <tr key={p.id}>
                     <td className="py-3 font-medium text-[#18181B]">
                       <div>{p.name}</div>
-                      <div className="text-[11px] text-[#6B665F]">{p.sku}</div>
+                      <div className="text-[11px] text-[#6B665F]">
+                        {p.brand} · {p.sku} {!p.isActive && '· غیرفعال'}
+                      </div>
                     </td>
                     <td className="py-3 tabular-nums">{formatToman(p.discountPrice ?? p.price)}</td>
-                    <td className="py-3 tabular-nums">
-                      <span className={p.stock <= 5 ? 'text-red-700 font-semibold' : ''}>{p.stock}</span>
+                    <td className="py-3 text-xs tabular-nums">
+                      <span className={p.stock <= 5 ? 'text-red-700 font-semibold' : ''}>{p.stock} جفت</span>
+                      <div className="text-[10px] text-[#6B665F]">
+                        {(p.sizeInventory || []).map((s) => `${s.size}:${s.stock}`).join(' · ')}
+                      </div>
                     </td>
                     <td className="py-3 text-end space-x-2 space-x-reverse whitespace-nowrap">
                       <button
@@ -706,14 +1041,16 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Categories */}
+      {/* 3. Categories (Add, Edit, Reorder, Delete) */}
       {data && tab === 'categories' && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <form
-            onSubmit={handleCreateCategory}
+            onSubmit={handleSaveCategory}
             className="md:col-span-5 bg-white border border-black/[0.06] rounded-xl p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#18181B]">افزودن دسته‌بندی</h2>
+            <h2 className="text-base font-semibold text-[#18181B]">
+              {editingCatId ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی کفش'}
+            </h2>
             <div className="space-y-1">
               <label htmlFor="c-name" className="text-xs font-medium">عنوان دسته‌بندی</label>
               <input
@@ -759,32 +1096,161 @@ export const AdminPage: React.FC = () => {
                 className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
               />
             </div>
-            <button
-              type="submit"
-              className="w-full py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md inline-flex items-center justify-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>افزودن دسته‌بندی</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="flex-1 py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md inline-flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{editingCatId ? 'ذخیره تغییرات' : 'افزودن دسته‌بندی'}</span>
+              </button>
+              {editingCatId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCatId(null);
+                    setCatName('');
+                    setCatSlug('');
+                    setCatDesc('');
+                  }}
+                  className="px-4 py-2 text-xs border border-black/15 rounded-md"
+                >
+                  انصراف
+                </button>
+              )}
+            </div>
           </form>
 
           <div className="md:col-span-7 bg-white border border-black/[0.06] rounded-xl p-5 space-y-3">
             {data.categories.map((c) => (
               <div
                 key={c.id}
+                className="flex items-center justify-between gap-3 py-2.5 border-b border-black/[0.05] last:border-0"
+              >
+                <div>
+                  <div className="text-sm font-medium text-[#18181B]">
+                    {c.name}{' '}
+                    <span className="text-[11px] text-[#8A847C] tabular-nums">(#{c.sortOrder})</span>
+                  </div>
+                  <div className="text-xs text-[#6B665F]">{c.description || c.slug}</div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleMoveCategory(c, -1)}
+                    aria-label={`اولویت بالاتر ${c.name}`}
+                    className="p-1.5 border border-black/10 rounded hover:bg-[#FAF7F2]"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveCategory(c, 1)}
+                    aria-label={`اولویت پایین‌تر ${c.name}`}
+                    className="p-1.5 border border-black/10 rounded hover:bg-[#FAF7F2]"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCatId(c.id);
+                      setCatName(c.name);
+                      setCatSlug(c.slug);
+                      setCatDesc(c.description);
+                      setCatImg(c.imageUrl);
+                    }}
+                    className="px-2 py-1 text-xs text-[#8F6E38] hover:underline"
+                  >
+                    ویرایش
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await apiFetch(`/api/admin/categories/${c.id}`, { method: 'DELETE' });
+                      await Promise.all([loadAdminData(), refreshStorefront()]);
+                    }}
+                    aria-label={`حذف دسته‌بندی ${c.name}`}
+                    className="p-1.5 text-red-700 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Brands */}
+      {data && tab === 'brands' && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          <form
+            onSubmit={handleCreateBrand}
+            className="md:col-span-5 bg-white border border-black/[0.06] rounded-xl p-6 space-y-4"
+          >
+            <h2 className="text-base font-semibold text-[#18181B]">افزودن برند کفش</h2>
+            <div className="space-y-1">
+              <label htmlFor="b-name" className="text-xs font-medium">نام برند</label>
+              <input
+                id="b-name"
+                type="text"
+                required
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                placeholder="Puma"
+                className="w-full h-9 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="b-slug" className="text-xs font-medium">اسلاگ (لاتین)</label>
+              <input
+                id="b-slug"
+                type="text"
+                dir="ltr"
+                required
+                value={brandSlug}
+                onChange={(e) => setBrandSlug(e.target.value)}
+                placeholder="puma"
+                className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="b-country" className="text-xs font-medium">کشور مبدا</label>
+              <input
+                id="b-country"
+                type="text"
+                value={brandCountry}
+                onChange={(e) => setBrandCountry(e.target.value)}
+                placeholder="آلمان"
+                className="w-full h-9 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md"
+            >
+              ثبت برند
+            </button>
+          </form>
+
+          <div className="md:col-span-7 bg-white border border-black/[0.06] rounded-xl p-5 space-y-3">
+            {data.brands.map((b) => (
+              <div
+                key={b.id}
                 className="flex items-center justify-between py-2.5 border-b border-black/[0.05] last:border-0"
               >
                 <div>
-                  <div className="text-sm font-medium text-[#18181B]">{c.name}</div>
-                  <div className="text-xs text-[#6B665F]">{c.description || c.slug}</div>
+                  <div className="text-sm font-semibold text-[#18181B]">{b.name}</div>
+                  <div className="text-xs text-[#6B665F]">{b.country || b.slug}</div>
                 </div>
                 <button
                   type="button"
                   onClick={async () => {
-                    await apiFetch(`/api/admin/categories/${c.id}`, { method: 'DELETE' });
+                    await apiFetch(`/api/admin/brands/${b.id}`, { method: 'DELETE' });
                     await Promise.all([loadAdminData(), refreshStorefront()]);
                   }}
-                  aria-label={`حذف دسته‌بندی ${c.name}`}
+                  aria-label={`حذف برند ${b.name}`}
                   className="p-1.5 text-red-700 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -795,7 +1261,7 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Orders */}
+      {/* 5. Orders */}
       {data && tab === 'orders' && (
         <div className="space-y-4">
           {data.orders.map((order) => (
@@ -806,11 +1272,12 @@ export const AdminPage: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.05] pb-3">
                 <div className="space-y-0.5">
                   <div className="text-sm font-bold text-[#18181B] tabular-nums">
-                    {order.orderNumber} · {order.customerName}
+                    <span dir="ltr" className="inline-block">{order.orderNumber}</span> · {order.customerName}
                   </div>
                   <div className="text-xs text-[#6B665F]">
-                    {order.customerPhone} · {order.customerAddress} (کد پستی: {order.postalCode})
+                    <span dir="ltr" className="inline-block">{order.customerPhone}</span> · {order.customerAddress} (کد پستی: <span dir="ltr" className="inline-block">{order.postalCode}</span>)
                   </div>
+                  {order.notes && <div className="text-[11px] text-[#8F6E38]">یادداشت: {order.notes}</div>}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -834,7 +1301,7 @@ export const AdminPage: React.FC = () => {
                 {(order.items ?? []).map((item) => (
                   <div key={item.id} className="flex justify-between">
                     <span>
-                      {item.productName} ({item.selectedSize} · {item.selectedColor}) × {item.quantity}
+                      {item.productName} (سایز {item.selectedSize} · {item.selectedColor}) × {item.quantity}
                     </span>
                     <span className="tabular-nums">{formatToman(item.unitPrice * item.quantity)}</span>
                   </div>
@@ -845,7 +1312,53 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 5. Discounts */}
+      {/* 6. Reviews Moderation */}
+      {data && tab === 'reviews' && (
+        <div className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-3">
+          {data.reviews.map((rev) => (
+            <div
+              key={rev.id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-black/[0.05] last:border-0"
+            >
+              <div className="space-y-1">
+                <div className="text-xs sm:text-sm font-semibold text-[#18181B]">
+                  {rev.authorName} · <span className="text-[#8F6E38]">{rev.productName || 'عمومی'}</span>
+                </div>
+                <p className="text-xs text-[#524E48]">{rev.comment}</p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await apiFetch(`/api/admin/reviews/${rev.id}`, {
+                      method: 'PATCH',
+                      body: JSON.stringify({ isApproved: !rev.isApproved }),
+                    });
+                    await Promise.all([loadAdminData(), refreshStorefront()]);
+                  }}
+                  className={`px-3 py-1 rounded text-xs font-medium ${
+                    rev.isApproved ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
+                  }`}
+                >
+                  {rev.isApproved ? 'تایید شده (نمایش)' : 'در انتظار تایید'}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await apiFetch(`/api/admin/reviews/${rev.id}`, { method: 'DELETE' });
+                    await Promise.all([loadAdminData(), refreshStorefront()]);
+                  }}
+                  className="text-xs text-red-700 hover:underline"
+                >
+                  حذف
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 7. Discounts */}
       {data && tab === 'discounts' && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <form
@@ -862,7 +1375,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={discCode}
                 onChange={(e) => setDiscCode(e.target.value)}
-                placeholder="SPRING20"
+                placeholder="SNEAKER20"
                 className="w-full h-9 px-3 text-xs text-end uppercase bg-[#FAF7F2] border border-black/15 rounded"
               />
             </div>
@@ -955,7 +1468,7 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 6. Banners */}
+      {/* 8. Banners */}
       {data && tab === 'banners' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {data.banners.map((banner) => (
@@ -964,7 +1477,7 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 7. Store White-Label Settings */}
+      {/* 9. Store White-Label Settings */}
       {settingsForm && tab === 'settings' && (
         <form
           onSubmit={handleSaveSettings}
@@ -972,7 +1485,7 @@ export const AdminPage: React.FC = () => {
         >
           <div>
             <h2 className="text-base font-semibold text-[#18181B]">
-              شخصی‌سازی برند، رنگ‌بندی و اطلاعات بوتیک (White-Label)
+              شخصی‌سازی برند، رنگ‌بندی و اطلاعات فروشگاه کفش (White-Label)
             </h2>
             <p className="text-xs text-[#6B665F] mt-1">
               تمامی تغییرات پس از ذخیره فوراً در کل فروشگاه اعمال می‌شوند.
@@ -1017,7 +1530,7 @@ export const AdminPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label htmlFor="s-c1" className="text-xs font-medium">رنگ اصلی (زغالی)</label>
+              <label htmlFor="s-c1" className="text-xs font-medium">رنگ اصلی</label>
               <input
                 id="s-c1"
                 type="color"
@@ -1027,7 +1540,7 @@ export const AdminPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="s-c2" className="text-xs font-medium">رنگ تاکیدی (طلایی ملایم)</label>
+              <label htmlFor="s-c2" className="text-xs font-medium">رنگ تاکیدی</label>
               <input
                 id="s-c2"
                 type="color"
@@ -1037,7 +1550,7 @@ export const AdminPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="s-c3" className="text-xs font-medium">رنگ پس‌زمینه (کرم روشن)</label>
+              <label htmlFor="s-c3" className="text-xs font-medium">رنگ پس‌زمینه</label>
               <input
                 id="s-c3"
                 type="color"
@@ -1072,7 +1585,7 @@ export const AdminPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="s-tg" className="text-xs font-medium">تلگرام / واتساپ</label>
+              <label htmlFor="s-tg" className="text-xs font-medium">تلگرام</label>
               <input
                 id="s-tg"
                 type="text"
@@ -1086,9 +1599,9 @@ export const AdminPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label htmlFor="s-ship-std" className="text-xs font-medium">هزینه ارسال استاندارد (تومان)</label>
+              <label htmlFor="s-ship1" className="text-xs font-medium">هزینه ارسال استاندارد (تومان)</label>
               <input
-                id="s-ship-std"
+                id="s-ship1"
                 type="number"
                 value={settingsForm.shippingBaseCost}
                 onChange={(e) => setSettingsForm({ ...settingsForm, shippingBaseCost: Number(e.target.value) })}
@@ -1096,9 +1609,9 @@ export const AdminPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="s-ship-exp" className="text-xs font-medium">هزینه ارسال اکسپرس (تومان)</label>
+              <label htmlFor="s-ship2" className="text-xs font-medium">هزینه ارسال اکسپرس (تومان)</label>
               <input
-                id="s-ship-exp"
+                id="s-ship2"
                 type="number"
                 value={settingsForm.expressShippingCost}
                 onChange={(e) => setSettingsForm({ ...settingsForm, expressShippingCost: Number(e.target.value) })}
@@ -1106,19 +1619,21 @@ export const AdminPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="s-ship-free" className="text-xs font-medium">سقف ارسال رایگان (تومان)</label>
+              <label htmlFor="s-free" className="text-xs font-medium">سقف ارسال رایگان (تومان)</label>
               <input
-                id="s-ship-free"
+                id="s-free"
                 type="number"
                 value={settingsForm.freeShippingThreshold}
-                onChange={(e) => setSettingsForm({ ...settingsForm, freeShippingThreshold: Number(e.target.value) })}
+                onChange={(e) =>
+                  setSettingsForm({ ...settingsForm, freeShippingThreshold: Number(e.target.value) })
+                }
                 className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="s-ann" className="text-xs font-medium">متن نوار اطلاعیه بالای صفحه</label>
+            <label htmlFor="s-ann" className="text-xs font-medium">متن نوار اطلاعیه بالای سایت</label>
             <input
               id="s-ann"
               type="text"
@@ -1129,7 +1644,7 @@ export const AdminPage: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="s-about" className="text-xs font-medium">معرفی فروشگاه</label>
+            <label htmlFor="s-about" className="text-xs font-medium">درباره فروشگاه</label>
             <textarea
               id="s-about"
               rows={2}
@@ -1143,7 +1658,7 @@ export const AdminPage: React.FC = () => {
             type="submit"
             className="px-6 py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
           >
-            ذخیره تنظیمات فروشگاه
+            ذخیره و اعمال تنظیمات فروشگاه
           </button>
         </form>
       )}
@@ -1151,21 +1666,15 @@ export const AdminPage: React.FC = () => {
   );
 };
 
-const BannerEditorCard: React.FC<{ banner: Banner; onSave: (b: Banner) => Promise<void> }> = ({
+const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => void }> = ({
   banner,
   onSave,
 }) => {
   const [form, setForm] = useState(banner);
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave(form);
-      }}
-      className="bg-white border border-black/[0.06] rounded-xl p-6 space-y-3"
-    >
-      <div className="text-xs font-medium text-[#8F6E38]">
-        موقعیت: {form.position === 'hero' ? 'بنر اصلی بالای صفحه' : 'بنر تبلیغاتی میانی'}
+    <div className="bg-white border border-black/[0.06] rounded-xl p-6 space-y-4">
+      <div className="text-xs font-semibold text-[#8F6E38]">
+        بنر {banner.position === 'hero' ? 'اصلی (Hero)' : 'تبلیغاتی میانی'}
       </div>
       <div className="space-y-1">
         <label className="text-xs font-medium">عنوان</label>
@@ -1196,7 +1705,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (b: Banner) => Promis
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium">مسیر لینک</label>
+          <label className="text-xs font-medium">لینک</label>
           <input
             type="text"
             dir="ltr"
@@ -1207,7 +1716,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (b: Banner) => Promis
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium">آدرس تصویر بنر</label>
+        <label className="text-xs font-medium">آدرس تصویر</label>
         <input
           type="text"
           dir="ltr"
@@ -1217,11 +1726,12 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (b: Banner) => Promis
         />
       </div>
       <button
-        type="submit"
+        type="button"
+        onClick={() => onSave(form)}
         className="px-4 py-2 text-xs font-medium bg-[#18181B] text-white rounded-md"
       >
         ذخیره بنر
       </button>
-    </form>
+    </div>
   );
 };

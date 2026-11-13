@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shirt } from 'lucide-react';
+import { Footprints } from 'lucide-react';
 
 interface SafeImageProps {
   src: string;
@@ -23,7 +23,7 @@ export const SafeImage: React.FC<SafeImageProps> = ({
         role="img"
         aria-label={alt}
       >
-        <Shirt className="w-8 h-8 opacity-45 mb-2" strokeWidth={1.25} />
+        <Footprints className="w-8 h-8 opacity-45 mb-2" strokeWidth={1.25} />
         <span className="text-xs font-medium px-3 text-center opacity-75 line-clamp-1">{alt}</span>
       </div>
     );

@@ -8,50 +8,100 @@ import { z } from 'zod';
 import { db } from './src/db/index.ts';
 import {
   banners,
+  brands,
   categories,
   discounts,
   orderItems,
   orders,
   products,
+  reviews,
   storeSettings,
   users,
+  wishlists,
 } from './src/db/schema.ts';
 import { ensureSeeded } from './src/db/seed.ts';
 import { optionalAuth, requireAdmin, requireAuth, type AuthRequest } from './src/middleware/auth.ts';
 import {
+  consumeRateLimit,
+  corsMiddleware,
   hashPassword,
   rateLimit,
   sanitizeString,
   SESSION_COOKIE_NAME,
   signSessionToken,
+  validateAndSaveImageBuffer,
+  validateStartupSecurityConfig,
   verifyCsrfOrigin,
   verifyPassword,
 } from './src/lib/security.ts';
 import {
   calculateOrderTotals,
+  decrementSizeInventory,
   getEffectivePrice,
+  getTotalStockFromSizes,
   normalizeDigits,
   validateIranianPhone,
   validateIranianPostalCode,
 } from './src/utils/commerce.ts';
 
 dotenv.config();
+validateStartupSecurityConfig();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const UPLOAD_DIR = path.resolve('public/uploads');
 
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
+
+app.use(corsMiddleware);
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+// Upload endpoint has a 4MB JSON limit for base64 of <=2MB binary image; global API limit stays 1MB
+app.post(
+  '/api/admin/upload',
+  cookieParser(),
+  verifyCsrfOrigin,
+  express.json({ limit: '4mb' }),
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const dataUrl = typeof req.body?.dataUrl === 'string' ? req.body.dataUrl : '';
+      if (!dataUrl) {
+        return res.status(400).json({ error: 'فایل تصویر ارسال نشده است.' });
+      }
+      const saved = validateAndSaveImageBuffer(dataUrl, UPLOAD_DIR);
+      res.status(201).json({
+        url: saved.publicPath,
+        mimeType: saved.mimeType,
+        sizeBytes: saved.sizeBytes,
+      });
+    } catch (err: any) {
+      return res.status(400).json({ error: err?.message || 'خطا در آپلود تصویر.' });
+    }
+  }
+);
+
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use(verifyCsrfOrigin);
 
-app.use((_req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
-
 app.use('/src/assets/images', express.static(path.resolve('src/assets/images')));
+app.use(
+  '/uploads',
+  express.static(UPLOAD_DIR, {
+    setHeaders: (res) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    },
+  })
+);
 
 const isSecureCookie = process.env.NODE_ENV === 'production';
 
@@ -71,13 +121,18 @@ function setSessionCookie(res: express.Response, user: { id: number; uid: string
 app.get('/api/storefront', async (_req, res, next) => {
   try {
     await ensureSeeded();
-    const [settingsRows, categoryRows, productRows, bannerRows] = await Promise.all([
+    const [settingsRows, categoryRows, brandRows, productRows, bannerRows, reviewRows] = await Promise.all([
       db.select().from(storeSettings).limit(1),
       db
         .select()
         .from(categories)
         .where(eq(categories.isActive, true))
         .orderBy(asc(categories.sortOrder), asc(categories.id)),
+      db
+        .select()
+        .from(brands)
+        .where(eq(brands.isActive, true))
+        .orderBy(asc(brands.sortOrder), asc(brands.id)),
       db
         .select()
         .from(products)
@@ -88,13 +143,28 @@ app.get('/api/storefront', async (_req, res, next) => {
         .from(banners)
         .where(eq(banners.isActive, true))
         .orderBy(asc(banners.sortOrder), asc(banners.id)),
+      db
+        .select()
+        .from(reviews)
+        .where(eq(reviews.isApproved, true))
+        .orderBy(desc(reviews.createdAt))
+        .limit(12),
     ]);
+
+    const productMetaMap = new Map(productRows.map((p) => [p.id, { name: p.name, slug: p.slug }]));
+    const enrichedReviews = reviewRows.map((r) => ({
+      ...r,
+      productName: r.productId ? productMetaMap.get(r.productId)?.name : undefined,
+      productSlug: r.productId ? productMetaMap.get(r.productId)?.slug : undefined,
+    }));
 
     res.json({
       settings: settingsRows[0] ?? null,
       categories: categoryRows,
+      brands: brandRows,
       products: productRows,
       banners: bannerRows,
+      reviews: enrichedReviews,
     });
   } catch (err) {
     next(err);
@@ -116,21 +186,96 @@ app.get('/api/products/:slug', async (req, res, next) => {
     }
 
     const product = rows[0];
-    let related: typeof rows = [];
-    if (product.categoryId) {
-      related = await db
+
+    const [similarRows, brandOrCareRows, productReviews] = await Promise.all([
+      product.categoryId
+        ? db
+            .select()
+            .from(products)
+            .where(and(eq(products.categoryId, product.categoryId), eq(products.isActive, true)))
+            .limit(6)
+        : Promise.resolve([] as typeof rows),
+      db
         .select()
         .from(products)
-        .where(and(eq(products.categoryId, product.categoryId), eq(products.isActive, true)))
-        .limit(5);
-      related = related.filter((r) => r.id !== product.id).slice(0, 4);
-    }
+        .where(eq(products.isActive, true))
+        .orderBy(desc(products.isBestseller), desc(products.id))
+        .limit(12),
+      db
+        .select()
+        .from(reviews)
+        .where(and(eq(reviews.productId, product.id), eq(reviews.isApproved, true)))
+        .orderBy(desc(reviews.createdAt)),
+    ]);
 
-    res.json({ product, related });
+    const similar = similarRows.filter((r) => r.id !== product.id).slice(0, 4);
+    const similarIds = new Set(similar.map((s) => s.id));
+    similarIds.add(product.id);
+
+    const related = brandOrCareRows
+      .filter((r) => !similarIds.has(r.id) && (r.brand === product.brand || r.sku.startsWith('AC-') || r.isFeatured))
+      .slice(0, 4);
+
+    res.json({ product, similar, related, reviews: productReviews });
   } catch (err) {
     next(err);
   }
 });
+
+const createReviewSchema = z.object({
+  productId: z.number().int().positive(),
+  authorName: z.string().min(2, 'نام خود را وارد کنید').max(60),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().min(8, 'متن دیدگاه باید حداقل ۸ کاراکتر باشد').max(600),
+});
+
+app.post(
+  '/api/reviews',
+  rateLimit({ windowMs: 60_000 * 10, max: 10, keyPrefix: 'submit-review' }),
+  optionalAuth,
+  async (req: AuthRequest, res, next) => {
+    try {
+      await ensureSeeded();
+      const parsed = createReviewSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.issues[0]?.message || 'اطلاعات دیدگاه نامعتبر است.' });
+      }
+
+      const prod = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(eq(products.id, parsed.data.productId))
+        .limit(1);
+
+      if (prod.length === 0) {
+        return res.status(404).json({ error: 'محصول یافت نشد.' });
+      }
+
+      const isSignedIn = Boolean(req.user);
+      const [created] = await db
+        .insert(reviews)
+        .values({
+          productId: parsed.data.productId,
+          authorName: sanitizeString(parsed.data.authorName),
+          rating: parsed.data.rating,
+          comment: sanitizeString(parsed.data.comment),
+          verifiedPurchase: isSignedIn,
+          isApproved: isSignedIn,
+        })
+        .returning();
+
+      res.status(201).json({
+        review: created,
+        pendingModeration: !created.isApproved,
+        message: created.isApproved
+          ? 'دیدگاه شما با موفقیت ثبت شد.'
+          : 'دیدگاه شما ثبت شد و پس از تایید مدیریت نمایش داده می‌شود.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 const discountValidateSchema = z.object({
   code: z.string().min(2).max(40),
@@ -178,6 +323,52 @@ app.post(
     }
   }
 );
+
+// ---------- Wishlist Routes (Authenticated Customers) ----------
+
+app.get('/api/wishlist', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const rows = await db
+      .select({ productId: wishlists.productId })
+      .from(wishlists)
+      .where(eq(wishlists.userId, req.user!.id));
+    res.json({ productIds: rows.map((r) => r.productId) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/wishlist/toggle', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const productId = Number(req.body?.productId);
+    if (!Number.isInteger(productId) || productId <= 0) {
+      return res.status(400).json({ error: 'شناسه محصول نامعتبر است.' });
+    }
+
+    const existing = await db
+      .select()
+      .from(wishlists)
+      .where(and(eq(wishlists.userId, req.user!.id), eq(wishlists.productId, productId)))
+      .limit(1);
+
+    let added = false;
+    if (existing.length > 0) {
+      await db.delete(wishlists).where(eq(wishlists.id, existing[0].id));
+    } else {
+      await db.insert(wishlists).values({ userId: req.user!.id, productId });
+      added = true;
+    }
+
+    const rows = await db
+      .select({ productId: wishlists.productId })
+      .from(wishlists)
+      .where(eq(wishlists.userId, req.user!.id));
+
+    res.json({ added, productIds: rows.map((r) => r.productId) });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ---------- Authentication & Account Routes ----------
 
@@ -257,7 +448,7 @@ const loginSchema = z.object({
 
 app.post(
   '/api/auth/login',
-  rateLimit({ windowMs: 60_000 * 5, max: 15, keyPrefix: 'login' }),
+  rateLimit({ windowMs: 60_000 * 5, max: 20, keyPrefix: 'login-ip' }),
   async (req, res, next) => {
     try {
       await ensureSeeded();
@@ -267,6 +458,14 @@ app.post(
       }
 
       const email = parsed.data.email.trim().toLowerCase();
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      const emailThrottle = await consumeRateLimit(`login-acct:${email}:${ip}`, 15 * 60_000, 8);
+      if (!emailThrottle.allowed) {
+        return res.status(429).json({
+          error: 'تلاش‌های ناموفق بیش از حد مجاز بوده است. لطفاً ۱۵ دقیقه دیگر دوباره امتحان کنید.',
+        });
+      }
+
       const found = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (found.length === 0 || !found[0].passwordHash) {
         return res.status(401).json({ error: 'ایمیل یا رمز عبور اشتباه است.' });
@@ -376,7 +575,7 @@ const createOrderSchema = z.object({
 
 app.post(
   '/api/orders',
-  rateLimit({ windowMs: 60_000, max: 12, keyPrefix: 'create-order' }),
+  rateLimit({ windowMs: 60_000, max: 20, keyPrefix: 'create-order' }),
   optionalAuth,
   async (req: AuthRequest, res, next) => {
     try {
@@ -400,26 +599,51 @@ app.post(
         const settingsList = await tx.select().from(storeSettings).limit(1);
         const settings = settingsList[0];
 
-        const productIds = [...new Set(parsed.data.items.map((i) => i.productId))];
-        const dbProducts = await tx.select().from(products).where(inArray(products.id, productIds));
-        const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+        // Deterministic product ID ordering prevents deadlocks while FOR UPDATE prevents concurrent overselling
+        const productIds = [...new Set(parsed.data.items.map((i) => i.productId))].sort((a, b) => a - b);
+        const lockedProducts = await tx
+          .select()
+          .from(products)
+          .where(inArray(products.id, productIds))
+          .orderBy(asc(products.id))
+          .for('update');
 
-        // Aggregate requested quantities per productId to verify stock strictly
-        const qtyPerProduct = new Map<number, number>();
+        const productMap = new Map(lockedProducts.map((p) => [p.id, { ...p }]));
+        const updatedInventories = new Map<
+          number,
+          { sizeInventory: { size: string; stock: number }[]; totalStock: number }
+        >();
+
         for (const item of parsed.data.items) {
-          qtyPerProduct.set(item.productId, (qtyPerProduct.get(item.productId) ?? 0) + item.quantity);
-        }
-
-        for (const [pid, totalQty] of qtyPerProduct.entries()) {
-          const prod = productMap.get(pid);
+          const prod = productMap.get(item.productId);
           if (!prod || !prod.isActive) {
             throw Object.assign(new Error('یکی از محصولات سبد خرید دیگر موجود نیست.'), { statusCode: 400 });
           }
-          if (prod.stock < totalQty) {
-            throw Object.assign(
-              new Error(`موجودی محصول «${prod.name}» کافی نیست (موجودی فعلی: ${prod.stock}).`),
-              { statusCode: 400 }
-            );
+
+          const cleanSize = sanitizeString(item.selectedSize);
+          const hasColor = prod.colors.some((c) => c.name === sanitizeString(item.selectedColor));
+          if (!hasColor && prod.colors.length > 0) {
+            throw Object.assign(new Error(`رنگ انتخاب‌شده برای «${prod.name}» معتبر نیست.`), { statusCode: 400 });
+          }
+
+          const currentState = updatedInventories.get(prod.id) ?? {
+            sizeInventory:
+              prod.sizeInventory && prod.sizeInventory.length > 0
+                ? prod.sizeInventory
+                : prod.sizes.map((s) => ({ size: s, stock: prod.stock })),
+            totalStock: prod.stock,
+          };
+
+          try {
+            const decremented = decrementSizeInventory(currentState.sizeInventory, cleanSize, item.quantity);
+            updatedInventories.set(prod.id, {
+              sizeInventory: decremented.nextSizeInventory,
+              totalStock: decremented.nextTotalStock,
+            });
+          } catch (stockErr: any) {
+            throw Object.assign(new Error(stockErr?.message || `موجودی کفش «${prod.name}» کافی نیست.`), {
+              statusCode: 400,
+            });
           }
         }
 
@@ -428,7 +652,7 @@ app.post(
           return {
             productId: prod.id,
             productName: prod.name,
-            productImage: prod.images[0] || '/src/assets/images/product_silk_blouse_1794595831614.jpg',
+            productImage: prod.images[0] || '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
             selectedSize: sanitizeString(item.selectedSize),
             selectedColor: sanitizeString(item.selectedColor),
             quantity: item.quantity,
@@ -473,15 +697,19 @@ app.post(
           throw Object.assign(new Error('مبلغ سبد خرید به حداقل مجاز کد تخفیف نمی‌رسد.'), { statusCode: 400 });
         }
 
-        // Decrement stock atomically
-        for (const [pid, totalQty] of qtyPerProduct.entries()) {
+        // Persist updated per-size inventories and aggregate stock atomically inside transaction
+        for (const [pid, inv] of updatedInventories.entries()) {
           await tx
             .update(products)
-            .set({ stock: sql`${products.stock} - ${totalQty}` })
-            .where(and(eq(products.id, pid), sql`${products.stock} >= ${totalQty}`));
+            .set({
+              sizeInventory: inv.sizeInventory,
+              sizes: inv.sizeInventory.map((s) => s.size),
+              stock: inv.totalStock,
+            })
+            .where(eq(products.id, pid));
         }
 
-        const orderNumber = `VERA-${Math.floor(100000 + Math.random() * 899999)}`;
+        const orderNumber = `VERA-${crypto.randomInt(100000, 999999)}`;
 
         const [createdOrder] = await tx
           .insert(orders)
@@ -610,17 +838,29 @@ app.post(
 app.get('/api/admin/overview', requireAdmin, async (_req, res, next) => {
   try {
     await ensureSeeded();
-    const [allProducts, allCategories, allOrders, allOrderItems, allDiscounts, allBanners, settingsList, userCount] =
-      await Promise.all([
-        db.select().from(products).orderBy(desc(products.id)),
-        db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id)),
-        db.select().from(orders).orderBy(desc(orders.createdAt)),
-        db.select().from(orderItems),
-        db.select().from(discounts).orderBy(desc(discounts.id)),
-        db.select().from(banners).orderBy(asc(banners.sortOrder), asc(banners.id)),
-        db.select().from(storeSettings).limit(1),
-        db.select({ total: sql<number>`count(*)::int` }).from(users),
-      ]);
+    const [
+      allProducts,
+      allCategories,
+      allBrands,
+      allOrders,
+      allOrderItems,
+      allDiscounts,
+      allBanners,
+      allReviews,
+      settingsList,
+      userCount,
+    ] = await Promise.all([
+      db.select().from(products).orderBy(desc(products.id)),
+      db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id)),
+      db.select().from(brands).orderBy(asc(brands.sortOrder), asc(brands.id)),
+      db.select().from(orders).orderBy(desc(orders.createdAt)),
+      db.select().from(orderItems),
+      db.select().from(discounts).orderBy(desc(discounts.id)),
+      db.select().from(banners).orderBy(asc(banners.sortOrder), asc(banners.id)),
+      db.select().from(reviews).orderBy(desc(reviews.createdAt)),
+      db.select().from(storeSettings).limit(1),
+      db.select({ total: sql<number>`count(*)::int` }).from(users),
+    ]);
 
     const itemsMap = new Map<number, typeof allOrderItems>();
     for (const item of allOrderItems) {
@@ -633,20 +873,29 @@ app.get('/api/admin/overview', requireAdmin, async (_req, res, next) => {
       .filter((o) => o.orderStatus !== 'cancelled')
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
+    const newOrdersCount = allOrders.filter((o) => o.orderStatus === 'pending').length;
     const lowStockCount = allProducts.filter((p) => p.stock <= 5).length;
+
+    const prodNameMap = new Map(allProducts.map((p) => [p.id, p.name]));
 
     res.json({
       stats: {
         totalOrders: allOrders.length,
+        newOrdersCount,
         totalRevenue,
         lowStockCount,
         totalCustomers: userCount[0]?.total ?? 0,
       },
       products: allProducts,
       categories: allCategories,
+      brands: allBrands,
       orders: allOrders.map((o) => ({ ...o, items: itemsMap.get(o.id) ?? [] })),
       discounts: allDiscounts,
       banners: allBanners,
+      reviews: allReviews.map((r) => ({
+        ...r,
+        productName: r.productId ? prodNameMap.get(r.productId) : undefined,
+      })),
       settings: settingsList[0] ?? null,
     });
   } catch (err) {
@@ -659,12 +908,23 @@ const productUpsertSchema = z.object({
   name: z.string().min(2).max(140),
   slug: z.string().min(2).max(140),
   sku: z.string().min(2).max(40),
-  description: z.string().min(5).max(2000),
+  brand: z.string().min(1).max(80),
+  model: z.string().max(100).optional().default(''),
+  upperMaterial: z.string().max(160).optional().default(''),
+  soleMaterial: z.string().max(160).optional().default(''),
+  features: z.array(z.string().min(1).max(120)).optional().default([]),
+  description: z.string().min(5).max(2500),
   fabricCare: z.string().max(500).optional().default(''),
   price: z.number().int().positive(),
   discountPrice: z.number().int().positive().nullable(),
-  stock: z.number().int().nonnegative(),
-  sizes: z.array(z.string().min(1).max(20)).min(1),
+  sizeInventory: z
+    .array(
+      z.object({
+        size: z.string().min(1).max(20),
+        stock: z.number().int().nonnegative(),
+      })
+    )
+    .min(1, 'حداقل یک سایز کفش وارد کنید'),
   colors: z.array(z.object({ name: z.string().min(1).max(40), hex: z.string().min(4).max(15) })).min(1),
   images: z.array(z.string().min(3).max(500)).min(1),
   isNew: z.boolean().default(false),
@@ -680,6 +940,12 @@ app.post('/api/admin/products', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ error: parsed.error.issues[0]?.message || 'مشخصات محصول نامعتبر است.' });
     }
     const d = parsed.data;
+    const cleanSizeInventory = d.sizeInventory.map((s) => ({
+      size: sanitizeString(s.size),
+      stock: Math.max(0, Math.floor(s.stock)),
+    }));
+    const computedTotalStock = getTotalStockFromSizes(cleanSizeInventory);
+
     const [created] = await db
       .insert(products)
       .values({
@@ -687,12 +953,18 @@ app.post('/api/admin/products', requireAdmin, async (req, res, next) => {
         name: sanitizeString(d.name),
         slug: sanitizeString(d.slug).toLowerCase().replace(/\s+/g, '-'),
         sku: sanitizeString(d.sku),
+        brand: sanitizeString(d.brand),
+        model: sanitizeString(d.model),
+        upperMaterial: sanitizeString(d.upperMaterial),
+        soleMaterial: sanitizeString(d.soleMaterial),
+        features: d.features.map(sanitizeString).filter(Boolean),
         description: sanitizeString(d.description),
         fabricCare: sanitizeString(d.fabricCare),
         price: d.price,
         discountPrice: d.discountPrice && d.discountPrice < d.price ? d.discountPrice : null,
-        stock: d.stock,
-        sizes: d.sizes.map(sanitizeString),
+        stock: computedTotalStock,
+        sizes: cleanSizeInventory.map((s) => s.size),
+        sizeInventory: cleanSizeInventory,
         colors: d.colors.map((c) => ({ name: sanitizeString(c.name), hex: sanitizeString(c.hex) })),
         images: d.images.map((img) => img.trim()),
         isNew: d.isNew,
@@ -719,6 +991,12 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ error: parsed.error.issues[0]?.message || 'مشخصات محصول نامعتبر است.' });
     }
     const d = parsed.data;
+    const cleanSizeInventory = d.sizeInventory.map((s) => ({
+      size: sanitizeString(s.size),
+      stock: Math.max(0, Math.floor(s.stock)),
+    }));
+    const computedTotalStock = getTotalStockFromSizes(cleanSizeInventory);
+
     const [updated] = await db
       .update(products)
       .set({
@@ -726,12 +1004,18 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res, next) => {
         name: sanitizeString(d.name),
         slug: sanitizeString(d.slug).toLowerCase().replace(/\s+/g, '-'),
         sku: sanitizeString(d.sku),
+        brand: sanitizeString(d.brand),
+        model: sanitizeString(d.model),
+        upperMaterial: sanitizeString(d.upperMaterial),
+        soleMaterial: sanitizeString(d.soleMaterial),
+        features: d.features.map(sanitizeString).filter(Boolean),
         description: sanitizeString(d.description),
         fabricCare: sanitizeString(d.fabricCare),
         price: d.price,
         discountPrice: d.discountPrice && d.discountPrice < d.price ? d.discountPrice : null,
-        stock: d.stock,
-        sizes: d.sizes.map(sanitizeString),
+        stock: computedTotalStock,
+        sizes: cleanSizeInventory.map((s) => s.size),
+        sizeInventory: cleanSizeInventory,
         colors: d.colors.map((c) => ({ name: sanitizeString(c.name), hex: sanitizeString(c.hex) })),
         images: d.images.map((img) => img.trim()),
         isNew: d.isNew,
@@ -795,11 +1079,108 @@ app.post('/api/admin/categories', requireAdmin, async (req, res, next) => {
   }
 });
 
+app.put('/api/admin/categories/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const parsed = categorySchema.safeParse(req.body);
+    if (!Number.isInteger(id) || id <= 0 || !parsed.success) {
+      return res.status(400).json({ error: 'مشخصات دسته‌بندی نامعتبر است.' });
+    }
+    const d = parsed.data;
+    const [updated] = await db
+      .update(categories)
+      .set({
+        name: sanitizeString(d.name),
+        slug: sanitizeString(d.slug).toLowerCase().replace(/\s+/g, '-'),
+        description: sanitizeString(d.description),
+        imageUrl: d.imageUrl.trim(),
+        sortOrder: d.sortOrder,
+        isActive: d.isActive,
+      })
+      .where(eq(categories.id, id))
+      .returning();
+    if (!updated) return res.status(404).json({ error: 'دسته‌بندی یافت نشد.' });
+    res.json({ category: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.delete('/api/admin/categories/:id', requireAdmin, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'شناسه نامعتبر است.' });
     await db.delete(categories).where(eq(categories.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const brandSchema = z.object({
+  name: z.string().min(2).max(80),
+  slug: z.string().min(2).max(80),
+  country: z.string().max(60).optional().default(''),
+  logoUrl: z.string().max(500).optional().default(''),
+  sortOrder: z.number().int().default(0),
+  isActive: z.boolean().default(true),
+});
+
+app.post('/api/admin/brands', requireAdmin, async (req, res, next) => {
+  try {
+    const parsed = brandSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'مشخصات برند نامعتبر است.' });
+    }
+    const d = parsed.data;
+    const [created] = await db
+      .insert(brands)
+      .values({
+        name: sanitizeString(d.name),
+        slug: sanitizeString(d.slug).toLowerCase().replace(/\s+/g, '-'),
+        country: sanitizeString(d.country),
+        logoUrl: d.logoUrl.trim(),
+        sortOrder: d.sortOrder,
+        isActive: d.isActive,
+      })
+      .returning();
+    res.status(201).json({ brand: created });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/admin/brands/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'شناسه نامعتبر است.' });
+    await db.delete(brands).where(eq(brands.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.patch('/api/admin/reviews/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const isApproved = Boolean(req.body?.isApproved);
+    const [updated] = await db
+      .update(reviews)
+      .set({ isApproved })
+      .where(eq(reviews.id, id))
+      .returning();
+    if (!updated) return res.status(404).json({ error: 'دیدگاه یافت نشد.' });
+    res.json({ review: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/admin/reviews/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    await db.delete(reviews).where(eq(reviews.id, id));
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -896,6 +1277,32 @@ const bannerSchema = z.object({
   position: z.enum(['hero', 'promo']),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
+});
+
+app.post('/api/admin/banners', requireAdmin, async (req, res, next) => {
+  try {
+    const parsed = bannerSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'اطلاعات بنر نامعتبر است.' });
+    }
+    const d = parsed.data;
+    const [created] = await db
+      .insert(banners)
+      .values({
+        title: sanitizeString(d.title),
+        subtitle: sanitizeString(d.subtitle),
+        ctaText: sanitizeString(d.ctaText),
+        ctaLink: d.ctaLink.trim(),
+        imageUrl: d.imageUrl.trim(),
+        position: d.position,
+        isActive: d.isActive,
+        sortOrder: d.sortOrder,
+      })
+      .returning();
+    res.status(201).json({ banner: created });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.put('/api/admin/banners/:id', requireAdmin, async (req, res, next) => {
@@ -1002,7 +1409,7 @@ app.put('/api/admin/settings', requireAdmin, async (req, res, next) => {
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled API error:', err);
   if (err?.code === '23505') {
-    return res.status(409).json({ error: 'مقدار وارد شده تکراری است (مانند شناسه یا ایمیل).' });
+    return res.status(409).json({ error: 'مقدار وارد شده تکراری است (مانند شناسه محصول، اسلاگ یا ایمیل).' });
   }
   res.status(500).json({ error: 'خطای داخلی سرور رخ داد. لطفاً دوباره تلاش کنید.' });
 });

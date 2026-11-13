@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate('/shop')}
                 className="hover:text-white transition-colors"
               >
-                همه محصولات
+                همه کفش‌ها و کتونی‌ها
               </button>
             </li>
             <li>
@@ -39,7 +39,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate('/shop?discount=1')}
                 className="hover:text-white transition-colors"
               >
-                پیشنهادهای ویژه
+                تخفیف‌های ویژه فصل
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate('/account?tab=wishlist')}
+                className="hover:text-white transition-colors"
+              >
+                لیست علاقه‌مندی‌ها
               </button>
             </li>
             <li>
@@ -66,13 +75,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#D6B77E]">ارسال و قوانین</h3>
+          <h3 className="text-sm font-semibold text-[#D6B77E]">ارسال و ضمانت تعویض سایز</h3>
           <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings?.shippingPolicy}</p>
           <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings?.returnPolicy}</p>
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#D6B77E]">ارتباط با بوتیک</h3>
+          <h3 className="text-sm font-semibold text-[#D6B77E]">ارتباط با فروشگاه</h3>
           <ul className="space-y-2 text-xs sm:text-sm text-[#D6D0C6]">
             <li>تلفن: <span dir="ltr" className="inline-block tabular-nums">{settings?.phone}</span></li>
             <li>ایمیل: <span dir="ltr" className="inline-block">{settings?.email}</span></li>
@@ -87,7 +96,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#A8A196]">
           <span>© {new Date().getFullYear()} {storeName}. تمامی حقوق محفوظ است.</span>
-          <span>قالب تجاری فروشگاهی با قابلیت سفارشی‌سازی برند</span>
+          <span>فروشگاه تخصصی کفش و کتونی · قالب تجاری قابل شخصی‌سازی</span>
         </div>
       </div>
     </footer>

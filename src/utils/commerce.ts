@@ -1,13 +1,11 @@
-export interface CartItemInput {
-  productId: number;
-  name: string;
-  price: number;
-  discountPrice: number | null;
-  quantity: number;
+export interface ProductSizeStockInput {
+  size: string;
   stock: number;
-  selectedSize: string;
-  selectedColor: string;
-  image: string;
+}
+
+export interface ProductColorInput {
+  name: string;
+  hex: string;
 }
 
 export interface ProductFilterItem {
@@ -15,10 +13,17 @@ export interface ProductFilterItem {
   categoryId: number | null;
   name: string;
   slug: string;
+  brand: string;
+  model: string;
+  upperMaterial: string;
+  soleMaterial: string;
   description: string;
   price: number;
   discountPrice: number | null;
   stock: number;
+  sizes: string[];
+  sizeInventory: ProductSizeStockInput[];
+  colors: ProductColorInput[];
   isNew: boolean;
   isBestseller: boolean;
   isFeatured: boolean;
@@ -42,6 +47,10 @@ export function formatToman(amount: number): string {
   return `${new Intl.NumberFormat('fa-IR').format(safe)} تومان`;
 }
 
+export function formatPersianNumber(value: number): string {
+  return new Intl.NumberFormat('fa-IR').format(value);
+}
+
 export function getEffectivePrice(price: number, discountPrice: number | null): number {
   if (discountPrice !== null && discountPrice > 0 && discountPrice < price) {
     return discountPrice;
@@ -54,6 +63,51 @@ export function calculateDiscountPercent(price: number, discountPrice: number | 
     return 0;
   }
   return Math.round(((price - discountPrice) / price) * 100);
+}
+
+export function getTotalStockFromSizes(sizeInventory: ProductSizeStockInput[]): number {
+  return sizeInventory.reduce((sum, entry) => sum + Math.max(0, Math.floor(entry.stock)), 0);
+}
+
+export function getSizeStock(
+  product: Pick<ProductFilterItem, 'sizeInventory' | 'stock'>,
+  size: string
+): number {
+  if (product.sizeInventory && product.sizeInventory.length > 0) {
+    const match = product.sizeInventory.find((s) => s.size === size);
+    return match ? Math.max(0, match.stock) : 0;
+  }
+  return Math.max(0, product.stock);
+}
+
+export function getAvailableSizes(product: Pick<ProductFilterItem, 'sizeInventory' | 'sizes'>): string[] {
+  if (product.sizeInventory && product.sizeInventory.length > 0) {
+    return product.sizeInventory.filter((s) => s.stock > 0).map((s) => s.size);
+  }
+  return product.sizes;
+}
+
+export function decrementSizeInventory(
+  sizeInventory: ProductSizeStockInput[],
+  size: string,
+  quantity: number
+): { nextSizeInventory: ProductSizeStockInput[]; nextTotalStock: number } {
+  const qty = Math.max(1, Math.floor(quantity));
+  const idx = sizeInventory.findIndex((entry) => entry.size === size);
+  if (idx === -1) {
+    throw new Error(`سایز ${size} برای این کفش تعریف نشده است.`);
+  }
+  const currentStock = sizeInventory[idx].stock;
+  if (currentStock < qty) {
+    throw new Error(`موجودی سایز ${size} کافی نیست (موجودی فعلی: ${currentStock} جفت).`);
+  }
+  const nextSizeInventory = sizeInventory.map((entry, i) =>
+    i === idx ? { ...entry, stock: entry.stock - qty } : { ...entry }
+  );
+  return {
+    nextSizeInventory,
+    nextTotalStock: getTotalStockFromSizes(nextSizeInventory),
+  };
 }
 
 export function validateIranianPhone(phone: string): boolean {
@@ -132,6 +186,9 @@ export function calculateOrderTotals(input: OrderCalculationInput): OrderTotals 
 export interface FilterCriteria {
   search?: string;
   categoryId?: number | null;
+  brand?: string | null;
+  size?: string | null;
+  color?: string | null;
   onlyDiscounted?: boolean;
   onlyInStock?: boolean;
   minPrice?: number | null;
@@ -143,12 +200,29 @@ export function filterAndSortProducts<T extends ProductFilterItem>(
   products: T[],
   criteria: FilterCriteria
 ): T[] {
-  const query = (criteria.search ?? '').trim().toLowerCase();
+  const query = normalizeDigits(criteria.search ?? '').toLowerCase();
 
   const filtered = products.filter((item) => {
     if (!item.isActive) return false;
     if (criteria.categoryId && item.categoryId !== criteria.categoryId) return false;
-    if (criteria.onlyInStock && item.stock <= 0) return false;
+    if (criteria.brand && item.brand !== criteria.brand) return false;
+
+    const totalStock =
+      item.sizeInventory && item.sizeInventory.length > 0
+        ? getTotalStockFromSizes(item.sizeInventory)
+        : item.stock;
+
+    if (criteria.onlyInStock && totalStock <= 0) return false;
+
+    if (criteria.size) {
+      const sizeCount = getSizeStock({ sizeInventory: item.sizeInventory, stock: totalStock }, criteria.size);
+      if (sizeCount <= 0) return false;
+    }
+
+    if (criteria.color) {
+      const hasColor = item.colors.some((c) => c.name === criteria.color);
+      if (!hasColor) return false;
+    }
 
     const effective = getEffectivePrice(item.price, item.discountPrice);
     if (criteria.onlyDiscounted && effective >= item.price) return false;
@@ -160,7 +234,7 @@ export function filterAndSortProducts<T extends ProductFilterItem>(
     }
 
     if (query) {
-      const hay = `${item.name} ${item.description}`.toLowerCase();
+      const hay = `${item.name} ${item.brand} ${item.model} ${item.upperMaterial} ${item.soleMaterial} ${item.description}`.toLowerCase();
       if (!hay.includes(query)) return false;
     }
 
@@ -210,3 +284,15 @@ export function getOrderStatusLabel(status: string): string {
       return 'نامشخص';
   }
 }
+
+export const SHOE_SIZE_GUIDE = [
+  { eu: '37', cm: '23.5', uk: '4', usWomen: '6.5', usMen: '5' },
+  { eu: '38', cm: '24.1', uk: '5', usWomen: '7.5', usMen: '5.5' },
+  { eu: '39', cm: '24.8', uk: '5.5', usWomen: '8', usMen: '6.5' },
+  { eu: '40', cm: '25.4', uk: '6.5', usWomen: '9', usMen: '7' },
+  { eu: '41', cm: '26.0', uk: '7', usWomen: '9.5', usMen: '8' },
+  { eu: '42', cm: '26.7', uk: '8', usWomen: '10.5', usMen: '8.5' },
+  { eu: '43', cm: '27.3', uk: '9', usWomen: '—', usMen: '9.5' },
+  { eu: '44', cm: '28.0', uk: '9.5', usWomen: '—', usMen: '10.5' },
+  { eu: '45', cm: '28.6', uk: '10.5', usWomen: '—', usMen: '11.5' },
+];

@@ -4,9 +4,11 @@ import { auth, googleAuthProvider } from '../lib/firebase';
 import { apiFetch } from '../lib/api';
 import type {
   Banner,
+  Brand,
   CartItem,
   Category,
   Product,
+  Review,
   StoreSettings,
   UserProfile,
 } from '../types/store';
@@ -14,10 +16,13 @@ import type {
 interface StoreContextValue {
   settings: StoreSettings | null;
   categories: Category[];
+  brands: Brand[];
   products: Product[];
   banners: Banner[];
+  reviews: Review[];
   user: UserProfile | null;
   cart: CartItem[];
+  wishlistIds: number[];
   isCartOpen: boolean;
   loading: boolean;
   error: string | null;
@@ -28,6 +33,8 @@ interface StoreContextValue {
   updateCartQty: (key: string, quantity: number) => void;
   removeFromCart: (key: string) => void;
   clearCart: () => void;
+  toggleWishlist: (productId: number) => Promise<void>;
+  isWishlisted: (productId: number) => boolean;
   loginWithEmail: (email: string, password: string) => Promise<UserProfile>;
   registerWithEmail: (payload: {
     fullName: string;
@@ -42,21 +49,34 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
-const CART_STORAGE_KEY = 'vera_boutique_cart_v1';
+const CART_STORAGE_KEY = 'vera_shoes_cart_v2';
+const WISHLIST_STORAGE_KEY = 'vera_shoes_wishlist_v2';
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const raw = localStorage.getItem(CART_STORAGE_KEY);
       return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [wishlistIds, setWishlistIds] = useState<number[]>(() => {
+    try {
+      const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as number[]) : [];
     } catch {
       return [];
     }
@@ -69,6 +89,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Ignore storage quota errors
     }
   }, [cart]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistIds));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [wishlistIds]);
 
   useEffect(() => {
     if (settings) {
@@ -85,13 +113,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const data = await apiFetch<{
         settings: StoreSettings | null;
         categories: Category[];
+        brands: Brand[];
         products: Product[];
         banners: Banner[];
+        reviews: Review[];
       }>('/api/storefront');
       setSettings(data.settings);
       setCategories(data.categories);
+      setBrands(data.brands ?? []);
       setProducts(data.products);
       setBanners(data.banners);
+      setReviews(data.reviews ?? []);
     } catch (err: any) {
       setError(err.message || 'خطا در بارگذاری اطلاعات فروشگاه');
     } finally {
@@ -103,6 +135,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const data = await apiFetch<{ user: UserProfile | null }>('/api/auth/me');
       setUser(data.user);
+      if (data.user) {
+        const wl = await apiFetch<{ productIds: number[] }>('/api/wishlist').catch(() => null);
+        if (wl) {
+          let localIds: number[] = [];
+          try {
+            const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+            localIds = raw ? (JSON.parse(raw) as number[]) : [];
+          } catch {
+            localIds = [];
+          }
+          const missingOnServer = localIds.filter((id) => Number.isInteger(id) && id > 0 && !wl.productIds.includes(id));
+          if (missingOnServer.length > 0) {
+            for (const pid of missingOnServer) {
+              await apiFetch('/api/wishlist/toggle', {
+                method: 'POST',
+                body: JSON.stringify({ productId: pid }),
+              }).catch(() => {});
+            }
+            const synced = await apiFetch<{ productIds: number[] }>('/api/wishlist').catch(() => wl);
+            setWishlistIds(synced.productIds);
+          } else {
+            setWishlistIds(wl.productIds);
+          }
+        }
+      }
     } catch {
       setUser(null);
     }
@@ -126,7 +183,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const existing = prev.find((p) => p.key === key);
       if (existing) {
         const nextQty = Math.min(item.maxStock, existing.quantity + item.quantity);
-        return prev.map((p) => (p.key === key ? { ...p, quantity: nextQty } : p));
+        return prev.map((p) => (p.key === key ? { ...p, quantity: nextQty, maxStock: item.maxStock } : p));
       }
       return [...prev, { ...item, key, quantity: Math.min(item.maxStock, Math.max(1, item.quantity)) }];
     });
@@ -153,14 +210,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   }, []);
 
-  const loginWithEmail = useCallback(async (email: string, password: string) => {
-    const res = await apiFetch<{ user: UserProfile }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    setUser(res.user);
-    return res.user;
-  }, []);
+  const toggleWishlist = useCallback(
+    async (productId: number) => {
+      if (user) {
+        try {
+          const res = await apiFetch<{ productIds: number[] }>('/api/wishlist/toggle', {
+            method: 'POST',
+            body: JSON.stringify({ productId }),
+          });
+          setWishlistIds(res.productIds);
+          return;
+        } catch {
+          // Fall back cleanly to local update if network blips
+        }
+      }
+      setWishlistIds((prev) =>
+        prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+      );
+    },
+    [user]
+  );
+
+  const isWishlisted = useCallback((productId: number) => wishlistIds.includes(productId), [wishlistIds]);
+
+  const loginWithEmail = useCallback(
+    async (email: string, password: string) => {
+      const res = await apiFetch<{ user: UserProfile }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      setUser(res.user);
+      await refreshUser();
+      return res.user;
+    },
+    [refreshUser]
+  );
 
   const registerWithEmail = useCallback(
     async (payload: { fullName: string; email: string; password: string; phone?: string }) => {
@@ -169,9 +253,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify(payload),
       });
       setUser(res.user);
+      await refreshUser();
       return res.user;
     },
-    []
+    [refreshUser]
   );
 
   const loginWithGoogle = useCallback(async () => {
@@ -184,8 +269,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       throw new Error('احراز هویت گوگل تکمیل نشد.');
     }
     setUser(res.user);
+    await refreshUser();
     return res.user;
-  }, []);
+  }, [refreshUser]);
 
   const logout = useCallback(async () => {
     await apiFetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
@@ -200,10 +286,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         settings,
         categories,
+        brands,
         products,
         banners,
+        reviews,
         user,
         cart,
+        wishlistIds,
         isCartOpen,
         loading,
         error,
@@ -214,6 +303,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateCartQty,
         removeFromCart,
         clearCart,
+        toggleWishlist,
+        isWishlisted,
         loginWithEmail,
         registerWithEmail,
         loginWithGoogle,

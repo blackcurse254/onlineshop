@@ -156,7 +156,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] p-4 rounded-lg border border-black/[0.06] text-xs sm:text-sm">
             <div>
               <span className="text-[#6B665F]">کد پیگیری سفارش: </span>
-              <strong className="text-[#18181B] tabular-nums" data-testid="order-number">
+              <strong dir="ltr" className="inline-block text-[#18181B] tabular-nums" data-testid="order-number">
                 {completedOrder.order.orderNumber}
               </strong>
             </div>

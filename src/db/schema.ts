@@ -14,6 +14,11 @@ export interface ProductColorOption {
   hex: string;
 }
 
+export interface ProductSizeStock {
+  size: string;
+  stock: number;
+}
+
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   uid: text('uid').notNull().unique(),
@@ -30,16 +35,16 @@ export const users = pgTable('users', {
 export const storeSettings = pgTable('store_settings', {
   id: serial('id').primaryKey(),
   storeName: text('store_name').notNull().default('VERA BOUTIQUE'),
-  storeSubtitle: text('store_subtitle').notNull().default('خانه مد و پوشاک معاصر'),
+  storeSubtitle: text('store_subtitle').notNull().default('فروشگاه تخصصی کفش و کتونی'),
   logoText: text('logo_text').notNull().default('VERA'),
   logoUrl: text('logo_url').notNull().default(''),
   primaryColor: text('primary_color').notNull().default('#18181B'),
   accentColor: text('accent_color').notNull().default('#B5945B'),
   backgroundColor: text('background_color').notNull().default('#FAF7F2'),
   phone: text('phone').notNull().default('021-88451290'),
-  email: text('email').notNull().default('hello@veraboutique.ir'),
-  instagram: text('instagram').notNull().default('@vera.boutique.ir'),
-  telegram: text('telegram').notNull().default('@veraboutique_support'),
+  email: text('email').notNull().default('hello@verashoes.ir'),
+  instagram: text('instagram').notNull().default('@vera.shoes.ir'),
+  telegram: text('telegram').notNull().default('@verashoes_support'),
   whatsapp: text('whatsapp').notNull().default('09120004512'),
   address: text('address').notNull().default('تهران، جردن، بلوار ناهید شرقی، پلاک ۱۸، طبقه اول'),
   shippingBaseCost: integer('shipping_base_cost').notNull().default(85000),
@@ -48,20 +53,30 @@ export const storeSettings = pgTable('store_settings', {
   aboutText: text('about_text')
     .notNull()
     .default(
-      'ورا بوتیک با تمرکز بر دوخت دقیق، الیاف طبیعی و برش‌های مدرن، مجموعه‌ای منتخب از پوشاک روزمره و رسمی را برای استایل ماندگار طراحی و عرضه می‌کند.'
+      'فروشگاه تخصصی کفش و کتونی ورا با تمرکز بر ارگونومی پا، متریال چرم طبیعی و زیره‌های استاندارد، مجموعه‌ای منتخب از کتونی‌های روزمره، ورزشی و کفش‌های رسمی را عرضه می‌کند.'
     ),
   shippingPolicy: text('shipping_policy')
     .notNull()
     .default(
-      'سفارش‌های تهران طی ۱ تا ۲ روز کاری و سفارش‌های سراسر کشور طی ۲ تا ۴ روز کاری با بسته‌بندی اختصاصی ارسال می‌شوند.'
+      'سفارش‌های تهران طی ۱ تا ۲ روز کاری و سفارش‌های سراسر کشور طی ۲ تا ۴ روز کاری با بسته‌بندی ایمن و جعبه اصلی ارسال می‌شوند.'
     ),
   returnPolicy: text('return_policy')
     .notNull()
-    .default('امکان تعویض سایز یا مرجوعی کالا تا ۷ روز پس از تحویل در صورت حفظ تگ و سلامت محصول فراهم است.'),
+    .default('امکان تعویض سایز کفش یا مرجوعی تا ۷ روز پس از تحویل در صورت استفاده نشدن در فضای باز فراهم است.'),
   announcementText: text('announcement_text')
     .notNull()
-    .default('ارسال رایگان برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف پاییزه: VERA15'),
+    .default('ارسال رایگان کفش برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف فصل: VERA15'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const brands = pgTable('brands', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+  country: text('country').notNull().default(''),
+  logoUrl: text('logo_url').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isActive: boolean('is_active').notNull().default(true),
 });
 
 export const categories = pgTable('categories', {
@@ -80,12 +95,18 @@ export const products = pgTable('products', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   sku: text('sku').notNull(),
+  brand: text('brand').notNull().default('VERA Studio'),
+  model: text('model').notNull().default(''),
+  upperMaterial: text('upper_material').notNull().default(''),
+  soleMaterial: text('sole_material').notNull().default(''),
+  features: jsonb('features').$type<string[]>().notNull().default([]),
   description: text('description').notNull(),
   fabricCare: text('fabric_care').notNull().default(''),
   price: integer('price').notNull(),
   discountPrice: integer('discount_price'),
   stock: integer('stock').notNull().default(0),
   sizes: jsonb('sizes').$type<string[]>().notNull(),
+  sizeInventory: jsonb('size_inventory').$type<ProductSizeStock[]>().notNull().default([]),
   colors: jsonb('colors').$type<ProductColorOption[]>().notNull(),
   images: jsonb('images').$type<string[]>().notNull(),
   isNew: boolean('is_new').notNull().default(false),
@@ -152,19 +173,49 @@ export const orderItems = pgTable('order_items', {
   unitPrice: integer('unit_price').notNull(),
 });
 
+export const reviews = pgTable('reviews', {
+  id: serial('id').primaryKey(),
+  productId: integer('product_id').references(() => products.id, { onDelete: 'set null' }),
+  authorName: text('author_name').notNull(),
+  rating: integer('rating').notNull().default(5),
+  comment: text('comment').notNull(),
+  verifiedPurchase: boolean('verified_purchase').notNull().default(true),
+  isApproved: boolean('is_approved').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const wishlists = pgTable('wishlists', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  productId: integer('product_id')
+    .references(() => products.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const rateLimits = pgTable('rate_limits', {
+  key: text('key').primaryKey(),
+  hits: integer('hits').notNull().default(1),
+  resetAt: timestamp('reset_at').notNull(),
+});
+
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));
 
-export const productsRelations = relations(products, ({ one }) => ({
+export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
     references: [categories.id],
   }),
+  reviews: many(reviews),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
+  wishlists: many(wishlists),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -182,6 +233,13 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
   product: one(products, {
     fields: [orderItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  product: one(products, {
+    fields: [reviews.productId],
     references: [products.id],
   }),
 }));

@@ -3,6 +3,11 @@ export interface ProductColorOption {
   hex: string;
 }
 
+export interface ProductSizeStock {
+  size: string;
+  stock: number;
+}
+
 export interface StoreSettings {
   id: number;
   storeName: string;
@@ -27,6 +32,16 @@ export interface StoreSettings {
   announcementText: string;
 }
 
+export interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+  country: string;
+  logoUrl: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -43,12 +58,18 @@ export interface Product {
   name: string;
   slug: string;
   sku: string;
+  brand: string;
+  model: string;
+  upperMaterial: string;
+  soleMaterial: string;
+  features: string[];
   description: string;
   fabricCare: string;
   price: number;
   discountPrice: number | null;
   stock: number;
   sizes: string[];
+  sizeInventory: ProductSizeStock[];
   colors: ProductColorOption[];
   images: string[];
   isNew: boolean;
@@ -77,6 +98,19 @@ export interface Discount {
   percent: number;
   minOrderAmount: number;
   isActive: boolean;
+}
+
+export interface Review {
+  id: number;
+  productId: number | null;
+  authorName: string;
+  rating: number;
+  comment: string;
+  verifiedPurchase: boolean;
+  isApproved: boolean;
+  createdAt: string;
+  productName?: string;
+  productSlug?: string;
 }
 
 export interface UserProfile {

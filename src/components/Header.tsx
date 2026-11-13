@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { Heart, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 interface HeaderProps {
@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearchSubmit }) => {
-  const { settings, cart, user, setIsCartOpen } = useStore();
+  const { settings, cart, wishlistIds, user, setIsCartOpen } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -20,8 +20,8 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
 
   const navLinks = [
     { label: 'خانه', path: '/' },
-    { label: 'فروشگاه', path: '/shop' },
-    { label: 'فروش ویژه', path: '/shop?discount=1' },
+    { label: 'فروشگاه کفش', path: '/shop' },
+    { label: 'تخفیف‌های ویژه', path: '/shop?discount=1' },
     { label: 'پیگیری سفارش', path: '/account?tab=track' },
     { label: 'مدیریت', path: '/admin' },
   ];
@@ -54,15 +54,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
       )}
 
       {/* Top Bar Contract: 3 zones separated by gap-8 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 md:gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
         {/* Zone 1: Brand Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <button
             type="button"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label={mobileMenuOpen ? 'بستن منو' : 'باز کردن منو'}
             aria-expanded={mobileMenuOpen}
-            className="md:hidden p-2 -ms-2 text-[#18181B] hover:bg-black/5 rounded-md min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="md:hidden p-1.5 -ms-1 text-[#18181B] hover:bg-black/5 rounded-md min-w-[38px] min-h-[38px] flex items-center justify-center shrink-0"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -73,17 +73,17 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               e.preventDefault();
               handleLinkClick('/');
             }}
-            className="font-display-serif text-xl sm:text-2xl font-semibold tracking-wider text-[#18181B] whitespace-nowrap shrink-0 flex items-center gap-2"
+            className="font-display-serif text-base sm:text-2xl font-semibold tracking-wide sm:tracking-wider text-[#18181B] whitespace-nowrap min-w-0 truncate flex items-center gap-1.5 sm:gap-2"
           >
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
                 alt={storeName}
                 referrerPolicy="no-referrer"
-                className="h-7 w-auto object-contain"
+                className="h-6 sm:h-7 w-auto object-contain shrink-0"
               />
             ) : null}
-            <span>{storeName}</span>
+            <span className="truncate">{storeName}</span>
           </a>
         </div>
 
@@ -117,16 +117,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
           })}
         </nav>
 
-        {/* Zone 3: Actions (Search, Account, Bag) */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Actions (Search, Wishlist, Account, Bag) */}
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            aria-label="جستجوی محصولات"
+            aria-label="جستجوی کفش و کتونی"
             aria-expanded={searchOpen}
-            className="p-2 text-[#18181B] hover:bg-black/5 rounded-md transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="p-1.5 sm:p-2 text-[#18181B] hover:bg-black/5 rounded-md transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
           >
             <Search className="w-[18px] h-[18px]" strokeWidth={1.75} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleLinkClick('/account?tab=wishlist')}
+            aria-label={`لیست علاقه‌مندی‌ها (${wishlistIds.length})`}
+            className="relative p-1.5 sm:p-2 text-[#18181B] hover:bg-black/5 rounded-md transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
+          >
+            <Heart className="w-[18px] h-[18px]" strokeWidth={1.75} />
+            {wishlistIds.length > 0 && (
+              <span className="absolute top-0.5 end-0.5 w-4 h-4 rounded-full bg-[#B5945B] text-white text-[10px] font-semibold flex items-center justify-center tabular-nums">
+                {new Intl.NumberFormat('fa-IR').format(wishlistIds.length)}
+              </span>
+            )}
           </button>
 
           <button
@@ -142,12 +156,12 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            aria-label={`سبد خرید (${totalQty} کالا)`}
+            aria-label={`سبد خرید (${totalQty} جفت)`}
             data-testid="cart-button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium bg-[#18181B] text-[#FAF7F2] rounded-md hover:bg-[#2A2A2E] transition-colors whitespace-nowrap shrink-0 min-h-[40px]"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs font-medium bg-[#18181B] text-[#FAF7F2] rounded-md hover:bg-[#2A2A2E] transition-colors whitespace-nowrap shrink-0 min-h-[38px] sm:min-h-[40px]"
           >
             <ShoppingBag className="w-4 h-4" strokeWidth={1.75} />
-            <span>سبد</span>
+            <span className="hidden sm:inline">سبد</span>
             <span className="tabular-nums font-semibold" data-testid="cart-count">
               {new Intl.NumberFormat('fa-IR').format(totalQty)}
             </span>
@@ -160,14 +174,14 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
         <div className="border-t border-black/[0.06] bg-white px-4 py-3">
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex items-center gap-2">
             <label htmlFor="header-search-input" className="sr-only">
-              جستجو در محصولات
+              جستجو در کفش‌ها و کتونی‌ها
             </label>
             <input
               id="header-search-input"
               type="search"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="جستجوی نام لباس، مدل یا جنس پارچه..."
+              placeholder="جستجوی نام کفش، کتونی، برند (مثلاً Nike) یا مدل..."
               autoFocus
               className="flex-1 h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
             />
@@ -197,6 +211,16 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               {link.label}
             </a>
           ))}
+          <a
+            href="/account?tab=wishlist"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLinkClick('/account?tab=wishlist');
+            }}
+            className="block px-3 py-2.5 text-sm font-medium text-[#18181B] hover:bg-[#FAF7F2] rounded-md"
+          >
+            علاقه‌مندی‌ها ({new Intl.NumberFormat('fa-IR').format(wishlistIds.length)})
+          </a>
           <a
             href="/account"
             onClick={(e) => {

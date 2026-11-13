@@ -85,7 +85,7 @@ function AppRouter() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--vera-bg)] text-[var(--vera-primary)]">
+    <div className="min-h-screen flex flex-col bg-[var(--vera-bg)] text-[var(--vera-primary)] overflow-x-clip">
       <Header currentPath={locationPath} onNavigate={navigate} onSearchSubmit={handleSearchSubmit} />
       <main className="flex-1">{content}</main>
       <Footer onNavigate={navigate} />

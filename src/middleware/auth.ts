@@ -20,14 +20,32 @@ export interface AuthRequest extends Request {
   user?: AuthenticatedUser;
 }
 
-const ADMIN_OWNER_EMAILS = new Set(['shayan.usefi6@gmail.com', 'admin@veraboutique.ir']);
+function getAdminOwnerEmails(): Set<string> {
+  const owners = new Set<string>(['shayan.usefi6@gmail.com']);
+  const envAdmin = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
+  if (envAdmin) {
+    owners.add(envAdmin);
+  }
+  return owners;
+}
 
 async function syncFirebaseUser(uid: string, email: string, name?: string): Promise<AuthenticatedUser> {
-  const defaultRole = ADMIN_OWNER_EMAILS.has(email.toLowerCase()) ? 'admin' : 'customer';
+  const normalizedEmail = email.toLowerCase();
+  const isOwnerAdmin = getAdminOwnerEmails().has(normalizedEmail);
+  const defaultRole = isOwnerAdmin ? 'admin' : 'customer';
+
   const existing = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
 
   if (existing.length > 0) {
-    const user = existing[0];
+    let user = existing[0];
+    if (isOwnerAdmin && user.role !== 'admin') {
+      const [promoted] = await db
+        .update(users)
+        .set({ role: 'admin' })
+        .where(eq(users.id, user.id))
+        .returning();
+      user = promoted;
+    }
     return {
       id: user.id,
       uid: user.uid,
@@ -44,14 +62,15 @@ async function syncFirebaseUser(uid: string, email: string, name?: string): Prom
     .insert(users)
     .values({
       uid,
-      email: email.toLowerCase(),
-      fullName: name || email.split('@')[0] || 'کاربر ورا',
+      email: normalizedEmail,
+      fullName: name || normalizedEmail.split('@')[0] || 'کاربر ورا',
       role: defaultRole,
     })
     .onConflictDoUpdate({
       target: users.email,
       set: {
         uid,
+        ...(isOwnerAdmin ? { role: 'admin' } : {}),
       },
     })
     .returning();
