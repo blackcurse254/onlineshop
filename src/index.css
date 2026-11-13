@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --vera-primary: #18181b;
+    --vera-accent: #b5945b;
+    --vera-bg: #faf7f2;
+    --font-sans: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    --font-display: 'Cormorant Garamond', 'Vazirmatn', serif;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--vera-bg);
+    color: var(--vera-primary);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--vera-bg);
+    color: var(--vera-primary);
+    overflow-x: hidden;
+  }
+}
+
+.font-display-serif {
+  font-family: var(--font-display);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

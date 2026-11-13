@@ -1,0 +1,6 @@
+{
+  "name": "VERA BOUTIQUE | فروشگاه اینترنتی پوشاک ورا",
+  "description": "فروشگاه اینترنتی پوشاک و استایل لوکس ورا بوتیک با طراحی فارسی راست‌چین، سبد خرید هوشمند، پیگیری سفارش و پنل مدیریت اختصاصی.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
