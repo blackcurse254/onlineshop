@@ -6,8 +6,8 @@ import {
   filterAndSortProducts,
   formatToman,
   getAvailableSizes,
+  getEffectiveTotalStock,
   getSizeStock,
-  getTotalStockFromSizes,
   type ProductSortOption,
 } from '../utils/commerce';
 import type { Product } from '../types/store';
@@ -47,8 +47,11 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
     setSelectedSize(params.get('size') || null);
     setSelectedColor(params.get('color') || null);
     setOnlyDiscounted(params.get('discount') === '1');
+    setOnlyInStock(false);
+    setMinPrice(null);
+    setMaxPrice(null);
     const s = params.get('sort') as ProductSortOption | null;
-    if (s) setSort(s);
+    setSort(s || 'newest');
   }, [queryString]);
 
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -64,7 +67,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
   const availableShoeSizes = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
-      p.sizes.forEach((s) => set.add(s));
+      (p.sizeInventory || []).forEach((entry) => {
+        if (entry.stock > 0) set.add(entry.size);
+      });
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
   }, [products]);
@@ -108,18 +113,18 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
     ]
   );
 
-  const handleQuickAdd = (product: Product) => {
-    const totalStock =
-      product.sizeInventory && product.sizeInventory.length > 0
-        ? getTotalStockFromSizes(product.sizeInventory)
-        : product.stock;
+  const handleQuickAdd = (product: Product, cardChosenSize?: string) => {
+    const totalStock = getEffectiveTotalStock(product);
     if (totalStock <= 0) return;
 
     const available = getAvailableSizes(product);
     const chosenSize =
-      selectedSize && available.includes(selectedSize)
-        ? selectedSize
-        : available[0] || product.sizes[0] || '41';
+      cardChosenSize && available.includes(cardChosenSize)
+        ? cardChosenSize
+        : selectedSize && available.includes(selectedSize)
+          ? selectedSize
+          : available[0];
+    if (!chosenSize) return;
     const maxStock = getSizeStock(product, chosenSize);
     if (maxStock <= 0) return;
 
@@ -195,10 +200,16 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
             <button
               type="button"
               onClick={() => setMobileFiltersOpen((v) => !v)}
+              aria-expanded={mobileFiltersOpen}
+              aria-controls="shop-filters-panel"
+              data-testid="mobile-filters-toggle"
               className="md:hidden inline-flex items-center gap-1.5 h-10 px-3 text-xs font-medium bg-white border border-black/15 rounded-md"
             >
               <Filter className="w-3.5 h-3.5" />
               <span>فیلترها</span>
+              {hasActiveFilters && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#B5945B]" aria-hidden="true" />
+              )}
             </button>
 
             <label htmlFor="shop-sort-select" className="text-xs text-[#6B665F] whitespace-nowrap">
@@ -222,6 +233,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
       {/* Filter Bar (always open on md+, collapsible on mobile) */}
       <div
+        id="shop-filters-panel"
         className={`${
           mobileFiltersOpen ? 'block' : 'hidden md:block'
         } bg-white border border-black/[0.06] rounded-lg p-4 sm:p-5 space-y-4`}
@@ -401,6 +413,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               key={product.id}
               product={product}
               category={product.categoryId ? categoryMap.get(product.categoryId) : undefined}
+              preferredSize={selectedSize}
               onNavigate={onNavigate}
               onQuickAdd={handleQuickAdd}
             />

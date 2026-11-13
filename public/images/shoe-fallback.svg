@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#F4EFE6" />
+  <circle cx="200" cy="148" r="92" fill="#EAE2D3" />
+  <path
+    d="M92 174C92 162 104 152 122 146C146 138 164 114 176 98C181 92 189 92 194 98C207 115 227 124 252 124C268 124 282 119 292 112C298 108 306 112 308 120C313 142 314 162 308 178C304 188 293 194 278 194H112C99 194 92 186 92 174Z"
+    fill="#FAF7F2"
+    stroke="#18181B"
+    stroke-width="3.5"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M94 180H307C307 190 299 196 286 196H110C99 196 94 190 94 180Z"
+    fill="#18181B"
+  />
+  <path d="M168 120L192 134M156 132L180 146" stroke="#B5945B" stroke-width="3" stroke-linecap="round" />
+  <text x="200" y="242" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" letter-spacing="4" fill="#6B6459">ADONIS</text>
+</svg>

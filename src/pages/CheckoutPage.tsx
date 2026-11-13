@@ -36,11 +36,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() =>
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `ord-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  );
   const [completedOrder, setCompletedOrder] = useState<{
     order: Order;
     items: OrderItem[];
     notice: string;
   } | null>(null);
+
+  const cartSignature = cart.map((c) => `${c.key}:${c.quantity}`).join('|');
+
+  useEffect(() => {
+    setIdempotencyKey(
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `ord-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    );
+  }, [cartSignature]);
 
   useEffect(() => {
     if (user) {
@@ -113,6 +128,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
       const res = await apiFetch<{ order: Order; items: OrderItem[]; notice: string }>('/api/orders', {
         method: 'POST',
         body: JSON.stringify({
+          idempotencyKey,
           customerName,
           customerPhone,
           customerAddress,
@@ -424,7 +440,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
 
           <div className="pt-3 border-t border-black/[0.06] space-y-2">
             <label htmlFor="coupon-code" className="block text-xs font-medium text-[#18181B]">
-              کد تخفیف (نمونه: VERA15)
+              کد تخفیف (نمونه: ADONIS15)
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -435,7 +451,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                   dir="ltr"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value)}
-                  placeholder="VERA15"
+                  placeholder="ADONIS15"
                   className="w-full h-9 ps-8 pe-3 text-xs uppercase bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
                 />
               </div>

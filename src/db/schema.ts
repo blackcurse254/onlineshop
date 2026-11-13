@@ -34,26 +34,26 @@ export const users = pgTable('users', {
 
 export const storeSettings = pgTable('store_settings', {
   id: serial('id').primaryKey(),
-  storeName: text('store_name').notNull().default('VERA BOUTIQUE'),
+  storeName: text('store_name').notNull().default('ADONIS'),
   storeSubtitle: text('store_subtitle').notNull().default('فروشگاه تخصصی کفش و کتونی'),
-  logoText: text('logo_text').notNull().default('VERA'),
+  logoText: text('logo_text').notNull().default('ADONIS'),
   logoUrl: text('logo_url').notNull().default(''),
   primaryColor: text('primary_color').notNull().default('#18181B'),
   accentColor: text('accent_color').notNull().default('#B5945B'),
   backgroundColor: text('background_color').notNull().default('#FAF7F2'),
-  phone: text('phone').notNull().default('021-88451290'),
-  email: text('email').notNull().default('hello@verashoes.ir'),
-  instagram: text('instagram').notNull().default('@vera.shoes.ir'),
-  telegram: text('telegram').notNull().default('@verashoes_support'),
-  whatsapp: text('whatsapp').notNull().default('09120004512'),
-  address: text('address').notNull().default('تهران، جردن، بلوار ناهید شرقی، پلاک ۱۸، طبقه اول'),
+  phone: text('phone').notNull().default(''),
+  email: text('email').notNull().default(''),
+  instagram: text('instagram').notNull().default(''),
+  telegram: text('telegram').notNull().default(''),
+  whatsapp: text('whatsapp').notNull().default(''),
+  address: text('address').notNull().default(''),
   shippingBaseCost: integer('shipping_base_cost').notNull().default(85000),
   expressShippingCost: integer('express_shipping_cost').notNull().default(165000),
   freeShippingThreshold: integer('free_shipping_threshold').notNull().default(4500000),
   aboutText: text('about_text')
     .notNull()
     .default(
-      'فروشگاه تخصصی کفش و کتونی ورا با تمرکز بر ارگونومی پا، متریال چرم طبیعی و زیره‌های استاندارد، مجموعه‌ای منتخب از کتونی‌های روزمره، ورزشی و کفش‌های رسمی را عرضه می‌کند.'
+      'فروشگاه تخصصی کفش و کتونی ADONIS با تمرکز بر ارگونومی پا، متریال چرم طبیعی و زیره‌های استاندارد، مجموعه‌ای منتخب از کتونی‌های روزمره، ورزشی و کفش‌های رسمی را عرضه می‌کند.'
     ),
   shippingPolicy: text('shipping_policy')
     .notNull()
@@ -65,7 +65,7 @@ export const storeSettings = pgTable('store_settings', {
     .default('امکان تعویض سایز کفش یا مرجوعی تا ۷ روز پس از تحویل در صورت استفاده نشدن در فضای باز فراهم است.'),
   announcementText: text('announcement_text')
     .notNull()
-    .default('ارسال رایگان کفش برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف فصل: VERA15'),
+    .default('ارسال رایگان کفش برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف فصل: ADONIS15'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
@@ -95,7 +95,7 @@ export const products = pgTable('products', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   sku: text('sku').notNull(),
-  brand: text('brand').notNull().default('VERA Studio'),
+  brand: text('brand').notNull().default('ADONIS Studio'),
   model: text('model').notNull().default(''),
   upperMaterial: text('upper_material').notNull().default(''),
   soleMaterial: text('sole_material').notNull().default(''),
@@ -141,6 +141,7 @@ export const discounts = pgTable('discounts', {
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
   orderNumber: text('order_number').notNull().unique(),
+  idempotencyKey: text('idempotency_key'),
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone').notNull(),
@@ -199,6 +200,17 @@ export const rateLimits = pgTable('rate_limits', {
   key: text('key').primaryKey(),
   hits: integer('hits').notNull().default(1),
   resetAt: timestamp('reset_at').notNull(),
+});
+
+export const passwordResets = pgTable('password_resets', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

@@ -24,8 +24,10 @@
    ```
    متغیرهای مهم امنیتی:
    - `SESSION_SECRET`: رشته تصادفی حداقل ۳۲ کاراکتری (در حالت `production` اجباری است؛ در صورت نبود آن، سرور اجرا نمی‌شود).
+   - `APP_URL` و `ALLOWED_ORIGINS`: آدرس رسمی سایت و فهرست دامنه‌های مجاز (`http://` یا `https://`) برای اعتبارسنجی دقیق CORS و CSRF.
+   - `ADMIN_EMAILS`: ایمیل‌های مجاز مدیر (با کاما جدا شوند). هیچ ایمیل ثابتی در کد قرار ندارد و تنها ایمیل‌های تاییدشده از متغیرهای محیطی مجوز مدیر دریافت می‌کنند.
    - `INITIAL_ADMIN_EMAIL` و `INITIAL_ADMIN_PASSWORD`: ایمیل و رمز عبور قوی (حداقل ۱۲ کاراکتر) برای ایجاد حساب مدیر اولیه هنگام راه‌اندازی.
-   - `PGHOST`، `PGPORT`، `PGDATABASE`، `PGUSER`، `PGPASSWORD` (یا اتصال Cloud SQL).
+   - `SQL_HOST`، `SQL_DB_NAME`، `SQL_USER`، `SQL_PASSWORD` (اتصال Cloud SQL PostgreSQL).
 
 3. اعمال اسکیمای PostgreSQL با Drizzle:
    ```bash
@@ -40,15 +42,24 @@
    npm start
    ```
 
+## معماری امنیتی و منطق موجودی
+
+- **موجودی مستقل سایزها**: در نبود `sizeInventory`، موجودی کلی هرگز برای سایزها تکرار نمی‌شود. تابع `migrateLegacyProductsSizeInventory` محصولات قدیمی را با حفظ مجموع کل موجودی (بدون افزایش ناخواسته) مهاجرت می‌دهد.
+- **ثبت سفارش و جلوگیری از تکرار**: سفارش‌ها با `idempotencyKey` یکتا، تولید شماره سفارش مقاوم در برابر برخورد و تراکنش `SELECT ... FOR UPDATE` ثبت می‌شوند؛ خطای موجودی یا اعتبارسنجی کل تراکنش را برمی‌گرداند.
+- **محدودیت نرخ درخواست پایدار (Multi-Instance)**: تمام مسیرهای حساس (ورود، ثبت‌نام، بازیابی رمز عبور، ثبت سفارش، پیگیری، بررسی کد تخفیف و آپلود فایل) به جدول `rate_limits` در PostgreSQL متصل هستند و در صورت اختلال دیتابیس به‌صورت امن (`503 Fail-Closed`) رفتار می‌کنند.
+- **محافظت CSRF و کوکی‌ها**: درخواست‌های تغییردهنده مبتنی بر کوکی بدون `Origin`/`Referer` معتبر یا با `Sec-Fetch-Site: cross-site` مسدود می‌شوند (`403`). کوکی نشست با `HttpOnly`، `SameSite=Lax` و `Secure` (در HTTPS/تولید) تنظیم و هنگام خروج با همان تنظیمات پاک می‌شود.
+
 ## تست‌ها
 
 ```bash
+npm run lint
+npm run build
 npx --yes tsx --test src/utils/commerce.test.ts
 ```
 
 ## توصیه‌های امنیتی پس از عمومی‌شدن مخزن
 
 اگر مخزن گیت‌هاب پروژه به‌صورت عمومی (Public) منتشر شده است:
-1. هرگز فایل `.env` یا کلیدهای محرمانه (`SESSION_SECRET`, `PGPASSWORD`, رمزهای ادمین، یا Service Account JSON) را در گیت کامیت نکنید. اگر قبلاً چنین مقادیری در تاریخچه گیت قرار گرفته‌اند، فوراً آن‌ها را **Rotate** (تغییر/تولید مجدد) کنید.
+1. هرگز فایل `.env` یا کلیدهای محرمانه (`SESSION_SECRET`, `SQL_PASSWORD`, رمزهای ادمین، یا Service Account JSON) را در گیت کامیت نکنید. اگر قبلاً چنین مقادیری در تاریخچه گیت قرار گرفته‌اند، فوراً آن‌ها را **Rotate** (تغییر/تولید مجدد) کنید.
 2. فایل `firebase-applet-config.json` شامل تنظیمات عمومی کلاینت Firebase Web SDK است؛ برای جلوگیری از سوءاستفاده احتمالی، در **Google Cloud Console → APIs & Services → Credentials** بر روی Web API Key محدودیت دامنه (**HTTP Referrer Restrictions**) اعمال کنید.
 3. در محیط عملیاتی (`NODE_ENV=production`) حتماً `APP_URL` و `SESSION_SECRET` معتبر تنظیم کنید تا بررسی CSRF Origin، کوکی `Secure` و محدودیت CORS به‌درستی فعال بمانند.

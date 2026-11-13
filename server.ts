@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from './src/db/index.ts';
 import {
@@ -13,6 +13,7 @@ import {
   discounts,
   orderItems,
   orders,
+  passwordResets,
   products,
   reviews,
   storeSettings,
@@ -24,7 +25,9 @@ import { optionalAuth, requireAdmin, requireAuth, type AuthRequest } from './src
 import {
   consumeRateLimit,
   corsMiddleware,
+  hashOpaqueToken,
   hashPassword,
+  isSafeUrlOrPath,
   rateLimit,
   sanitizeString,
   SESSION_COOKIE_NAME,
@@ -40,6 +43,7 @@ import {
   getEffectivePrice,
   getTotalStockFromSizes,
   normalizeDigits,
+  normalizeSizeInventory,
   validateIranianPhone,
   validateIranianPostalCode,
 } from './src/utils/commerce.ts';
@@ -68,6 +72,7 @@ app.post(
   '/api/admin/upload',
   cookieParser(),
   verifyCsrfOrigin,
+  rateLimit({ windowMs: 60_000 * 10, max: 30, keyPrefix: 'admin-upload' }),
   express.json({ limit: '4mb' }),
   requireAdmin,
   async (req, res) => {
@@ -83,7 +88,10 @@ app.post(
         sizeBytes: saved.sizeBytes,
       });
     } catch (err: any) {
-      return res.status(400).json({ error: err?.message || 'خطا در آپلود تصویر.' });
+      const msg = typeof err?.message === 'string' && err.message.startsWith('حجم') || err?.message?.startsWith('فرمت')
+        ? err.message
+        : 'خطا در آپلود تصویر.';
+      return res.status(400).json({ error: msg });
     }
   }
 );
@@ -98,21 +106,35 @@ app.use(
   express.static(UPLOAD_DIR, {
     setHeaders: (res) => {
       res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
       res.setHeader('Cache-Control', 'public, max-age=604800');
     },
   })
 );
 
-const isSecureCookie = process.env.NODE_ENV === 'production';
+function getSessionCookieOptions(req: express.Request): express.CookieOptions {
+  const isHttps =
+    process.env.NODE_ENV === 'production' ||
+    req.secure ||
+    req.headers['x-forwarded-proto'] === 'https';
 
-function setSessionCookie(res: express.Response, user: { id: number; uid: string; role: string }) {
-  const token = signSessionToken({ userId: user.id, uid: user.uid, role: user.role });
-  res.cookie(SESSION_COOKIE_NAME, token, {
+  return {
     httpOnly: true,
     sameSite: 'lax',
-    secure: isSecureCookie,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    secure: isHttps,
     path: '/',
+  };
+}
+
+function setSessionCookie(
+  req: express.Request,
+  res: express.Response,
+  user: { id: number; uid: string; role: string }
+) {
+  const token = signSessionToken({ userId: user.id, uid: user.uid, role: user.role });
+  res.cookie(SESSION_COOKIE_NAME, token, {
+    ...getSessionCookieOptions(req),
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   });
 }
 
@@ -433,7 +455,7 @@ app.post(
           role: users.role,
         });
 
-      setSessionCookie(res, created);
+      setSessionCookie(req, res, created);
       res.status(201).json({ user: created });
     } catch (err) {
       next(err);
@@ -459,7 +481,12 @@ app.post(
 
       const email = parsed.data.email.trim().toLowerCase();
       const ip = req.ip || req.socket.remoteAddress || 'unknown';
-      const emailThrottle = await consumeRateLimit(`login-acct:${email}:${ip}`, 15 * 60_000, 8);
+      const emailThrottle = await consumeRateLimit(`login-acct:${email}:${ip}`, 15 * 60_000, 8, 'fail-closed');
+      if (emailThrottle.dbUnavailable) {
+        return res.status(503).json({
+          error: 'سرویس کنترل امنیت موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.',
+        });
+      }
       if (!emailThrottle.allowed) {
         return res.status(429).json({
           error: 'تلاش‌های ناموفق بیش از حد مجاز بوده است. لطفاً ۱۵ دقیقه دیگر دوباره امتحان کنید.',
@@ -487,7 +514,7 @@ app.post(
         role: userRow.role,
       };
 
-      setSessionCookie(res, safeUser);
+      setSessionCookie(req, res, safeUser);
       res.json({ user: safeUser });
     } catch (err) {
       next(err);
@@ -495,8 +522,136 @@ app.post(
   }
 );
 
-app.post('/api/auth/logout', (_req, res) => {
-  res.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+const forgotPasswordSchema = z.object({
+  email: z.string().email('ایمیل معتبر نیست').max(120),
+});
+
+app.post(
+  '/api/auth/forgot-password',
+  rateLimit({ windowMs: 15 * 60_000, max: 10, keyPrefix: 'forgot-ip' }),
+  async (req, res, next) => {
+    try {
+      await ensureSeeded();
+      const parsed = forgotPasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.issues[0]?.message || 'ایمیل معتبر وارد کنید.' });
+      }
+
+      const email = parsed.data.email.trim().toLowerCase();
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      const emailThrottle = await consumeRateLimit(`forgot-acct:${email}:${ip}`, 15 * 60_000, 5, 'fail-closed');
+      if (emailThrottle.dbUnavailable) {
+        return res.status(503).json({
+          error: 'سرویس کنترل امنیت موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.',
+        });
+      }
+      if (!emailThrottle.allowed) {
+        return res.status(429).json({
+          error: 'درخواست‌های بازیابی رمز بیش از حد مجاز بوده است. لطفاً ۱۵ دقیقه دیگر تلاش کنید.',
+        });
+      }
+
+      const found = await db
+        .select({ id: users.id, passwordHash: users.passwordHash })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (found.length > 0 && found[0].passwordHash) {
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = hashOpaqueToken(rawToken);
+        const expiresAt = new Date(Date.now() + 15 * 60_000);
+
+        await db.transaction(async (tx) => {
+          await tx
+            .update(passwordResets)
+            .set({ usedAt: new Date() })
+            .where(and(eq(passwordResets.userId, found[0].id), isNull(passwordResets.usedAt)));
+          await tx.insert(passwordResets).values({
+            userId: found[0].id,
+            tokenHash,
+            expiresAt,
+          });
+        });
+      }
+
+      // Generic non-enumerating response; raw token is never exposed in API output
+      res.json({
+        ok: true,
+        message: 'در صورت ثبت این ایمیل با رمز عبور در سیستم، دستورالعمل بازیابی رمز عبور صادر خواهد شد.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(32, 'کد بازیابی نامعتبر است').max(200),
+  newPassword: z.string().min(8, 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد').max(100),
+});
+
+app.post(
+  '/api/auth/reset-password',
+  rateLimit({ windowMs: 15 * 60_000, max: 10, keyPrefix: 'reset-ip' }),
+  async (req, res, next) => {
+    try {
+      await ensureSeeded();
+      const parsed = resetPasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.issues[0]?.message || 'اطلاعات بازیابی نامعتبر است.' });
+      }
+
+      const tokenHash = hashOpaqueToken(parsed.data.token.trim());
+      const now = new Date();
+
+      const updatedUserId = await db.transaction(async (tx) => {
+        const found = await tx
+          .select()
+          .from(passwordResets)
+          .where(
+            and(
+              eq(passwordResets.tokenHash, tokenHash),
+              isNull(passwordResets.usedAt),
+              gt(passwordResets.expiresAt, now)
+            )
+          )
+          .limit(1);
+
+        if (found.length === 0) {
+          return null;
+        }
+
+        const record = found[0];
+        await tx
+          .update(users)
+          .set({ passwordHash: hashPassword(parsed.data.newPassword) })
+          .where(eq(users.id, record.userId));
+
+        await tx
+          .update(passwordResets)
+          .set({ usedAt: now })
+          .where(and(eq(passwordResets.userId, record.userId), isNull(passwordResets.usedAt)));
+
+        return record.userId;
+      });
+
+      if (!updatedUserId) {
+        return res.status(400).json({ error: 'توکن بازیابی رمز عبور نامعتبر یا منقضی شده است.' });
+      }
+
+      res.json({
+        ok: true,
+        message: 'رمز عبور با موفقیت تغییر یافت. اکنون می‌توانید با رمز جدید وارد شوید.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie(SESSION_COOKIE_NAME, getSessionCookieOptions(req));
   res.json({ ok: true });
 });
 
@@ -553,6 +708,7 @@ app.put('/api/auth/profile', requireAuth, async (req: AuthRequest, res, next) =>
 // ---------- Checkout & Order Tracking ----------
 
 const createOrderSchema = z.object({
+  idempotencyKey: z.string().min(8).max(80).optional(),
   customerName: z.string().min(2, 'نام خریدار الزامی است').max(80),
   customerPhone: z.string().min(10).max(20),
   customerAddress: z.string().min(8, 'آدرس کامل پستی الزامی است').max(400),
@@ -595,12 +751,62 @@ app.post(
         return res.status(400).json({ error: 'کد پستی باید دقیقاً ۱۰ رقم باشد.' });
       }
 
+      const cleanIdempotencyKey = parsed.data.idempotencyKey
+        ? sanitizeString(parsed.data.idempotencyKey)
+        : null;
+
+      // Consolidate duplicate line items matching same (productId, size, color)
+      const consolidatedMap = new Map<
+        string,
+        { productId: number; selectedSize: string; selectedColor: string; quantity: number }
+      >();
+      for (const rawItem of parsed.data.items) {
+        const cleanSize = sanitizeString(rawItem.selectedSize);
+        const cleanColor = sanitizeString(rawItem.selectedColor);
+        const key = `${rawItem.productId}::${cleanSize}::${cleanColor}`;
+        const existing = consolidatedMap.get(key);
+        if (existing) {
+          existing.quantity += rawItem.quantity;
+        } else {
+          consolidatedMap.set(key, {
+            productId: rawItem.productId,
+            selectedSize: cleanSize,
+            selectedColor: cleanColor,
+            quantity: rawItem.quantity,
+          });
+        }
+      }
+      const consolidatedItems = Array.from(consolidatedMap.values());
+      for (const item of consolidatedItems) {
+        if (item.quantity > 20) {
+          return res.status(400).json({ error: 'حداکثر تعداد مجاز از هر سایز در یک سفارش ۲۰ جفت است.' });
+        }
+      }
+
       const result = await db.transaction(async (tx) => {
+        if (cleanIdempotencyKey) {
+          await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${cleanIdempotencyKey}))`);
+          const duplicate = await tx
+            .select()
+            .from(orders)
+            .where(eq(orders.idempotencyKey, cleanIdempotencyKey))
+            .limit(1);
+
+          if (duplicate.length > 0) {
+            const existingOrder = duplicate[0];
+            const existingItems = await tx
+              .select()
+              .from(orderItems)
+              .where(eq(orderItems.orderId, existingOrder.id));
+            return { order: existingOrder, items: existingItems, deduplicated: true };
+          }
+        }
+
         const settingsList = await tx.select().from(storeSettings).limit(1);
         const settings = settingsList[0];
 
         // Deterministic product ID ordering prevents deadlocks while FOR UPDATE prevents concurrent overselling
-        const productIds = [...new Set(parsed.data.items.map((i) => i.productId))].sort((a, b) => a - b);
+        const productIds = [...new Set(consolidatedItems.map((i) => i.productId))].sort((a, b) => a - b);
         const lockedProducts = await tx
           .select()
           .from(products)
@@ -614,28 +820,35 @@ app.post(
           { sizeInventory: { size: string; stock: number }[]; totalStock: number }
         >();
 
-        for (const item of parsed.data.items) {
+        for (const item of consolidatedItems) {
           const prod = productMap.get(item.productId);
           if (!prod || !prod.isActive) {
             throw Object.assign(new Error('یکی از محصولات سبد خرید دیگر موجود نیست.'), { statusCode: 400 });
           }
 
-          const cleanSize = sanitizeString(item.selectedSize);
-          const hasColor = prod.colors.some((c) => c.name === sanitizeString(item.selectedColor));
+          if (!Array.isArray(prod.sizeInventory) || prod.sizeInventory.length === 0) {
+            throw Object.assign(
+              new Error(`موجودی مستقل سایزها برای کفش «${prod.name}» هنوز پیکربندی نشده است.`),
+              { statusCode: 400 }
+            );
+          }
+
+          const hasColor = prod.colors.some((c) => c.name === item.selectedColor);
           if (!hasColor && prod.colors.length > 0) {
             throw Object.assign(new Error(`رنگ انتخاب‌شده برای «${prod.name}» معتبر نیست.`), { statusCode: 400 });
           }
 
           const currentState = updatedInventories.get(prod.id) ?? {
-            sizeInventory:
-              prod.sizeInventory && prod.sizeInventory.length > 0
-                ? prod.sizeInventory
-                : prod.sizes.map((s) => ({ size: s, stock: prod.stock })),
-            totalStock: prod.stock,
+            sizeInventory: prod.sizeInventory,
+            totalStock: getTotalStockFromSizes(prod.sizeInventory),
           };
 
           try {
-            const decremented = decrementSizeInventory(currentState.sizeInventory, cleanSize, item.quantity);
+            const decremented = decrementSizeInventory(
+              currentState.sizeInventory,
+              item.selectedSize,
+              item.quantity
+            );
             updatedInventories.set(prod.id, {
               sizeInventory: decremented.nextSizeInventory,
               totalStock: decremented.nextTotalStock,
@@ -647,14 +860,14 @@ app.post(
           }
         }
 
-        const lineItems = parsed.data.items.map((item) => {
+        const lineItems = consolidatedItems.map((item) => {
           const prod = productMap.get(item.productId)!;
           return {
             productId: prod.id,
             productName: prod.name,
             productImage: prod.images[0] || '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
-            selectedSize: sanitizeString(item.selectedSize),
-            selectedColor: sanitizeString(item.selectedColor),
+            selectedSize: item.selectedSize,
+            selectedColor: item.selectedColor,
             quantity: item.quantity,
             price: prod.price,
             discountPrice: prod.discountPrice,
@@ -697,6 +910,25 @@ app.post(
           throw Object.assign(new Error('مبلغ سبد خرید به حداقل مجاز کد تخفیف نمی‌رسد.'), { statusCode: 400 });
         }
 
+        // Generate unique high-entropy order number with collision retry before persisting
+        const dateTag = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+        let orderNumber = '';
+        for (let attempt = 0; attempt < 6; attempt++) {
+          const candidate = `ADONIS-${dateTag}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+          const clash = await tx
+            .select({ id: orders.id })
+            .from(orders)
+            .where(eq(orders.orderNumber, candidate))
+            .limit(1);
+          if (clash.length === 0) {
+            orderNumber = candidate;
+            break;
+          }
+        }
+        if (!orderNumber) {
+          throw new Error('خطا در تولید شماره سفارش یکتا.');
+        }
+
         // Persist updated per-size inventories and aggregate stock atomically inside transaction
         for (const [pid, inv] of updatedInventories.entries()) {
           await tx
@@ -709,12 +941,11 @@ app.post(
             .where(eq(products.id, pid));
         }
 
-        const orderNumber = `VERA-${crypto.randomInt(100000, 999999)}`;
-
         const [createdOrder] = await tx
           .insert(orders)
           .values({
             orderNumber,
+            idempotencyKey: cleanIdempotencyKey,
             userId: req.user?.id ?? null,
             customerName: sanitizeString(parsed.data.customerName),
             customerPhone: phone,
@@ -749,12 +980,13 @@ app.post(
           )
           .returning();
 
-        return { order: createdOrder, items: insertedItems };
+        return { order: createdOrder, items: insertedItems, deduplicated: false };
       });
 
-      res.status(201).json({
+      res.status(result.deduplicated ? 200 : 201).json({
         order: result.order,
         items: result.items,
+        deduplicated: result.deduplicated,
         isDemoPayment: true,
         notice: 'سفارش شما با پرداخت آزمایشی (شبیه‌سازی شده) ثبت شد. هیچ تراکنش بانکی واقعی انجام نشده است.',
       });
@@ -826,7 +1058,22 @@ app.post(
 
       const order = found[0];
       const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
-      res.json({ order: { ...order, items } });
+      res.json({
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          shippingMethod: order.shippingMethod,
+          shippingCost: order.shippingCost,
+          subtotal: order.subtotal,
+          discountAmount: order.discountAmount,
+          totalAmount: order.totalAmount,
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.orderStatus,
+          createdAt: order.createdAt,
+          items,
+        },
+      });
     } catch (err) {
       next(err);
     }
@@ -903,6 +1150,12 @@ app.get('/api/admin/overview', requireAdmin, async (_req, res, next) => {
   }
 });
 
+const safeUrlSchema = z
+  .string()
+  .min(3)
+  .max(500)
+  .refine(isSafeUrlOrPath, 'آدرس تصویر یا لینک باید مسیر داخلی معتبر یا http/https باشد');
+
 const productUpsertSchema = z.object({
   categoryId: z.number().int().positive().nullable(),
   name: z.string().min(2).max(140),
@@ -926,7 +1179,7 @@ const productUpsertSchema = z.object({
     )
     .min(1, 'حداقل یک سایز کفش وارد کنید'),
   colors: z.array(z.object({ name: z.string().min(1).max(40), hex: z.string().min(4).max(15) })).min(1),
-  images: z.array(z.string().min(3).max(500)).min(1),
+  images: z.array(safeUrlSchema).min(1),
   isNew: z.boolean().default(false),
   isBestseller: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
@@ -940,10 +1193,14 @@ app.post('/api/admin/products', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ error: parsed.error.issues[0]?.message || 'مشخصات محصول نامعتبر است.' });
     }
     const d = parsed.data;
-    const cleanSizeInventory = d.sizeInventory.map((s) => ({
-      size: sanitizeString(s.size),
-      stock: Math.max(0, Math.floor(s.stock)),
-    }));
+    let cleanSizeInventory;
+    try {
+      cleanSizeInventory = normalizeSizeInventory(
+        d.sizeInventory.map((s) => ({ size: sanitizeString(s.size), stock: s.stock }))
+      );
+    } catch (sizeErr: any) {
+      return res.status(400).json({ error: sizeErr?.message || 'سایزبندی نامعتبر است.' });
+    }
     const computedTotalStock = getTotalStockFromSizes(cleanSizeInventory);
 
     const [created] = await db
@@ -991,10 +1248,14 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ error: parsed.error.issues[0]?.message || 'مشخصات محصول نامعتبر است.' });
     }
     const d = parsed.data;
-    const cleanSizeInventory = d.sizeInventory.map((s) => ({
-      size: sanitizeString(s.size),
-      stock: Math.max(0, Math.floor(s.stock)),
-    }));
+    let cleanSizeInventory;
+    try {
+      cleanSizeInventory = normalizeSizeInventory(
+        d.sizeInventory.map((s) => ({ size: sanitizeString(s.size), stock: s.stock }))
+      );
+    } catch (sizeErr: any) {
+      return res.status(400).json({ error: sizeErr?.message || 'سایزبندی نامعتبر است.' });
+    }
     const computedTotalStock = getTotalStockFromSizes(cleanSizeInventory);
 
     const [updated] = await db
@@ -1050,7 +1311,7 @@ const categorySchema = z.object({
   name: z.string().min(2).max(80),
   slug: z.string().min(2).max(80),
   description: z.string().max(300).optional().default(''),
-  imageUrl: z.string().min(3).max(500),
+  imageUrl: safeUrlSchema,
   sortOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
 });
@@ -1121,7 +1382,12 @@ const brandSchema = z.object({
   name: z.string().min(2).max(80),
   slug: z.string().min(2).max(80),
   country: z.string().max(60).optional().default(''),
-  logoUrl: z.string().max(500).optional().default(''),
+  logoUrl: z
+    .string()
+    .max(500)
+    .optional()
+    .default('')
+    .refine((v) => !v.trim() || isSafeUrlOrPath(v), 'آدرس لوگو نامعتبر است'),
   sortOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
 });
@@ -1272,8 +1538,8 @@ const bannerSchema = z.object({
   title: z.string().min(2).max(140),
   subtitle: z.string().min(2).max(300),
   ctaText: z.string().min(2).max(60),
-  ctaLink: z.string().min(1).max(200),
-  imageUrl: z.string().min(3).max(500),
+  ctaLink: safeUrlSchema,
+  imageUrl: safeUrlSchema,
   position: z.enum(['hero', 'promo']),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
@@ -1338,16 +1604,26 @@ const settingsUpdateSchema = z.object({
   storeName: z.string().min(2).max(80),
   storeSubtitle: z.string().min(2).max(120),
   logoText: z.string().min(1).max(30),
-  logoUrl: z.string().max(500).optional().default(''),
+  logoUrl: z
+    .string()
+    .max(500)
+    .optional()
+    .default('')
+    .refine((v) => !v.trim() || isSafeUrlOrPath(v), 'آدرس لوگو نامعتبر است'),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-  phone: z.string().min(3).max(40),
-  email: z.string().email().max(120),
-  instagram: z.string().max(80),
-  telegram: z.string().max(80),
-  whatsapp: z.string().max(40),
-  address: z.string().min(5).max(300),
+  phone: z.string().max(40).optional().default(''),
+  email: z
+    .string()
+    .max(120)
+    .optional()
+    .default('')
+    .refine((v) => !v.trim() || z.string().email().safeParse(v.trim()).success, 'فرمت ایمیل نامعتبر است'),
+  instagram: z.string().max(80).optional().default(''),
+  telegram: z.string().max(80).optional().default(''),
+  whatsapp: z.string().max(40).optional().default(''),
+  address: z.string().max(300).optional().default(''),
   shippingBaseCost: z.number().int().nonnegative(),
   expressShippingCost: z.number().int().nonnegative(),
   freeShippingThreshold: z.number().int().nonnegative(),
@@ -1431,7 +1707,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`VERA BOUTIQUE server running on http://0.0.0.0:${PORT}`);
+    console.log(`ADONIS server running on http://0.0.0.0:${PORT}`);
   });
 }
 

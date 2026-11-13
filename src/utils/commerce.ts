@@ -66,25 +66,89 @@ export function calculateDiscountPercent(price: number, discountPrice: number | 
 }
 
 export function getTotalStockFromSizes(sizeInventory: ProductSizeStockInput[]): number {
-  return sizeInventory.reduce((sum, entry) => sum + Math.max(0, Math.floor(entry.stock)), 0);
+  if (!Array.isArray(sizeInventory) || sizeInventory.length === 0) return 0;
+  return sizeInventory.reduce((sum, entry) => {
+    const s = Number.isFinite(entry.stock) ? Math.max(0, Math.floor(entry.stock)) : 0;
+    return sum + s;
+  }, 0);
+}
+
+export function getEffectiveTotalStock(
+  product: Pick<ProductFilterItem, 'sizeInventory'>
+): number {
+  return getTotalStockFromSizes(product.sizeInventory ?? []);
 }
 
 export function getSizeStock(
-  product: Pick<ProductFilterItem, 'sizeInventory' | 'stock'>,
+  product: Pick<ProductFilterItem, 'sizeInventory'>,
   size: string
 ): number {
-  if (product.sizeInventory && product.sizeInventory.length > 0) {
-    const match = product.sizeInventory.find((s) => s.size === size);
-    return match ? Math.max(0, match.stock) : 0;
+  if (!Array.isArray(product.sizeInventory) || product.sizeInventory.length === 0) {
+    // Never repeat aggregate stock across sizes when sizeInventory is absent
+    return 0;
   }
-  return Math.max(0, product.stock);
+  const match = product.sizeInventory.find((s) => s.size === size);
+  if (!match || !Number.isFinite(match.stock)) return 0;
+  return Math.max(0, Math.floor(match.stock));
 }
 
-export function getAvailableSizes(product: Pick<ProductFilterItem, 'sizeInventory' | 'sizes'>): string[] {
-  if (product.sizeInventory && product.sizeInventory.length > 0) {
-    return product.sizeInventory.filter((s) => s.stock > 0).map((s) => s.size);
+export function getAvailableSizes(product: Pick<ProductFilterItem, 'sizeInventory'>): string[] {
+  if (!Array.isArray(product.sizeInventory) || product.sizeInventory.length === 0) {
+    return [];
   }
-  return product.sizes;
+  return product.sizeInventory.filter((s) => Number.isFinite(s.stock) && s.stock > 0).map((s) => s.size);
+}
+
+export function normalizeSizeInventory(entries: ProductSizeStockInput[]): ProductSizeStockInput[] {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    throw new Error('حداقل یک سایز معتبر با موجودی مستقل تعریف کنید.');
+  }
+  const seen = new Set<string>();
+  const normalized: ProductSizeStockInput[] = [];
+  for (const entry of entries) {
+    const size = String(entry.size ?? '').trim();
+    if (!size) {
+      throw new Error('نام سایز نمی‌تواند خالی باشد.');
+    }
+    if (seen.has(size)) {
+      throw new Error(`سایز «${size}» تکراری است.`);
+    }
+    if (!Number.isInteger(entry.stock) || entry.stock < 0) {
+      throw new Error(`موجودی سایز «${size}» باید عدد صحیح و غیرمنفی باشد.`);
+    }
+    seen.add(size);
+    normalized.push({ size, stock: entry.stock });
+  }
+  return normalized;
+}
+
+export function migrateLegacySizeInventory(
+  sizes: string[],
+  legacyStock: number
+): ProductSizeStockInput[] {
+  const uniqueSizes: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of sizes ?? []) {
+    const clean = String(raw ?? '').trim();
+    if (clean && !seen.has(clean)) {
+      seen.add(clean);
+      uniqueSizes.push(clean);
+    }
+  }
+  if (uniqueSizes.length === 0) {
+    return [];
+  }
+  const safeTotal = Number.isFinite(legacyStock) ? Math.max(0, Math.floor(legacyStock)) : 0;
+  if (safeTotal === 0) {
+    return uniqueSizes.map((size) => ({ size, stock: 0 }));
+  }
+  // Conserve total legacy stock without repeating it across every size
+  const base = Math.floor(safeTotal / uniqueSizes.length);
+  const remainder = safeTotal % uniqueSizes.length;
+  return uniqueSizes.map((size, idx) => ({
+    size,
+    stock: base + (idx < remainder ? 1 : 0),
+  }));
 }
 
 export function decrementSizeInventory(
@@ -92,17 +156,25 @@ export function decrementSizeInventory(
   size: string,
   quantity: number
 ): { nextSizeInventory: ProductSizeStockInput[]; nextTotalStock: number } {
-  const qty = Math.max(1, Math.floor(quantity));
+  if (!Array.isArray(sizeInventory) || sizeInventory.length === 0) {
+    throw new Error('موجودی سایزهای این کفش هنوز پیکربندی نشده است.');
+  }
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw new Error('تعداد سفارش باید عدد صحیح و بزرگ‌تر از صفر باشد.');
+  }
   const idx = sizeInventory.findIndex((entry) => entry.size === size);
   if (idx === -1) {
     throw new Error(`سایز ${size} برای این کفش تعریف نشده است.`);
   }
   const currentStock = sizeInventory[idx].stock;
-  if (currentStock < qty) {
+  if (!Number.isInteger(currentStock) || currentStock < 0) {
+    throw new Error(`موجودی ثبت‌شده برای سایز ${size} نامعتبر است.`);
+  }
+  if (currentStock < quantity) {
     throw new Error(`موجودی سایز ${size} کافی نیست (موجودی فعلی: ${currentStock} جفت).`);
   }
   const nextSizeInventory = sizeInventory.map((entry, i) =>
-    i === idx ? { ...entry, stock: entry.stock - qty } : { ...entry }
+    i === idx ? { size: entry.size, stock: entry.stock - quantity } : { size: entry.size, stock: Math.max(0, Math.floor(entry.stock)) }
   );
   return {
     nextSizeInventory,
@@ -207,15 +279,12 @@ export function filterAndSortProducts<T extends ProductFilterItem>(
     if (criteria.categoryId && item.categoryId !== criteria.categoryId) return false;
     if (criteria.brand && item.brand !== criteria.brand) return false;
 
-    const totalStock =
-      item.sizeInventory && item.sizeInventory.length > 0
-        ? getTotalStockFromSizes(item.sizeInventory)
-        : item.stock;
+    const totalStock = getEffectiveTotalStock(item);
 
     if (criteria.onlyInStock && totalStock <= 0) return false;
 
     if (criteria.size) {
-      const sizeCount = getSizeStock({ sizeInventory: item.sizeInventory, stock: totalStock }, criteria.size);
+      const sizeCount = getSizeStock(item, criteria.size);
       if (sizeCount <= 0) return false;
     }
 

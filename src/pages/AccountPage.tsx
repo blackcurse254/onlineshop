@@ -19,7 +19,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
   const params = new URLSearchParams(queryString);
   const urlTab = params.get('tab');
   const initialTab: GuestTab =
-    urlTab === 'track' ? 'track' : urlTab === 'wishlist' ? 'wishlist' : 'login';
+    urlTab === 'track'
+      ? 'track'
+      : urlTab === 'wishlist'
+        ? 'wishlist'
+        : urlTab === 'register'
+          ? 'register'
+          : 'login';
   const initialAuthTab: AuthTab =
     urlTab === 'track' ? 'track' : urlTab === 'wishlist' ? 'wishlist' : 'overview';
 
@@ -33,6 +39,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [showResetMode, setShowResetMode] = useState(false);
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   // Profile fields
   const [profileName, setProfileName] = useState('');
@@ -57,6 +67,9 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
     } else if (t === 'wishlist') {
       setTab('wishlist');
       setAuthTab('wishlist');
+    } else if (t === 'register') {
+      setTab('register');
+      setAuthTab('overview');
     } else {
       setAuthTab('overview');
       setTab((prev) => (prev === 'register' ? 'register' : 'login'));
@@ -112,6 +125,44 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
       await loginWithGoogle();
     } catch (err: any) {
       setAuthError(err.message || 'ورود با گوگل تکمیل نشد.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setResetMessage(null);
+    setAuthLoading(true);
+    try {
+      const res = await apiFetch<{ message: string }>('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      setResetMessage(res.message);
+    } catch (err: any) {
+      setAuthError(err.message || 'خطا در ارسال درخواست بازیابی');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setResetMessage(null);
+    setAuthLoading(true);
+    try {
+      const res = await apiFetch<{ message: string }>('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token: resetToken, newPassword }),
+      });
+      setResetMessage(res.message);
+      setResetToken('');
+      setNewPassword('');
+    } catch (err: any) {
+      setAuthError(err.message || 'خطا در تغییر رمز عبور');
     } finally {
       setAuthLoading(false);
     }
@@ -207,7 +258,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
           <div>
             <h1 className="text-2xl font-bold text-[#18181B]">حساب کاربری: {user.fullName}</h1>
             <p className="text-xs sm:text-sm text-[#6B665F] mt-1">
-              {user.email} · {user.role === 'admin' ? 'مدیر فروشگاه' : 'مشتری ورا'}
+              {user.email} · {user.role === 'admin' ? 'مدیر فروشگاه' : 'مشتری آدونیس'}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -281,7 +332,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                   dir="ltr"
                   value={trackOrderNumber}
                   onChange={(e) => setTrackOrderNumber(e.target.value)}
-                  placeholder="VERA-104200"
+                  placeholder="ADONIS-251113-XXXXXX"
                   className="w-full h-10 px-3 text-sm text-end uppercase bg-[#FAF7F2] border border-black/15 rounded-md"
                 />
               </div>
@@ -499,69 +550,176 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
       {tab === 'login' && (
         <div className="bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-[#18181B]">ورود به حساب کاربری</h1>
-            <p className="text-xs text-[#6B665F]">برای مشاهده سفارش‌ها و مدیریت لیست علاقه‌مندی‌ها وارد شوید.</p>
+            <h1 className="text-xl font-bold text-[#18181B]">
+              {showResetMode ? 'بازیابی رمز عبور' : 'ورود به حساب کاربری'}
+            </h1>
+            <p className="text-xs text-[#6B665F]">
+              {showResetMode
+                ? 'ایمیل خود را برای صدور کد بازیابی وارد کنید یا کد دریافتی را ثبت نمایید.'
+                : 'برای مشاهده سفارش‌ها و مدیریت لیست علاقه‌مندی‌ها وارد شوید.'}
+            </p>
           </div>
 
           {authError && (
             <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-800">{authError}</div>
           )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="login-email" className="text-xs font-medium text-[#18181B]">
-                ایمیل
-              </label>
-              <input
-                id="login-email"
-                type="email"
-                required
-                dir="ltr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
-              />
+          {resetMessage && (
+            <div className="p-3 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+              {resetMessage}
             </div>
+          )}
 
-            <div className="space-y-1">
-              <label htmlFor="login-password" className="text-xs font-medium text-[#18181B]">
-                رمز عبور
-              </label>
-              <input
-                id="login-password"
-                type="password"
-                required
-                dir="ltr"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
-              />
+          {showResetMode ? (
+            <div className="space-y-5">
+              <form onSubmit={handleForgotPassword} className="space-y-3">
+                <div className="space-y-1">
+                  <label htmlFor="forgot-email" className="text-xs font-medium text-[#18181B]">
+                    ایمیل حساب کاربری
+                  </label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    required
+                    dir="ltr"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
+                >
+                  {authLoading ? 'در حال ارسال...' : 'درخواست بازیابی رمز عبور'}
+                </button>
+              </form>
+
+              <form onSubmit={handleResetPassword} className="space-y-3 pt-4 border-t border-black/10">
+                <div className="space-y-1">
+                  <label htmlFor="reset-token" className="text-xs font-medium text-[#18181B]">
+                    کد بازیابی دریافت‌شده
+                  </label>
+                  <input
+                    id="reset-token"
+                    type="text"
+                    required
+                    minLength={32}
+                    dir="ltr"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="reset-new-pass" className="text-xs font-medium text-[#18181B]">
+                    رمز عبور جدید (حداقل ۸ کاراکتر)
+                  </label>
+                  <input
+                    id="reset-new-pass"
+                    type="password"
+                    required
+                    minLength={8}
+                    dir="ltr"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-2.5 text-sm font-medium border border-[#18181B] text-[#18181B] rounded-md hover:bg-[#FAF7F2] disabled:opacity-50"
+                >
+                  ثبت رمز عبور جدید
+                </button>
+              </form>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResetMode(false);
+                  setAuthError(null);
+                  setResetMessage(null);
+                }}
+                className="w-full text-center text-xs font-medium text-[#8F6E38] hover:underline"
+              >
+                بازگشت به فرم ورود
+              </button>
             </div>
+          ) : (
+            <>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-1">
+                  <label htmlFor="login-email" className="text-xs font-medium text-[#18181B]">
+                    ایمیل
+                  </label>
+                  <input
+                    id="login-email"
+                    type="email"
+                    required
+                    dir="ltr"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
-            >
-              {authLoading ? 'در حال بررسی...' : 'ورود'}
-            </button>
-          </form>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="login-password" className="text-xs font-medium text-[#18181B]">
+                      رمز عبور
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetMode(true);
+                        setAuthError(null);
+                        setResetMessage(null);
+                      }}
+                      className="text-xs text-[#8F6E38] hover:underline"
+                    >
+                      فراموشی رمز عبور؟
+                    </button>
+                  </div>
+                  <input
+                    id="login-password"
+                    type="password"
+                    required
+                    dir="ltr"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  />
+                </div>
 
-          <div className="relative flex items-center py-1">
-            <div className="flex-grow border-t border-black/10" />
-            <span className="shrink mx-3 text-xs text-[#8A847C]">یا</span>
-            <div className="flex-grow border-t border-black/10" />
-          </div>
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
+                >
+                  {authLoading ? 'در حال بررسی...' : 'ورود'}
+                </button>
+              </form>
 
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={authLoading}
-            className="w-full py-2.5 px-4 text-xs sm:text-sm font-medium border border-black/20 text-[#18181B] rounded-md hover:bg-[#FAF7F2] transition-colors"
-          >
-            ورود سریع با حساب گوگل
-          </button>
+              <div className="relative flex items-center py-1">
+                <div className="flex-grow border-t border-black/10" />
+                <span className="shrink mx-3 text-xs text-[#8A847C]">یا</span>
+                <div className="flex-grow border-t border-black/10" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={authLoading}
+                className="w-full py-2.5 px-4 text-xs sm:text-sm font-medium border border-black/20 text-[#18181B] rounded-md hover:bg-[#FAF7F2] transition-colors"
+              >
+                ورود سریع با حساب گوگل
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -673,7 +831,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 dir="ltr"
                 value={trackOrderNumber}
                 onChange={(e) => setTrackOrderNumber(e.target.value)}
-                placeholder="VERA-104200"
+                placeholder="ADONIS-251113-XXXXXX"
                 className="w-full h-10 px-3 text-sm text-end uppercase bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>

@@ -49,8 +49,10 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
-const CART_STORAGE_KEY = 'vera_shoes_cart_v2';
-const WISHLIST_STORAGE_KEY = 'vera_shoes_wishlist_v2';
+const CART_STORAGE_KEY = 'adonis_shoes_cart_v1';
+const WISHLIST_STORAGE_KEY = 'adonis_shoes_wishlist_v1';
+const LEGACY_CART_KEY = 'vera_shoes_cart_v2';
+const LEGACY_WISHLIST_KEY = 'vera_shoes_wishlist_v2';
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
@@ -66,7 +68,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      const raw = localStorage.getItem(CART_STORAGE_KEY) || localStorage.getItem(LEGACY_CART_KEY);
       return raw ? (JSON.parse(raw) as CartItem[]) : [];
     } catch {
       return [];
@@ -75,7 +77,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [wishlistIds, setWishlistIds] = useState<number[]>(() => {
     try {
-      const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      const raw =
+        localStorage.getItem(WISHLIST_STORAGE_KEY) || localStorage.getItem(LEGACY_WISHLIST_KEY);
       return raw ? (JSON.parse(raw) as number[]) : [];
     } catch {
       return [];

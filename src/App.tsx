@@ -40,7 +40,7 @@ function AppRouter() {
   if (loading) {
     content = (
       <div className="min-h-[60vh] flex items-center justify-center text-sm text-[#6B665F]">
-        در حال آماده‌سازی فروشگاه VERA BOUTIQUE...
+        در حال آماده‌سازی فروشگاه ADONIS...
       </div>
     );
   } else if (error) {

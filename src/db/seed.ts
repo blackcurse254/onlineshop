@@ -11,14 +11,15 @@ import {
   users,
 } from './schema.ts';
 import { hashPassword } from '../lib/security.ts';
-import { getTotalStockFromSizes } from '../utils/commerce.ts';
+import { getTotalStockFromSizes, migrateLegacySizeInventory } from '../utils/commerce.ts';
 
 let seedPromise: Promise<void> | null = null;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function bootstrapEnvAdmin() {
   const adminEmail = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
   const adminPassword = process.env.INITIAL_ADMIN_PASSWORD?.trim();
-  if (!adminEmail || !adminPassword || adminPassword.length < 12) {
+  if (!adminEmail || !EMAIL_REGEX.test(adminEmail) || !adminPassword || adminPassword.length < 12) {
     return;
   }
 
@@ -39,39 +40,63 @@ async function bootstrapEnvAdmin() {
   }
 }
 
+export async function migrateLegacyProductsSizeInventory(): Promise<number> {
+  let migratedCount = 0;
+  await db.transaction(async (tx) => {
+    const allProds = await tx.select().from(products);
+    for (const prod of allProds) {
+      const hasInventory = Array.isArray(prod.sizeInventory) && prod.sizeInventory.length > 0;
+      if (!hasInventory) {
+        const migrated = migrateLegacySizeInventory(prod.sizes ?? [], prod.stock ?? 0);
+        const total = getTotalStockFromSizes(migrated);
+        await tx
+          .update(products)
+          .set({
+            sizeInventory: migrated,
+            sizes: migrated.map((s) => s.size),
+            stock: total,
+          })
+          .where(eq(products.id, prod.id));
+        migratedCount += 1;
+      }
+    }
+  });
+  return migratedCount;
+}
+
 async function runSeed() {
   const existingSettings = await db.select({ total: count() }).from(storeSettings);
   if ((existingSettings[0]?.total ?? 0) === 0) {
     await db.insert(storeSettings).values({
-      storeName: 'VERA BOUTIQUE',
+      storeName: 'ADONIS',
       storeSubtitle: 'فروشگاه تخصصی کفش و کتونی',
-      logoText: 'VERA',
+      logoText: 'ADONIS',
       primaryColor: '#18181B',
       accentColor: '#B5945B',
       backgroundColor: '#FAF7F2',
-      phone: '021-88451290',
-      email: 'hello@verashoes.ir',
-      instagram: '@vera.shoes.ir',
-      telegram: '@verashoes_support',
-      whatsapp: '09120004512',
-      address: 'تهران، جردن، بلوار ناهید شرقی، پلاک ۱۸، طبقه اول',
+      phone: '',
+      email: '',
+      instagram: '',
+      telegram: '',
+      whatsapp: '',
+      address: '',
       shippingBaseCost: 85000,
       expressShippingCost: 165000,
       freeShippingThreshold: 4500000,
       aboutText:
-        'فروشگاه تخصصی کفش و کتونی ورا با تمرکز بر ارگونومی پا، متریال چرم طبیعی و زیره‌های استاندارد، مجموعه‌ای منتخب از کتونی‌های روزمره، ورزشی و کفش‌های رسمی را عرضه می‌کند.',
+        'فروشگاه تخصصی کفش و کتونی ADONIS با تمرکز بر ارگونومی پا، متریال چرم طبیعی و زیره‌های استاندارد، مجموعه‌ای منتخب از کتونی‌های روزمره، ورزشی و کفش‌های رسمی را عرضه می‌کند.',
       shippingPolicy:
         'سفارش‌های تهران طی ۱ تا ۲ روز کاری و سفارش‌های سراسر کشور طی ۲ تا ۴ روز کاری با بسته‌بندی ایمن و جعبه اصلی ارسال می‌شوند.',
       returnPolicy:
         'امکان تعویض سایز کفش یا مرجوعی تا ۷ روز پس از تحویل در صورت استفاده نشدن در فضای باز فراهم است.',
-      announcementText: 'ارسال رایگان کفش برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف فصل: VERA15',
+      announcementText: 'ارسال رایگان کفش برای خریدهای بالای ۴,۵۰۰,۰۰۰ تومان · کد تخفیف فصل: ADONIS15',
     });
   }
 
   const existingBrands = await db.select({ total: count() }).from(brands);
   if ((existingBrands[0]?.total ?? 0) === 0) {
     await db.insert(brands).values([
-      { name: 'VERA Studio', slug: 'vera-studio', country: 'ایران / ایتالیا', sortOrder: 1, isActive: true },
+      { name: 'ADONIS Studio', slug: 'adonis-studio', country: 'ایران / ایتالیا', sortOrder: 1, isActive: true },
       { name: 'Nike', slug: 'nike', country: 'آمریکا', sortOrder: 2, isActive: true },
       { name: 'New Balance', slug: 'new-balance', country: 'آمریکا', sortOrder: 3, isActive: true },
       { name: 'Adidas', slug: 'adidas', country: 'آلمان', sortOrder: 4, isActive: true },
@@ -182,10 +207,10 @@ async function runSeed() {
     const productPayloads = [
       {
         categoryId: catMap.get('mens-sneakers') ?? null,
-        name: 'کتونی چرم مردانه مدل کورت ورا',
+        name: 'کتونی چرم مردانه مدل کورت آدونیس',
         slug: 'vera-court-leather-mens-sneaker',
-        sku: 'VS-101',
-        brand: 'VERA Studio',
+        sku: 'AD-101',
+        brand: 'ADONIS Studio',
         model: 'Court Classic 01',
         upperMaterial: 'چرم طبیعی گاوی فول‌گرین با پنل جیر',
         soleMaterial: 'لاستیک طبیعی دوخته‌شده (Cup Sole) ضدسایش',
@@ -219,8 +244,8 @@ async function runSeed() {
         categoryId: catMap.get('womens-sneakers') ?? null,
         name: 'کتونی زنانه عاجی مدل میلانو ایر',
         slug: 'vera-milano-ivory-womens-sneaker',
-        sku: 'VS-201',
-        brand: 'VERA Studio',
+        sku: 'AD-201',
+        brand: 'ADONIS Studio',
         model: 'Milano Air W',
         upperMaterial: 'چرم نبوک و نپا تنفس‌پذیر',
         soleMaterial: 'فوم فشرده EVA با روکش لاستیکی ضدلغزش',
@@ -394,8 +419,8 @@ async function runSeed() {
         categoryId: catMap.get('formal-shoes') ?? null,
         name: 'کفش رسمی آکسفورد چرم مشکی دست‌دوز',
         slug: 'vera-oxford-black-leather-formal',
-        sku: 'VS-701',
-        brand: 'VERA Studio',
+        sku: 'AD-701',
+        brand: 'ADONIS Studio',
         model: 'Savile Oxford',
         upperMaterial: 'چرم طبیعی گاوی برش یک‌تکه (Wholecut)',
         soleMaterial: 'چرم فشرده با محافظ لاستیکی جلوپنجه',
@@ -426,8 +451,8 @@ async function runSeed() {
         categoryId: catMap.get('sandals-slides') ?? null,
         name: 'صندل و اسلاید چرم برنزه مدل ریویرا',
         slug: 'vera-riviera-tan-leather-slides',
-        sku: 'VS-801',
-        brand: 'VERA Studio',
+        sku: 'AD-801',
+        brand: 'ADONIS Studio',
         model: 'Riviera Cork',
         upperMaterial: 'چرم طبیعی دباغی گیاهی',
         soleMaterial: 'کفی چوب‌پنبه ارگونومیک + زیره EVA',
@@ -528,7 +553,7 @@ async function runSeed() {
         name: 'پک تخصصی مراقبت از کفش و قالب چوب سدر',
         slug: 'vera-cedar-shoe-care-kit',
         sku: 'AC-010',
-        brand: 'VERA Studio',
+        brand: 'ADONIS Studio',
         model: 'Care Kit Pro',
         upperMaterial: 'چوب طبیعی سدر معطر + موی طبیعی اسب',
         soleMaterial: 'فرمول نانو بدون الکل',
@@ -572,7 +597,7 @@ async function runSeed() {
   if ((existingBanners[0]?.total ?? 0) === 0) {
     await db.insert(banners).values([
       {
-        title: 'کلکسیون تخصصی کفش و کتونی ورا',
+        title: 'کلکسیون تخصصی کفش و کتونی آدونیس',
         subtitle: 'ترکیب مهندسی ارگونومی پا، چرم طبیعی دست‌دوز و طراحی مدرن برای قدم‌های مطمئن روزمره و ورزشی.',
         ctaText: 'مشاهده کلکسیون کفش',
         ctaLink: '/shop?sort=newest',
@@ -598,7 +623,7 @@ async function runSeed() {
   if ((existingDiscounts[0]?.total ?? 0) === 0) {
     await db.insert(discounts).values([
       {
-        code: 'VERA15',
+        code: 'ADONIS15',
         title: 'تخفیف ۱۵ درصدی کلکسیون کفش فصل',
         percent: 15,
         minOrderAmount: 1500000,
@@ -606,7 +631,7 @@ async function runSeed() {
       },
       {
         code: 'WELCOME10',
-        title: 'هدیه اولین خرید از ورا',
+        title: 'هدیه اولین خرید از آدونیس',
         percent: 10,
         minOrderAmount: 0,
         isActive: true,
@@ -657,6 +682,7 @@ async function runSeed() {
     ]);
   }
 
+  await migrateLegacyProductsSizeInventory();
   await bootstrapEnvAdmin();
 }
 

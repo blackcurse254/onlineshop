@@ -73,7 +73,7 @@ export const AdminPage: React.FC = () => {
     name: '',
     slug: '',
     sku: '',
-    brand: 'VERA Studio',
+    brand: 'ADONIS Studio',
     model: '',
     categoryId: '',
     upperMaterial: 'چرم طبیعی گاوی',
@@ -174,7 +174,27 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  if (!user || user.role !== 'admin') {
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-14" data-testid="admin-forbidden">
+        <div className="bg-white border border-black/[0.08] rounded-xl p-6 sm:p-8 space-y-4 text-center">
+          <Lock className="w-8 h-8 text-red-700 mx-auto" />
+          <h1 className="text-xl font-bold text-[#18181B]">دسترسی غیرمجاز</h1>
+          <p className="text-xs sm:text-sm text-[#6B665F] leading-relaxed">
+            حساب کاربری فعلی شما مجوز دسترسی به پنل مدیریت فروشگاه ADONIS را ندارد.
+          </p>
+          <a
+            href="/"
+            className="inline-block px-5 py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
+          >
+            بازگشت به صفحه اصلی
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="max-w-md mx-auto px-4 py-14">
         <div className="bg-white border border-black/[0.08] rounded-xl p-6 sm:p-8 space-y-5">
@@ -186,9 +206,9 @@ export const AdminPage: React.FC = () => {
             دسترسی به داشبورد، موجودی سایز کفش‌ها و تنظیمات فروشگاه تنها با احراز هویت مدیر در سمت سرور مجاز است.
           </p>
 
-          {(error || (user && user.role !== 'admin')) && (
+          {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
-              {error || 'حساب فعلی شما نقش مدیر ندارد.'}
+              {error}
             </div>
           )}
 
@@ -271,8 +291,8 @@ export const AdminPage: React.FC = () => {
     const payload = {
       name: prodForm.name,
       slug: prodForm.slug || `shoe-${Date.now()}`,
-      sku: prodForm.sku || `VS-${Math.floor(100 + Math.random() * 899)}`,
-      brand: prodForm.brand.trim() || 'VERA Studio',
+      sku: prodForm.sku || `AD-${Math.floor(100 + Math.random() * 899)}`,
+      brand: prodForm.brand.trim() || 'ADONIS Studio',
       model: prodForm.model.trim(),
       categoryId: prodForm.categoryId ? Number(prodForm.categoryId) : null,
       upperMaterial: prodForm.upperMaterial.trim(),
@@ -331,13 +351,13 @@ export const AdminPage: React.FC = () => {
     setSizeInventory(
       p.sizeInventory && p.sizeInventory.length > 0
         ? p.sizeInventory
-        : p.sizes.map((s) => ({ size: s, stock: p.stock }))
+        : (p.sizes || []).map((s) => ({ size: s, stock: 0 }))
     );
     setProdForm({
       name: p.name,
       slug: p.slug,
       sku: p.sku,
-      brand: p.brand || 'VERA Studio',
+      brand: p.brand || 'ADONIS Studio',
       model: p.model || '',
       categoryId: p.categoryId ? String(p.categoryId) : '',
       upperMaterial: p.upperMaterial || '',
@@ -715,7 +735,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={prodForm.slug}
                   onChange={(e) => setProdForm({ ...prodForm, slug: e.target.value })}
-                  placeholder="vera-runner-pro"
+                  placeholder="adonis-runner-pro"
                   className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
                 />
               </div>
@@ -728,7 +748,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={prodForm.sku}
                   onChange={(e) => setProdForm({ ...prodForm, sku: e.target.value })}
-                  placeholder="VS-105"
+                  placeholder="AD-105"
                   className="w-full h-9 px-3 text-xs text-end bg-[#FAF7F2] border border-black/15 rounded"
                 />
               </div>
@@ -1492,7 +1512,7 @@ export const AdminPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label htmlFor="s-name" className="text-xs font-medium">نام برند / فروشگاه</label>
               <input
@@ -1501,6 +1521,17 @@ export const AdminPage: React.FC = () => {
                 required
                 value={settingsForm.storeName}
                 onChange={(e) => setSettingsForm({ ...settingsForm, storeName: e.target.value })}
+                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="s-logo-text" className="text-xs font-medium">متن لوگوی هدر</label>
+              <input
+                id="s-logo-text"
+                type="text"
+                required
+                value={settingsForm.logoText}
+                onChange={(e) => setSettingsForm({ ...settingsForm, logoText: e.target.value })}
                 className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>
@@ -1561,7 +1592,7 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label htmlFor="s-phone" className="text-xs font-medium">تلفن تماس</label>
               <input
@@ -1570,6 +1601,17 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.phone}
                 onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
+                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="s-email" className="text-xs font-medium">ایمیل پشتیبانی</label>
+              <input
+                id="s-email"
+                type="email"
+                dir="ltr"
+                value={settingsForm.email}
+                onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
                 className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>
@@ -1593,6 +1635,30 @@ export const AdminPage: React.FC = () => {
                 value={settingsForm.telegram}
                 onChange={(e) => setSettingsForm({ ...settingsForm, telegram: e.target.value })}
                 className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="s-wa" className="text-xs font-medium">واتساپ</label>
+              <input
+                id="s-wa"
+                type="text"
+                dir="ltr"
+                value={settingsForm.whatsapp}
+                onChange={(e) => setSettingsForm({ ...settingsForm, whatsapp: e.target.value })}
+                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="s-address" className="text-xs font-medium">آدرس فروشگاه</label>
+              <input
+                id="s-address"
+                type="text"
+                value={settingsForm.address}
+                onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
+                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
               />
             </div>
           </div>
@@ -1641,6 +1707,29 @@ export const AdminPage: React.FC = () => {
               onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
               className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="s-ship-pol" className="text-xs font-medium">سیاست ارسال سفارش</label>
+              <textarea
+                id="s-ship-pol"
+                rows={2}
+                value={settingsForm.shippingPolicy}
+                onChange={(e) => setSettingsForm({ ...settingsForm, shippingPolicy: e.target.value })}
+                className="w-full p-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="s-ret-pol" className="text-xs font-medium">سیاست تعویض و بازگشت سایز</label>
+              <textarea
+                id="s-ret-pol"
+                rows={2}
+                value={settingsForm.returnPolicy}
+                onChange={(e) => setSettingsForm({ ...settingsForm, returnPolicy: e.target.value })}
+                className="w-full p-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+              />
+            </div>
           </div>
 
           <div className="space-y-1">

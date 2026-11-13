@@ -20,25 +20,38 @@ export interface AuthRequest extends Request {
   user?: AuthenticatedUser;
 }
 
-function getAdminOwnerEmails(): Set<string> {
-  const owners = new Set<string>(['shayan.usefi6@gmail.com']);
-  const envAdmin = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
-  if (envAdmin) {
-    owners.add(envAdmin);
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getEnvAdminEmails(): Set<string> {
+  const admins = new Set<string>();
+  const rawList = [process.env.INITIAL_ADMIN_EMAIL || '', process.env.ADMIN_EMAILS || '']
+    .join(',')
+    .split(',');
+
+  for (const raw of rawList) {
+    const email = raw.trim().toLowerCase();
+    if (email && EMAIL_REGEX.test(email)) {
+      admins.add(email);
+    }
   }
-  return owners;
+  return admins;
 }
 
-async function syncFirebaseUser(uid: string, email: string, name?: string): Promise<AuthenticatedUser> {
+async function syncFirebaseUser(
+  uid: string,
+  email: string,
+  emailVerified: boolean,
+  name?: string
+): Promise<AuthenticatedUser> {
   const normalizedEmail = email.toLowerCase();
-  const isOwnerAdmin = getAdminOwnerEmails().has(normalizedEmail);
-  const defaultRole = isOwnerAdmin ? 'admin' : 'customer';
+  const isEnvAdmin = emailVerified && getEnvAdminEmails().has(normalizedEmail);
+  const defaultRole = isEnvAdmin ? 'admin' : 'customer';
 
   const existing = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
 
   if (existing.length > 0) {
     let user = existing[0];
-    if (isOwnerAdmin && user.role !== 'admin') {
+    if (isEnvAdmin && user.role !== 'admin') {
       const [promoted] = await db
         .update(users)
         .set({ role: 'admin' })
@@ -58,33 +71,57 @@ async function syncFirebaseUser(uid: string, email: string, name?: string): Prom
     };
   }
 
-  const inserted = await db
+  // Only link an existing email row when Firebase confirms the email is verified
+  if (emailVerified) {
+    const inserted = await db
+      .insert(users)
+      .values({
+        uid,
+        email: normalizedEmail,
+        fullName: name || normalizedEmail.split('@')[0] || 'کاربر آدونیس',
+        role: defaultRole,
+      })
+      .onConflictDoUpdate({
+        target: users.email,
+        set: {
+          uid,
+          ...(isEnvAdmin ? { role: 'admin' } : {}),
+        },
+      })
+      .returning();
+
+    const row = inserted[0];
+    return {
+      id: row.id,
+      uid: row.uid,
+      email: row.email,
+      fullName: row.fullName,
+      phone: row.phone,
+      address: row.address,
+      postalCode: row.postalCode,
+      role: row.role,
+    };
+  }
+
+  const [created] = await db
     .insert(users)
     .values({
       uid,
-      email: normalizedEmail,
-      fullName: name || normalizedEmail.split('@')[0] || 'کاربر ورا',
-      role: defaultRole,
-    })
-    .onConflictDoUpdate({
-      target: users.email,
-      set: {
-        uid,
-        ...(isOwnerAdmin ? { role: 'admin' } : {}),
-      },
+      email: `${uid}@unverified.firebase.local`,
+      fullName: name || 'کاربر آدونیس',
+      role: 'customer',
     })
     .returning();
 
-  const row = inserted[0];
   return {
-    id: row.id,
-    uid: row.uid,
-    email: row.email,
-    fullName: row.fullName,
-    phone: row.phone,
-    address: row.address,
-    postalCode: row.postalCode,
-    role: row.role,
+    id: created.id,
+    uid: created.uid,
+    email: created.email,
+    fullName: created.fullName,
+    phone: created.phone,
+    address: created.address,
+    postalCode: created.postalCode,
+    role: created.role,
   };
 }
 
@@ -96,7 +133,7 @@ export async function resolveAuthUser(req: Request): Promise<AuthenticatedUser |
       try {
         const decoded = await adminAuth.verifyIdToken(idToken);
         const email = decoded.email || `${decoded.uid}@firebase.local`;
-        return await syncFirebaseUser(decoded.uid, email, decoded.name);
+        return await syncFirebaseUser(decoded.uid, email, decoded.email_verified === true, decoded.name);
       } catch {
         return undefined;
       }

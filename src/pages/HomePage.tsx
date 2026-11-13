@@ -3,7 +3,7 @@ import { ArrowLeft, Award, RefreshCw, ShieldCheck, Star, Truck } from 'lucide-re
 import { useStore } from '../context/StoreContext';
 import { SafeImage } from '../components/SafeImage';
 import { ProductCard } from '../components/ProductCard';
-import { getAvailableSizes, getSizeStock, getTotalStockFromSizes } from '../utils/commerce';
+import { getAvailableSizes, getEffectiveTotalStock, getSizeStock } from '../utils/commerce';
 import type { Product } from '../types/store';
 
 interface HomePageProps {
@@ -38,15 +38,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     [products]
   );
 
-  const handleQuickAdd = (product: Product) => {
-    const totalStock =
-      product.sizeInventory && product.sizeInventory.length > 0
-        ? getTotalStockFromSizes(product.sizeInventory)
-        : product.stock;
+  const handleQuickAdd = (product: Product, cardChosenSize?: string) => {
+    const totalStock = getEffectiveTotalStock(product);
     if (totalStock <= 0) return;
 
     const availableSizes = getAvailableSizes(product);
-    const chosenSize = availableSizes[0] || product.sizes[0] || '41';
+    const chosenSize =
+      cardChosenSize && availableSizes.includes(cardChosenSize)
+        ? cardChosenSize
+        : availableSizes[0];
+    if (!chosenSize) return;
     const sizeMax = getSizeStock(product, chosenSize);
     if (sizeMax <= 0) return;
 
@@ -73,6 +74,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <SafeImage
               src={heroBanner.imageUrl}
               alt={heroBanner.title}
+              loading="eager"
               className="w-full h-full object-cover object-center absolute inset-0"
             />
           ) : null}
@@ -82,7 +84,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 {settings?.storeName} · {settings?.storeSubtitle}
               </p>
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight text-balance">
-                {heroBanner?.title || 'کلکسیون تخصصی کفش و کتونی ورا'}
+                {heroBanner?.title || 'کلکسیون تخصصی کفش و کتونی آدونیس'}
               </h1>
               <p className="text-xs sm:text-base text-white/90 leading-relaxed max-w-xl">
                 {heroBanner?.subtitle ||
@@ -159,7 +161,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.08] pb-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#18181B]">ویترین کفش و کتونی ورا</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#18181B]">ویترین کفش و کتونی آدونیس</h2>
             <p className="text-xs sm:text-sm text-[#6B665F] mt-1">
               منتخب جدیدترین مدل‌ها، پرفروش‌ترین کتونی‌ها و پیشنهادهای ویژه فصل
             </p>

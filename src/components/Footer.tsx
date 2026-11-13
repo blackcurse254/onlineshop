@@ -7,7 +7,27 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { settings, categories } = useStore();
-  const storeName = settings?.storeName || 'VERA BOUTIQUE';
+  const storeName = settings?.storeName || 'ADONIS';
+
+  const contactItems = [
+    settings?.phone?.trim()
+      ? { label: 'تلفن', value: settings.phone.trim(), ltr: true, tabular: true }
+      : null,
+    settings?.email?.trim()
+      ? { label: 'ایمیل', value: settings.email.trim(), ltr: true, tabular: false }
+      : null,
+    settings?.instagram?.trim()
+      ? { label: 'اینستاگرام', value: settings.instagram.trim(), ltr: true, tabular: false }
+      : null,
+    settings?.telegram?.trim()
+      ? { label: 'تلگرام', value: settings.telegram.trim(), ltr: true, tabular: false }
+      : null,
+    settings?.whatsapp?.trim()
+      ? { label: 'واتساپ', value: settings.whatsapp.trim(), ltr: true, tabular: true }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; value: string; ltr: boolean; tabular: boolean }>;
+
+  const hasAddress = Boolean(settings?.address?.trim());
 
   return (
     <footer className="bg-[#18181B] text-[#FAF7F2] border-t border-black/10 mt-16">
@@ -16,9 +36,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div className="font-display-serif text-2xl font-semibold tracking-wider text-white">
             {storeName}
           </div>
-          <p className="text-xs sm:text-sm text-[#D6D0C6] leading-relaxed">
-            {settings?.aboutText}
-          </p>
+          {settings?.aboutText ? (
+            <p className="text-xs sm:text-sm text-[#D6D0C6] leading-relaxed">
+              {settings.aboutText}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-3">
@@ -76,27 +98,45 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-[#D6B77E]">ارسال و ضمانت تعویض سایز</h3>
-          <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings?.shippingPolicy}</p>
-          <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings?.returnPolicy}</p>
+          {settings?.shippingPolicy ? (
+            <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings.shippingPolicy}</p>
+          ) : null}
+          {settings?.returnPolicy ? (
+            <p className="text-xs text-[#D6D0C6] leading-relaxed">{settings.returnPolicy}</p>
+          ) : null}
         </div>
 
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-[#D6B77E]">ارتباط با فروشگاه</h3>
-          <ul className="space-y-2 text-xs sm:text-sm text-[#D6D0C6]">
-            <li>تلفن: <span dir="ltr" className="inline-block tabular-nums">{settings?.phone}</span></li>
-            <li>ایمیل: <span dir="ltr" className="inline-block">{settings?.email}</span></li>
-            <li>اینستاگرام: <span dir="ltr" className="inline-block">{settings?.instagram}</span></li>
-            <li>تلگرام: <span dir="ltr" className="inline-block">{settings?.telegram}</span></li>
-            <li>واتساپ: <span dir="ltr" className="inline-block tabular-nums">{settings?.whatsapp}</span></li>
-            <li className="text-xs text-[#A8A196] pt-1 leading-relaxed">{settings?.address}</li>
-          </ul>
+          {contactItems.length > 0 || hasAddress ? (
+            <ul className="space-y-2 text-xs sm:text-sm text-[#D6D0C6]">
+              {contactItems.map((item) => (
+                <li key={item.label}>
+                  {item.label}:{' '}
+                  <span
+                    dir={item.ltr ? 'ltr' : undefined}
+                    className={`inline-block ${item.tabular ? 'tabular-nums' : ''}`}
+                  >
+                    {item.value}
+                  </span>
+                </li>
+              ))}
+              {hasAddress && (
+                <li className="text-xs text-[#A8A196] pt-1 leading-relaxed">{settings?.address}</li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-xs text-[#A8A196] leading-relaxed">
+              راه‌های ارتباطی و نشانی فروشگاه پس از تنظیم در بخش مدیریت نمایش داده می‌شوند.
+            </p>
+          )}
         </div>
       </div>
 
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#A8A196]">
           <span>© {new Date().getFullYear()} {storeName}. تمامی حقوق محفوظ است.</span>
-          <span>فروشگاه تخصصی کفش و کتونی · قالب تجاری قابل شخصی‌سازی</span>
+          <span>فروشگاه تخصصی کفش و کتونی</span>
         </div>
       </div>
     </footer>

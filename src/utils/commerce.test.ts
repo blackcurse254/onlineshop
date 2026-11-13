@@ -7,9 +7,12 @@ import {
   filterAndSortProducts,
   getAvailableSizes,
   getEffectivePrice,
+  getEffectiveTotalStock,
   getSizeStock,
   getTotalStockFromSizes,
+  migrateLegacySizeInventory,
   normalizeDigits,
+  normalizeSizeInventory,
   validateIranianPhone,
   validateIranianPostalCode,
 } from './commerce';
@@ -42,15 +45,45 @@ test('per-size shoe inventory tracks independent sizes and prevents overselling'
   ];
 
   assert.equal(getTotalStockFromSizes(sizeInventory), 3);
-  assert.equal(getSizeStock({ sizeInventory, stock: 3 }, '41'), 0);
-  assert.deepEqual(getAvailableSizes({ sizeInventory, sizes: ['40', '41', '42'] }), ['40', '42']);
+  assert.equal(getSizeStock({ sizeInventory }, '41'), 0);
+  assert.deepEqual(getAvailableSizes({ sizeInventory }), ['40', '42']);
 
   const firstOrder = decrementSizeInventory(sizeInventory, '42', 1);
   assert.equal(firstOrder.nextTotalStock, 2);
-  assert.equal(getSizeStock({ sizeInventory: firstOrder.nextSizeInventory, stock: firstOrder.nextTotalStock }, '42'), 0);
+  assert.equal(getSizeStock({ sizeInventory: firstOrder.nextSizeInventory }, '42'), 0);
 
   // Concurrent second order for size 42 must fail cleanly
   assert.throws(() => decrementSizeInventory(firstOrder.nextSizeInventory, '42', 1), /موجودی سایز 42 کافی نیست/);
+  // Zero, negative, or fractional quantities must never silently convert to 1 or increase stock
+  assert.throws(() => decrementSizeInventory(sizeInventory, '40', 0));
+  assert.throws(() => decrementSizeInventory(sizeInventory, '40', -2));
+  assert.throws(() => decrementSizeInventory(sizeInventory, '40', 1.5));
+});
+
+test('missing sizeInventory never repeats overall stock across sizes and legacy migration conserves total stock', () => {
+  const unmigrated = { sizeInventory: [] };
+  assert.equal(getEffectiveTotalStock(unmigrated), 0);
+  assert.equal(getSizeStock(unmigrated, '41'), 0);
+  assert.deepEqual(getAvailableSizes(unmigrated), []);
+  assert.throws(() => decrementSizeInventory([], '41', 1));
+
+  // Migrating legacy stock=5 across 3 sizes must sum to 5 (never 15!)
+  const migrated = migrateLegacySizeInventory(['40', '41', '42', '41'], 5);
+  assert.equal(migrated.length, 3);
+  assert.equal(getTotalStockFromSizes(migrated), 5);
+  assert.deepEqual(migrated, [
+    { size: '40', stock: 2 },
+    { size: '41', stock: 2 },
+    { size: '42', stock: 1 },
+  ]);
+
+  assert.throws(() => normalizeSizeInventory([{ size: '40', stock: -1 }]));
+  assert.throws(() =>
+    normalizeSizeInventory([
+      { size: '40', stock: 1 },
+      { size: '40', stock: 2 },
+    ])
+  );
 });
 
 test('calculateOrderTotals applies discount, shipping threshold, and express shipping', () => {
@@ -90,7 +123,7 @@ test('filterAndSortProducts filters by brand, shoe size stock, color, price, and
       categoryId: 10,
       name: 'کتونی چرم کرم کورت',
       slug: 'court-cream',
-      brand: 'VERA Studio',
+      brand: 'ADONIS Studio',
       model: 'Court 01',
       upperMaterial: 'چرم طبیعی',
       soleMaterial: 'لاستیک طبیعی',
@@ -139,7 +172,7 @@ test('filterAndSortProducts filters by brand, shoe size stock, color, price, and
   assert.equal(size42.length, 1);
   assert.equal(size42[0].id, 2);
 
-  const byBrand = filterAndSortProducts(sample, { brand: 'VERA Studio', color: 'کرم' });
+  const byBrand = filterAndSortProducts(sample, { brand: 'ADONIS Studio', color: 'کرم' });
   assert.equal(byBrand.length, 1);
   assert.equal(byBrand[0].id, 1);
 });

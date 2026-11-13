@@ -1,45 +1,64 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { SafeImage } from './SafeImage';
 import { useStore } from '../context/StoreContext';
 import {
   calculateDiscountPercent,
   formatToman,
+  getAvailableSizes,
   getEffectivePrice,
-  getTotalStockFromSizes,
+  getEffectiveTotalStock,
 } from '../utils/commerce';
 import type { Category, Product } from '../types/store';
 
 interface ProductCardProps {
   product: Product;
   category?: Category;
+  preferredSize?: string | null;
   onNavigate: (path: string) => void;
-  onQuickAdd?: (product: Product) => void;
+  onQuickAdd?: (product: Product, selectedSize?: string) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   category,
+  preferredSize,
   onNavigate,
   onQuickAdd,
 }) => {
   const { isWishlisted, toggleWishlist } = useStore();
   const effectivePrice = getEffectivePrice(product.price, product.discountPrice);
   const discountPct = calculateDiscountPercent(product.price, product.discountPrice);
-  const totalStock =
-    product.sizeInventory && product.sizeInventory.length > 0
-      ? getTotalStockFromSizes(product.sizeInventory)
-      : product.stock;
+  const totalStock = getEffectiveTotalStock(product);
   const outOfStock = totalStock <= 0;
   const wishlisted = isWishlisted(product.id);
 
+  const availableSizes = useMemo(() => getAvailableSizes(product), [product]);
+  const [selectedCardSize, setSelectedCardSize] = useState<string>(() => {
+    if (preferredSize && availableSizes.includes(preferredSize)) return preferredSize;
+    return availableSizes[0] || '';
+  });
+
+  useEffect(() => {
+    if (preferredSize && availableSizes.includes(preferredSize)) {
+      setSelectedCardSize(preferredSize);
+    } else if (!selectedCardSize || !availableSizes.includes(selectedCardSize)) {
+      setSelectedCardSize(availableSizes[0] || '');
+    }
+  }, [preferredSize, availableSizes, product.id]);
+
+  const sizeEntries = product.sizeInventory && product.sizeInventory.length > 0 ? product.sizeInventory : [];
+
   return (
-    <article className="group flex flex-col bg-white border border-black/[0.06] rounded-lg overflow-hidden transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <article
+      data-testid={`product-card-${product.id}`}
+      className="group flex flex-col bg-white border border-black/[0.06] rounded-lg overflow-hidden transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F4EFE6]">
         <button
           type="button"
           onClick={() => onNavigate(`/product/${product.slug}`)}
-          className="w-full h-full text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#18181B]"
+          className="block w-full h-full text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#18181B]"
           aria-label={`مشاهده جزئیات ${product.name}`}
         >
           <SafeImage
@@ -109,6 +128,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
 
+        {onQuickAdd && sizeEntries.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1 pt-1" role="group" aria-label={`انتخاب سایز ${product.name}`}>
+            {sizeEntries.slice(0, 6).map((entry) => {
+              const unavailable = entry.stock <= 0;
+              const active = selectedCardSize === entry.size && !unavailable;
+              return (
+                <button
+                  key={entry.size}
+                  type="button"
+                  disabled={unavailable}
+                  onClick={() => setSelectedCardSize(entry.size)}
+                  aria-pressed={active}
+                  aria-label={unavailable ? `سایز ${entry.size} ناموجود` : `انتخاب سایز ${entry.size}`}
+                  className={`min-w-[28px] h-6 px-1.5 text-[11px] font-medium rounded border tabular-nums transition-colors ${
+                    unavailable
+                      ? 'bg-[#F4EFE6] text-[#A8A196] border-black/10 line-through cursor-not-allowed opacity-60'
+                      : active
+                        ? 'bg-[#18181B] text-white border-[#18181B]'
+                        : 'bg-[#FAF7F2] text-[#3F3B36] border-black/10 hover:border-[#18181B]'
+                  }`}
+                >
+                  {entry.size}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="mt-auto pt-2.5 border-t border-black/[0.05] flex items-center justify-between gap-3">
           <div className="flex flex-col">
             {discountPct > 0 && (
@@ -124,8 +171,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {onQuickAdd ? (
             <button
               type="button"
-              disabled={outOfStock}
-              onClick={() => onQuickAdd(product)}
+              disabled={outOfStock || !selectedCardSize}
+              onClick={() => onQuickAdd(product, selectedCardSize)}
               aria-label={`افزودن سریع ${product.name} به سبد خرید`}
               className="px-3 py-1.5 text-xs font-medium rounded border border-[#18181B]/20 text-[#18181B] hover:bg-[#18181B] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
             >

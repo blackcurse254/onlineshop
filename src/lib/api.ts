@@ -5,6 +5,9 @@ export async function apiFetch<T>(url: string, options: RequestInit = {}): Promi
   if (!headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
   }
+  if (!headers.has('X-CSRF-Protection')) {
+    headers.set('X-CSRF-Protection', '1');
+  }
 
   const currentFirebaseUser = auth.currentUser;
   if (currentFirebaseUser && !headers.has('Authorization')) {

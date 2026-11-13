@@ -22,8 +22,8 @@ import {
   formatToman,
   getAvailableSizes,
   getEffectivePrice,
+  getEffectiveTotalStock,
   getSizeStock,
-  getTotalStockFromSizes,
 } from '../utils/commerce';
 import type { Product, Review } from '../types/store';
 
@@ -79,7 +79,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ slug, onNa
         setReviews(res.reviews ?? []);
         setActiveImage(0);
         const avail = getAvailableSizes(res.product);
-        setSelectedSize(avail[0] || res.product.sizes[0] || '41');
+        setSelectedSize(avail[0] || res.product.sizeInventory?.[0]?.size || '');
         setSelectedColor(res.product.colors[0]?.name || 'استاندارد');
         setQuantity(1);
       })
@@ -124,16 +124,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ slug, onNa
   const discountPct = calculateDiscountPercent(product.price, product.discountPrice);
 
   const sizeEntries =
-    product.sizeInventory && product.sizeInventory.length > 0
-      ? product.sizeInventory
-      : product.sizes.map((size) => ({ size, stock: product.stock }));
+    product.sizeInventory && product.sizeInventory.length > 0 ? product.sizeInventory : [];
 
-  const totalStock =
-    product.sizeInventory && product.sizeInventory.length > 0
-      ? getTotalStockFromSizes(product.sizeInventory)
-      : product.stock;
+  const totalStock = getEffectiveTotalStock(product);
 
-  const selectedSizeStock = getSizeStock(product, selectedSize);
+  const selectedSizeStock = selectedSize ? getSizeStock(product, selectedSize) : 0;
   const outOfStockAll = totalStock <= 0;
   const outOfStockSelected = selectedSizeStock <= 0;
   const wishlisted = isWishlisted(product.id);
@@ -201,6 +196,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ slug, onNa
             <SafeImage
               src={product.images[activeImage] || product.images[0] || ''}
               alt={product.name}
+              loading="eager"
               className="w-full h-full object-cover cursor-zoom-in"
             />
             <button
@@ -606,10 +602,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ slug, onNa
           >
             <X className="w-5 h-5" />
           </button>
-          <img
+          <SafeImage
             src={product.images[activeImage] || product.images[0] || ''}
             alt={product.name}
-            referrerPolicy="no-referrer"
+            loading="eager"
             onClick={(e) => e.stopPropagation()}
             className="max-w-4xl max-h-[85vh] w-auto rounded-lg object-contain bg-[#F4EFE6]"
           />
