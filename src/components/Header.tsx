@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Heart, Menu, Search, Shield, ShoppingBag, User, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
 interface HeaderProps {
   currentPath: string;
@@ -20,6 +21,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
   const storeName = settings?.storeName || 'ADONIS';
   const logoText = settings?.logoText || storeName;
 
+  const mobileToggleRef = useRef<HTMLButtonElement | null>(null);
+  const mobileDialogRef = useRef<HTMLDivElement | null>(null);
+  const mobileCloseBtnRef = useRef<HTMLButtonElement | null>(null);
+  const searchToggleRef = useRef<HTMLButtonElement | null>(null);
+
   const navLinks = useMemo(() => {
     const links = [
       { label: 'خانه', path: '/' },
@@ -37,42 +43,33 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
     setLogoFailed(false);
   }, [settings?.logoUrl]);
 
+  const { markNavigationClose } = useAccessibleDialog({
+    isOpen: mobileMenuOpen,
+    onClose: () => setMobileMenuOpen(false),
+    containerRef: mobileDialogRef,
+    initialFocusRef: mobileCloseBtnRef,
+    restoreFocusRef: mobileToggleRef,
+    closeOnDesktopBreakpoint: true,
+  });
+
   // Ensure mobile menu and search drawer always close on route changes
   useEffect(() => {
+    markNavigationClose();
     setMobileMenuOpen(false);
     setSearchOpen(false);
-  }, [currentPath]);
+  }, [currentPath, markNavigationClose]);
 
-  // Body scroll lock and keyboard / desktop resize handling for mobile menu
   useEffect(() => {
-    if (!mobileMenuOpen) return;
-
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
+    if (!searchOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setMobileMenuOpen(false);
+        setSearchOpen(false);
+        searchToggleRef.current?.focus();
       }
     };
-    const onResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileMenuOpen(false);
-      }
-    };
-
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('resize', onResize);
-
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [mobileMenuOpen]);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [searchOpen]);
 
   const isLinkActive = (path: string) => {
     if (path === '/') {
@@ -94,6 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
   };
 
   const handleLinkClick = (path: string) => {
+    markNavigationClose();
     setMobileMenuOpen(false);
     setSearchOpen(false);
     onNavigate(path);
@@ -128,6 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
           {/* Zone 1: Brand Wordmark & Mobile Trigger */}
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <button
+              ref={mobileToggleRef}
               type="button"
               onClick={() => {
                 setSearchOpen(false);
@@ -171,6 +170,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                 <a
                   key={link.path}
                   href={link.path}
+                  aria-current={isActive ? 'page' : undefined}
                   onClick={(e) => {
                     e.preventDefault();
                     handleLinkClick(link.path);
@@ -190,6 +190,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
           {/* Zone 3: Actions (Search, Wishlist, Account, Bag) */}
           <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             <button
+              ref={searchToggleRef}
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -279,10 +280,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
       {/* Full-Viewport Mobile Navigation Drawer (rendered outside header backdrop-blur containing block) */}
       {mobileMenuOpen && (
         <div
+          ref={mobileDialogRef}
           id="mobile-navigation-drawer"
           role="dialog"
           aria-modal="true"
-          aria-label="منوی ناوبری موبایل"
+          aria-labelledby="mobile-menu-title"
           data-testid="mobile-menu-panel"
           className="fixed inset-0 z-50 md:hidden flex"
         >
@@ -293,15 +295,19 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
             aria-hidden="true"
           />
 
-          <aside className="relative z-10 w-full max-w-[340px] h-[100dvh] bg-[#FAF7F2] shadow-2xl border-e border-black/10 flex flex-col overflow-y-auto">
+          <aside className="relative z-10 w-full max-w-[340px] h-[100dvh] max-h-[100dvh] bg-[#FAF7F2] shadow-2xl border-e border-black/10 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
             <div className="px-4 h-16 bg-white border-b border-black/[0.08] flex items-center justify-between shrink-0">
               <div className="flex flex-col min-w-0">
-                <span className="font-display-serif text-xl font-semibold tracking-wider text-[#18181B] truncate">
+                <span
+                  id="mobile-menu-title"
+                  className="font-display-serif text-xl font-semibold tracking-wider text-[#18181B] truncate"
+                >
                   {logoText}
                 </span>
                 <span className="text-[11px] text-[#6B665F] truncate">فروشگاه تخصصی کفش و کتونی</span>
               </div>
               <button
+                ref={mobileCloseBtnRef}
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="بستن منوی موبایل"
@@ -312,13 +318,17 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               </button>
             </div>
 
-            <nav aria-label="لینک‌های منوی موبایل" className="flex-1 p-4 space-y-1.5">
+            <nav
+              aria-label="لینک‌های منوی موبایل"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 space-y-1.5"
+            >
               {navLinks.map((link) => {
                 const active = isLinkActive(link.path);
                 return (
                   <a
                     key={link.path}
                     href={link.path}
+                    aria-current={active ? 'page' : undefined}
                     onClick={(e) => {
                       e.preventDefault();
                       handleLinkClick(link.path);
@@ -340,6 +350,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
 
               <a
                 href="/account?tab=wishlist"
+                aria-current={
+                  currentPath.startsWith('/account') && currentPath.includes('tab=wishlist')
+                    ? 'page'
+                    : undefined
+                }
                 onClick={(e) => {
                   e.preventDefault();
                   handleLinkClick('/account?tab=wishlist');
@@ -363,6 +378,14 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
             <div className="p-4 bg-white border-t border-black/[0.08] space-y-2.5 shrink-0">
               <a
                 href="/account"
+                aria-current={
+                  currentPath === '/account' ||
+                  (currentPath.startsWith('/account?') &&
+                    !currentPath.includes('tab=track') &&
+                    !currentPath.includes('tab=wishlist'))
+                    ? 'page'
+                    : undefined
+                }
                 onClick={(e) => {
                   e.preventDefault();
                   handleLinkClick('/account');

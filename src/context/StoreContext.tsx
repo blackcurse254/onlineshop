@@ -26,6 +26,7 @@ interface StoreContextValue {
   isCartOpen: boolean;
   loading: boolean;
   error: string | null;
+  passwordResetEnabled: boolean;
   setIsCartOpen: (open: boolean) => void;
   refreshStorefront: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -65,6 +66,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [passwordResetEnabled, setPasswordResetEnabled] = useState(false);
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
@@ -120,6 +122,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         products: Product[];
         banners: Banner[];
         reviews: Review[];
+        authCapabilities?: { passwordResetEnabled?: boolean };
       }>('/api/storefront');
       setSettings(data.settings);
       setCategories(data.categories);
@@ -127,6 +130,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setProducts(data.products);
       setBanners(data.banners);
       setReviews(data.reviews ?? []);
+      setPasswordResetEnabled(Boolean(data.authCapabilities?.passwordResetEnabled));
     } catch (err: any) {
       setError(err.message || 'خطا در بارگذاری اطلاعات فروشگاه');
     } finally {
@@ -299,6 +303,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isCartOpen,
         loading,
         error,
+        passwordResetEnabled,
         setIsCartOpen,
         refreshStorefront,
         refreshUser,

@@ -12,6 +12,7 @@ import {
 } from './schema.ts';
 import { hashPassword } from '../lib/security.ts';
 import { getTotalStockFromSizes, migrateLegacySizeInventory } from '../utils/commerce.ts';
+import { applyAdonisSettingsMigration } from './migrations.ts';
 
 let seedPromise: Promise<void> | null = null;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -683,6 +684,7 @@ async function runSeed() {
   }
 
   await migrateLegacyProductsSizeInventory();
+  await applyAdonisSettingsMigration();
   await bootstrapEnvAdmin();
 }
 

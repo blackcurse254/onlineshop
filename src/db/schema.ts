@@ -213,6 +213,41 @@ export const passwordResets = pgTable('password_resets', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export interface StoreSettingsSnapshotData {
+  storeName: string;
+  storeSubtitle: string;
+  logoText: string;
+  logoUrl: string;
+  primaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  phone: string;
+  email: string;
+  instagram: string;
+  telegram: string;
+  whatsapp: string;
+  address: string;
+  shippingBaseCost: number;
+  expressShippingCost: number;
+  freeShippingThreshold: number;
+  aboutText: string;
+  shippingPolicy: string;
+  returnPolicy: string;
+  announcementText: string;
+}
+
+export const storeSettingsSnapshots = pgTable('store_settings_snapshots', {
+  id: serial('id').primaryKey(),
+  migrationKey: text('migration_key').notNull().unique(),
+  settingsId: integer('settings_id').notNull(),
+  previousSnapshot: jsonb('previous_snapshot').$type<StoreSettingsSnapshotData>().notNull(),
+  appliedSnapshot: jsonb('applied_snapshot').$type<StoreSettingsSnapshotData>().notNull(),
+  status: text('status').notNull().default('applied'),
+  notes: text('notes').notNull().default(''),
+  appliedAt: timestamp('applied_at').defaultNow().notNull(),
+  rolledBackAt: timestamp('rolled_back_at'),
+});
+
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));

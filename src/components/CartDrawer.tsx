@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { SafeImage } from './SafeImage';
 import { calculateOrderTotals, formatToman, getEffectivePrice } from '../utils/commerce';
 
@@ -10,27 +11,15 @@ interface CartDrawerProps {
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const { cart, isCartOpen, setIsCartOpen, updateCartQty, removeFromCart, settings } = useStore();
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => {
-    if (!isCartOpen) return;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsCartOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [isCartOpen, setIsCartOpen]);
+  const { markNavigationClose } = useAccessibleDialog({
+    isOpen: isCartOpen,
+    onClose: () => setIsCartOpen(false),
+    containerRef: drawerRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   if (!isCartOpen) return null;
 
@@ -54,22 +43,35 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const progressPct = Math.min(100, Math.round((totals.subtotal / Math.max(1, threshold)) * 100));
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="سبد خرید">
+    <div
+      ref={drawerRef}
+      className="fixed inset-0 z-50 flex justify-end"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-drawer-title"
+      data-testid="cart-drawer"
+    >
       <div
         className="fixed inset-0 bg-black/45 backdrop-blur-[1px]"
+        data-testid="cart-drawer-backdrop"
         onClick={() => setIsCartOpen(false)}
+        aria-hidden="true"
       />
 
-      <aside className="relative z-10 w-full max-w-md bg-[#FAF7F2] h-full flex flex-col shadow-2xl border-s border-black/10">
-        <div className="px-5 py-4 bg-white border-b border-black/[0.08] flex items-center justify-between">
+      <aside className="relative z-10 w-full max-w-md bg-[#FAF7F2] h-[100dvh] max-h-[100dvh] flex flex-col shadow-2xl border-s border-black/10 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
+        <div className="px-5 py-4 bg-white border-b border-black/[0.08] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-5 h-5 text-[#18181B]" strokeWidth={1.75} />
-            <h2 className="text-base font-semibold text-[#18181B]">سبد خرید شما</h2>
+            <h2 id="cart-drawer-title" className="text-base font-semibold text-[#18181B]">
+              سبد خرید شما
+            </h2>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={() => setIsCartOpen(false)}
             aria-label="بستن سبد خرید"
+            data-testid="cart-drawer-close"
             className="p-2 text-[#524E48] hover:text-[#18181B] rounded-md min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
@@ -107,6 +109,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => {
+                  markNavigationClose();
                   setIsCartOpen(false);
                   onNavigate('/shop');
                 }}
@@ -199,9 +202,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => {
+                markNavigationClose();
                 setIsCartOpen(false);
                 onNavigate('/checkout');
               }}
+              data-testid="cart-checkout-button"
               className="w-full py-3 px-4 bg-[#18181B] text-white text-sm font-medium rounded-md hover:bg-[#2A2A2E] transition-colors"
             >
               ادامه و ثبت سفارش

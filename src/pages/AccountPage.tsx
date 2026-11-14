@@ -15,9 +15,21 @@ type GuestTab = 'login' | 'register' | 'track' | 'wishlist';
 type AuthTab = 'overview' | 'wishlist' | 'track';
 
 export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigate }) => {
-  const { user, setUser, products, categories, wishlistIds, loginWithEmail, registerWithEmail, loginWithGoogle, logout } = useStore();
+  const {
+    user,
+    setUser,
+    products,
+    categories,
+    wishlistIds,
+    passwordResetEnabled,
+    loginWithEmail,
+    registerWithEmail,
+    loginWithGoogle,
+    logout,
+  } = useStore();
   const params = new URLSearchParams(queryString);
   const urlTab = params.get('tab');
+  const urlToken = params.get('token') ?? '';
   const initialTab: GuestTab =
     urlTab === 'track'
       ? 'track'
@@ -39,8 +51,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [showResetMode, setShowResetMode] = useState(false);
-  const [resetToken, setResetToken] = useState('');
+  const [showResetMode, setShowResetMode] = useState(
+    () => urlTab === 'reset' && passwordResetEnabled
+  );
+  const [resetToken, setResetToken] = useState(() => (passwordResetEnabled ? urlToken : ''));
   const [newPassword, setNewPassword] = useState('');
   const [resetMessage, setResetMessage] = useState<string | null>(null);
 
@@ -61,20 +75,37 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
   useEffect(() => {
     const p = new URLSearchParams(queryString);
     const t = p.get('tab');
+    const tok = p.get('token') ?? '';
     if (t === 'track') {
       setTab('track');
       setAuthTab('track');
+      setShowResetMode(false);
     } else if (t === 'wishlist') {
       setTab('wishlist');
       setAuthTab('wishlist');
+      setShowResetMode(false);
     } else if (t === 'register') {
       setTab('register');
       setAuthTab('overview');
+      setShowResetMode(false);
+    } else if (t === 'reset') {
+      setTab('login');
+      setAuthTab('overview');
+      if (passwordResetEnabled) {
+        setShowResetMode(true);
+        if (tok) setResetToken(tok);
+      } else {
+        setShowResetMode(false);
+        setAuthError('بازیابی رمز عبور تا زمان پیکربندی سرویس ارسال ایمیل روی سرور فعال نیست.');
+      }
     } else {
       setAuthTab('overview');
       setTab((prev) => (prev === 'register' ? 'register' : 'login'));
+      if (!passwordResetEnabled) {
+        setShowResetMode(false);
+      }
     }
-  }, [queryString]);
+  }, [queryString, passwordResetEnabled]);
 
   useEffect(() => {
     if (user) {
@@ -551,11 +582,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
         <div className="bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
           <div className="space-y-1">
             <h1 className="text-xl font-bold text-[#18181B]">
-              {showResetMode ? 'بازیابی رمز عبور' : 'ورود به حساب کاربری'}
+              {passwordResetEnabled && showResetMode ? 'بازیابی رمز عبور' : 'ورود به حساب کاربری'}
             </h1>
             <p className="text-xs text-[#6B665F]">
-              {showResetMode
-                ? 'ایمیل خود را برای صدور کد بازیابی وارد کنید یا کد دریافتی را ثبت نمایید.'
+              {passwordResetEnabled && showResetMode
+                ? 'ایمیل خود را برای ارسال لینک یک‌بارمصرف بازیابی وارد کنید یا کد دریافتی را ثبت نمایید.'
                 : 'برای مشاهده سفارش‌ها و مدیریت لیست علاقه‌مندی‌ها وارد شوید.'}
             </p>
           </div>
@@ -569,7 +600,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
             </div>
           )}
 
-          {showResetMode ? (
+          {passwordResetEnabled && showResetMode ? (
             <div className="space-y-5">
               <form onSubmit={handleForgotPassword} className="space-y-3">
                 <div className="space-y-1">
@@ -672,17 +703,20 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     <label htmlFor="login-password" className="text-xs font-medium text-[#18181B]">
                       رمز عبور
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowResetMode(true);
-                        setAuthError(null);
-                        setResetMessage(null);
-                      }}
-                      className="text-xs text-[#8F6E38] hover:underline"
-                    >
-                      فراموشی رمز عبور؟
-                    </button>
+                    {passwordResetEnabled && (
+                      <button
+                        type="button"
+                        data-testid="forgot-password-trigger"
+                        onClick={() => {
+                          setShowResetMode(true);
+                          setAuthError(null);
+                          setResetMessage(null);
+                        }}
+                        className="text-xs text-[#8F6E38] hover:underline"
+                      >
+                        فراموشی رمز عبور؟
+                      </button>
+                    )}
                   </div>
                   <input
                     id="login-password"

@@ -21,6 +21,11 @@ import {
   wishlists,
 } from './src/db/schema.ts';
 import { ensureSeeded } from './src/db/seed.ts';
+import {
+  buildPasswordResetUrl,
+  isEmailServiceConfigured,
+  sendPasswordResetEmail,
+} from './src/lib/mailer.ts';
 import { optionalAuth, requireAdmin, requireAuth, type AuthRequest } from './src/middleware/auth.ts';
 import {
   consumeRateLimit,
@@ -187,6 +192,9 @@ app.get('/api/storefront', async (_req, res, next) => {
       products: productRows,
       banners: bannerRows,
       reviews: enrichedReviews,
+      authCapabilities: {
+        passwordResetEnabled: isEmailServiceConfigured(),
+      },
     });
   } catch (err) {
     next(err);
@@ -398,7 +406,12 @@ app.get('/api/auth/me', async (req: AuthRequest, res, next) => {
   try {
     await ensureSeeded();
     await optionalAuth(req, res, () => {
-      res.json({ user: req.user ?? null });
+      res.json({
+        user: req.user ?? null,
+        authCapabilities: {
+          passwordResetEnabled: isEmailServiceConfigured(),
+        },
+      });
     });
   } catch (err) {
     next(err);
@@ -532,6 +545,12 @@ app.post(
   async (req, res, next) => {
     try {
       await ensureSeeded();
+      if (!isEmailServiceConfigured()) {
+        return res.status(503).json({
+          error: 'بازیابی رمز عبور تا زمان پیکربندی سرویس ارسال ایمیل روی سرور فعال نیست.',
+        });
+      }
+
       const parsed = forgotPasswordSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.issues[0]?.message || 'ایمیل معتبر وارد کنید.' });
@@ -552,7 +571,11 @@ app.post(
       }
 
       const found = await db
-        .select({ id: users.id, passwordHash: users.passwordHash })
+        .select({
+          id: users.id,
+          fullName: users.fullName,
+          passwordHash: users.passwordHash,
+        })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
@@ -562,23 +585,59 @@ app.post(
         const tokenHash = hashOpaqueToken(rawToken);
         const expiresAt = new Date(Date.now() + 15 * 60_000);
 
-        await db.transaction(async (tx) => {
+        const insertedReset = await db.transaction(async (tx) => {
           await tx
             .update(passwordResets)
             .set({ usedAt: new Date() })
             .where(and(eq(passwordResets.userId, found[0].id), isNull(passwordResets.usedAt)));
-          await tx.insert(passwordResets).values({
-            userId: found[0].id,
-            tokenHash,
-            expiresAt,
-          });
+          const [createdReset] = await tx
+            .insert(passwordResets)
+            .values({
+              userId: found[0].id,
+              tokenHash,
+              expiresAt,
+            })
+            .returning({ id: passwordResets.id });
+          return createdReset;
         });
+
+        const settingsRow = await db.select({ storeName: storeSettings.storeName }).from(storeSettings).limit(1);
+        const storeName = settingsRow[0]?.storeName || 'ADONIS';
+        const configuredAppUrl =
+          process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL' ? process.env.APP_URL : '';
+        const requestOrigin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
+        const resetUrl = buildPasswordResetUrl(configuredAppUrl || requestOrigin, rawToken);
+
+        try {
+          await sendPasswordResetEmail({
+            to: email,
+            recipientName: found[0].fullName,
+            storeName,
+            resetUrl,
+            rawToken,
+            expiresMinutes: 15,
+          });
+        } catch (mailErr) {
+          // Immediately invalidate the freshly issued token if email delivery failed
+          await db
+            .update(passwordResets)
+            .set({ usedAt: new Date() })
+            .where(eq(passwordResets.id, insertedReset.id))
+            .catch(() => {});
+          console.error(
+            'Password reset email delivery failed:',
+            mailErr instanceof Error ? mailErr.message : 'unknown'
+          );
+          return res.status(502).json({
+            error: 'ارسال ایمیل بازیابی با خطا مواجه شد. لطفاً دقایقی دیگر دوباره تلاش کنید.',
+          });
+        }
       }
 
-      // Generic non-enumerating response; raw token is never exposed in API output
+      // Generic non-enumerating response; raw token is never exposed in API output or stored in DB
       res.json({
         ok: true,
-        message: 'در صورت ثبت این ایمیل با رمز عبور در سیستم، دستورالعمل بازیابی رمز عبور صادر خواهد شد.',
+        message: 'در صورت ثبت این ایمیل در سیستم، لینک یک‌بارمصرف بازیابی رمز عبور به ایمیل شما ارسال شد.',
       });
     } catch (err) {
       next(err);
@@ -597,6 +656,12 @@ app.post(
   async (req, res, next) => {
     try {
       await ensureSeeded();
+      if (!isEmailServiceConfigured()) {
+        return res.status(503).json({
+          error: 'بازیابی رمز عبور تا زمان پیکربندی سرویس ارسال ایمیل روی سرور فعال نیست.',
+        });
+      }
+
       const parsed = resetPasswordSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.issues[0]?.message || 'اطلاعات بازیابی نامعتبر است.' });
@@ -606,9 +671,10 @@ app.post(
       const now = new Date();
 
       const updatedUserId = await db.transaction(async (tx) => {
-        const found = await tx
-          .select()
-          .from(passwordResets)
+        // Atomic single-use claim prevents concurrent double-spending of the same reset token
+        const claimed = await tx
+          .update(passwordResets)
+          .set({ usedAt: now })
           .where(
             and(
               eq(passwordResets.tokenHash, tokenHash),
@@ -616,28 +682,28 @@ app.post(
               gt(passwordResets.expiresAt, now)
             )
           )
-          .limit(1);
+          .returning({ userId: passwordResets.userId });
 
-        if (found.length === 0) {
+        if (claimed.length === 0) {
           return null;
         }
 
-        const record = found[0];
+        const userId = claimed[0].userId;
         await tx
           .update(users)
           .set({ passwordHash: hashPassword(parsed.data.newPassword) })
-          .where(eq(users.id, record.userId));
+          .where(eq(users.id, userId));
 
         await tx
           .update(passwordResets)
           .set({ usedAt: now })
-          .where(and(eq(passwordResets.userId, record.userId), isNull(passwordResets.usedAt)));
+          .where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt)));
 
-        return record.userId;
+        return userId;
       });
 
       if (!updatedUserId) {
-        return res.status(400).json({ error: 'توکن بازیابی رمز عبور نامعتبر یا منقضی شده است.' });
+        return res.status(400).json({ error: 'توکن بازیابی رمز عبور نامعتبر، استفاده‌شده یا منقضی شده است.' });
       }
 
       res.json({
