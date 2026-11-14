@@ -48,122 +48,150 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   }, [preferredSize, availableSizes, product.id]);
 
   const sizeEntries = product.sizeInventory && product.sizeInventory.length > 0 ? product.sizeInventory : [];
+  const primaryImage = product.images[0] || '';
+  const secondaryImage = product.images.length > 1 ? product.images[1] : '';
 
   return (
     <article
       data-testid={`product-card-${product.id}`}
-      className="group flex flex-col bg-white border border-[#16141A]/[0.08] rounded-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-[var(--adonis-accent)]/40"
+      className="group h-full flex flex-col bg-white border border-[#16141A]/[0.08] rounded-sm overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-[#16141A]/20"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#E2E0DB]">
-        <button
-          type="button"
-          onClick={() => onNavigate(`/product/${product.slug}`)}
-          className="block w-full h-full text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--adonis-accent)]"
-          aria-label={`مشاهده جزئیات ${product.name}`}
-        >
-          <SafeImage
-            src={product.images[0] || ''}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-          {outOfStock && (
-            <div className="absolute inset-0 bg-[#2B1A2E]/60 flex items-center justify-center">
-              <span className="text-xs font-medium text-white bg-[#16141A]/90 px-3 py-1 rounded-sm">
-                ناموجود
-              </span>
-            </div>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            void toggleWishlist(product.id);
-          }}
-          data-testid={`wishlist-toggle-${product.id}`}
-          title={wishlisted ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها'}
-          aria-label={wishlisted ? `حذف ${product.name} از علاقه‌مندی‌ها` : `افزودن ${product.name} به علاقه‌مندی‌ها`}
-          aria-pressed={wishlisted}
-          className={`absolute top-3 end-3 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-sm border active:scale-95 transition-all cursor-pointer ${
-            wishlisted
-              ? 'bg-[var(--adonis-accent)] text-white border-[var(--adonis-accent)] shadow-sm'
-              : 'bg-white/95 text-[var(--adonis-primary)] border-[#16141A]/10 hover:bg-white hover:border-[var(--adonis-accent)]/50'
-          }`}
-        >
-          <Heart className="w-4 h-4 transition-transform" fill={wishlisted ? 'currentColor' : 'none'} strokeWidth={1.75} />
-        </button>
-      </div>
-
-      <div className="flex flex-col flex-1 p-4 gap-2">
-        <div className="flex items-center justify-between gap-2 text-xs text-[#85818A]">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-semibold text-[var(--adonis-primary)] shrink-0">{product.brand}</span>
-            <span aria-hidden="true">·</span>
-            <span className="truncate">{category?.name || 'کفش و کتونی'}</span>
-          </div>
-          {discountPct > 0 ? (
-            <span className="text-[#B01D39] font-semibold tabular-nums shrink-0">
-              {new Intl.NumberFormat('fa-IR').format(discountPct)}٪ تخفیف
-            </span>
-          ) : product.isNew ? (
-            <span className="text-[#B01D39] font-medium shrink-0">جدید</span>
-          ) : null}
-        </div>
-
-        <h3 className="text-sm sm:text-base font-semibold text-[var(--adonis-primary)] leading-snug line-clamp-1">
+      <div className="relative">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#E2E0DB]">
           <button
             type="button"
             onClick={() => onNavigate(`/product/${product.slug}`)}
-            className="text-start hover:text-[#B01D39] transition-colors w-full truncate"
+            className="block w-full h-full text-start focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--adonis-accent)]"
+            aria-label={`مشاهده جزئیات ${product.name}`}
+          >
+            <SafeImage
+              src={primaryImage}
+              alt={product.name}
+              className={`w-full h-full object-cover transition-all duration-500 ${
+                outOfStock
+                  ? 'grayscale opacity-90'
+                  : secondaryImage
+                    ? 'group-hover:scale-[1.04] md:group-hover:opacity-0'
+                    : 'group-hover:scale-[1.04]'
+              }`}
+            />
+            {secondaryImage && !outOfStock && (
+              <SafeImage
+                src={secondaryImage}
+                alt={`${product.name} نمای دوم`}
+                className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-[1.04]"
+              />
+            )}
+            {outOfStock && (
+              <div className="absolute inset-0 bg-[#EFEEEA]/70 backdrop-blur-[1px] flex items-center justify-center">
+                <span className="text-xs font-semibold text-[#EFEEEA] bg-[#16141A] px-3.5 py-1.5 rounded-sm shadow-xs">
+                  ناموجود
+                </span>
+              </div>
+            )}
+          </button>
+
+          {discountPct > 0 && (
+            <span className="discount-tag-notched absolute top-3 start-3 z-10 bg-[#C21E3C] text-white text-[11px] font-semibold px-2.5 py-1 tabular-nums shadow-xs pointer-events-none">
+              <span dir="ltr" className="inline-block">
+                −{new Intl.NumberFormat('fa-IR').format(discountPct)}٪
+              </span>
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              void toggleWishlist(product.id);
+            }}
+            data-testid={`wishlist-toggle-${product.id}`}
+            title={wishlisted ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها'}
+            aria-label={wishlisted ? `حذف ${product.name} از علاقه‌مندی‌ها` : `افزودن ${product.name} به علاقه‌مندی‌ها`}
+            aria-pressed={wishlisted}
+            className={`absolute top-3 end-3 z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center backdrop-blur-xs border active:scale-95 transition-all cursor-pointer ${
+              wishlisted
+                ? 'bg-[#C21E3C] text-white border-[#C21E3C] shadow-sm'
+                : 'bg-white/90 text-[#16141A] border-[#16141A]/15 hover:bg-white hover:border-[#C21E3C]'
+            }`}
+          >
+            <Heart className="w-4 h-4 transition-transform" fill={wishlisted ? 'currentColor' : 'none'} strokeWidth={1.75} />
+          </button>
+        </div>
+
+        {/* Size chips: single-row scrollable on mobile for equal card heights, slide-up overlay on desktop hover/focus */}
+        {onQuickAdd && sizeEntries.length > 0 && !outOfStock && (
+          <div
+            role="group"
+            aria-label={`انتخاب سایز ${product.name}`}
+            className="px-3 pt-2.5 pb-1.5 bg-white border-b border-[#16141A]/[0.05] md:border-b-0 md:border-t md:border-[#16141A]/10 md:absolute md:inset-x-0 md:bottom-0 md:z-20 md:bg-white/95 md:backdrop-blur-xs md:p-2.5 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-focus-within:opacity-100 md:group-focus-within:translate-y-0 md:transition-all md:duration-200"
+          >
+            <div className="flex flex-nowrap md:flex-wrap items-center gap-1 overflow-x-auto md:overflow-visible">
+              {sizeEntries.slice(0, 6).map((entry) => {
+                const unavailable = entry.stock <= 0;
+                const active = selectedCardSize === entry.size && !unavailable;
+                return (
+                  <button
+                    key={entry.size}
+                    type="button"
+                    disabled={unavailable}
+                    onClick={() => setSelectedCardSize(entry.size)}
+                    aria-pressed={active}
+                    aria-label={unavailable ? `سایز ${entry.size} ناموجود` : `انتخاب سایز ${entry.size}`}
+                    className={`min-w-[30px] h-7 px-1.5 text-[11px] font-medium rounded-sm border tabular-nums transition-colors ${
+                      unavailable
+                        ? 'bg-[#E2E0DB] text-[#85818A] border-[#16141A]/10 line-through cursor-not-allowed opacity-70'
+                        : active
+                          ? 'bg-[#16141A] text-white border-[#16141A]'
+                          : 'bg-[#EFEEEA] text-[#4B4752] border-[#16141A]/10 hover:border-[#C21E3C]'
+                    }`}
+                  >
+                    {entry.size}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Thin 2px anemone hover rule directly under image container */}
+      <div className="h-[2px] w-full bg-[#16141A]/[0.06] overflow-hidden shrink-0" aria-hidden="true">
+        <div className="h-full w-full bg-[#C21E3C] origin-right scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+      </div>
+
+      <div className="flex flex-col flex-1 p-3.5 sm:p-4 gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span dir="ltr" className="font-display-serif text-[10px] uppercase tracking-[0.06em] sm:tracking-[0.18em] text-[#6A6670] shrink-0">
+              {product.brand}
+            </span>
+            <span className="hidden sm:inline text-[#6A6670] text-[10px] shrink-0" aria-hidden="true">·</span>
+            <span className="hidden sm:inline text-[11px] text-[#6A6670] truncate">{category?.name || 'کفش و کتونی'}</span>
+          </div>
+          {product.isNew && (
+            <span className="text-[#B01D39] text-[11px] font-semibold shrink-0">جدید</span>
+          )}
+        </div>
+
+        <h3 className="text-sm sm:text-[15px] font-semibold text-[#16141A] leading-snug line-clamp-2 min-h-[2.5rem]">
+          <button
+            type="button"
+            onClick={() => onNavigate(`/product/${product.slug}`)}
+            className="text-start hover:text-[#B01D39] transition-colors w-full"
           >
             {product.name}
           </button>
         </h3>
 
-        <div className="flex items-center justify-between text-[11px] text-[#85818A]">
-          <span className="truncate">{product.model || product.upperMaterial}</span>
-          <span className={`tabular-nums font-medium shrink-0 ${outOfStock ? 'text-[#B01D39]' : 'text-emerald-700'}`}>
-            {outOfStock ? 'ناموجود' : 'موجود'}
-          </span>
-        </div>
-
-        {onQuickAdd && sizeEntries.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1 pt-1" role="group" aria-label={`انتخاب سایز ${product.name}`}>
-            {sizeEntries.slice(0, 6).map((entry) => {
-              const unavailable = entry.stock <= 0;
-              const active = selectedCardSize === entry.size && !unavailable;
-              return (
-                <button
-                  key={entry.size}
-                  type="button"
-                  disabled={unavailable}
-                  onClick={() => setSelectedCardSize(entry.size)}
-                  aria-pressed={active}
-                  aria-label={unavailable ? `سایز ${entry.size} ناموجود` : `انتخاب سایز ${entry.size}`}
-                  className={`min-w-[30px] h-7 px-1.5 text-[11px] font-medium rounded-sm border tabular-nums transition-colors ${
-                    unavailable
-                      ? 'bg-[#E2E0DB] text-[#85818A] border-[#16141A]/10 line-through cursor-not-allowed opacity-70'
-                      : active
-                        ? 'bg-[var(--adonis-primary)] text-white border-[var(--adonis-primary)]'
-                        : 'bg-[#EFEEEA] text-[#4B4752] border-[#16141A]/10 hover:border-[var(--adonis-accent)]'
-                  }`}
-                >
-                  {entry.size}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="mt-auto pt-3 border-t border-[#16141A]/[0.06] flex items-center justify-between gap-3">
-          <div className="flex flex-col">
+        <div className="mt-auto pt-3 border-t border-[#16141A]/[0.06] flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-col min-w-0">
             {discountPct > 0 && (
-              <span className="text-xs text-[#85818A] line-through tabular-nums">
+              <span className="text-[11px] text-[#6A6670] line-through tabular-nums">
                 {formatToman(product.price)}
               </span>
             )}
-            <span className="text-sm sm:text-[15px] font-bold text-[var(--adonis-primary)] tabular-nums">
+            <span className="text-sm sm:text-[15px] font-semibold text-[#16141A] tabular-nums">
               {formatToman(effectivePrice)}
             </span>
           </div>
@@ -174,15 +202,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               disabled={outOfStock || !selectedCardSize}
               onClick={() => onQuickAdd(product, selectedCardSize)}
               aria-label={`افزودن سریع ${product.name} به سبد خرید`}
-              className="px-3.5 py-2 text-xs font-medium rounded-sm border border-[#16141A]/20 text-[var(--adonis-primary)] hover:bg-[var(--adonis-accent)] hover:text-white hover:border-[var(--adonis-accent)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
+              className="min-h-[44px] px-3.5 text-xs font-medium rounded-sm bg-[#16141A] text-white hover:bg-[#C21E3C] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
             >
-              {outOfStock ? 'اتمام موجودی' : 'افزودن'}
+              {outOfStock ? 'ناموجود' : 'افزودن'}
             </button>
           ) : (
             <button
               type="button"
               onClick={() => onNavigate(`/product/${product.slug}`)}
-              className="px-3.5 py-2 text-xs font-medium rounded-sm border border-[#16141A]/20 text-[var(--adonis-primary)] hover:bg-[var(--adonis-accent)] hover:text-white hover:border-[var(--adonis-accent)] transition-colors whitespace-nowrap shrink-0"
+              className="min-h-[44px] px-3.5 text-xs font-medium rounded-sm border border-[#16141A] text-[#16141A] hover:bg-[#16141A] hover:text-[#EFEEEA] transition-colors whitespace-nowrap shrink-0"
             >
               جزئیات
             </button>

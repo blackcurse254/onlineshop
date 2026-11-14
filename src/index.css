@@ -31,6 +31,22 @@
     font-weight: 400;
     font-synthesis: none;
   }
+
+  ::selection {
+    background-color: #c21e3c;
+    color: #ffffff;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid #c21e3c;
+    outline-offset: 2px;
+  }
 }
 
 .font-display-serif {
@@ -56,6 +72,58 @@
   overflow: hidden;
 }
 
+.discount-tag-notched {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+
+.reveal-item {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-item.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes adonisShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #e2e0db 0%, #efeeea 50%, #e2e0db 100%);
+  background-size: 200% 100%;
+  animation: adonisShimmer 1.6s ease-in-out infinite;
+}
+
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #efeeea;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(22, 20, 26, 0.25);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(22, 20, 26, 0.45);
+  }
+}
+
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
@@ -65,6 +133,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal-item {
+    opacity: 1;
+    transform: none;
+  }
+
+  .skeleton-shimmer {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

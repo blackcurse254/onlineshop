@@ -177,13 +177,19 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                     e.preventDefault();
                     handleLinkClick(link.path);
                   }}
-                  className={`whitespace-nowrap shrink-0 py-1 border-b-2 transition-colors ${
+                  className={`relative group whitespace-nowrap shrink-0 min-h-[44px] inline-flex items-center transition-colors ${
                     isActive
-                      ? 'text-[var(--adonis-primary)] font-semibold border-[var(--adonis-accent)]'
-                      : 'border-transparent hover:text-[#B01D39] hover:border-[#16141A]/20'
+                      ? 'text-[var(--adonis-primary)] font-semibold'
+                      : 'hover:text-[#B01D39]'
                   }`}
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  <span
+                    aria-hidden="true"
+                    className={`absolute bottom-1.5 inset-x-0 h-[2px] bg-[#C21E3C] origin-right transition-transform duration-200 ${
+                      isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    }`}
+                  />
                 </a>
               );
             })}

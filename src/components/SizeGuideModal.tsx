@@ -30,11 +30,11 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
       aria-labelledby="size-guide-title"
     >
       <div className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-xl bg-white rounded-sm border border-[#16141A]/10 shadow-2xl overflow-hidden">
-        <div className="px-5 py-4 bg-[#EFEEEA] border-b border-[#16141A]/[0.08] flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="relative z-10 w-full max-w-xl bg-white rounded-sm border border-[#16141A]/15 border-t-2 border-t-[#C21E3C] shadow-2xl overflow-hidden">
+        <div className="px-5 py-4 bg-[#EFEEEA] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
             <Ruler className="w-5 h-5 text-[var(--adonis-accent)]" />
-            <h2 id="size-guide-title" className="text-lg text-[var(--adonis-primary)]">
+            <h2 id="size-guide-title" className="text-xl text-[var(--adonis-primary)]">
               راهنمای استاندارد سایز کفش و کتونی
             </h2>
           </div>
@@ -43,11 +43,12 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
             type="button"
             onClick={onClose}
             aria-label="بستن راهنمای سایز"
-            className="p-2 text-[#6A6670] hover:text-[var(--adonis-primary)] rounded-sm min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="p-2 text-[#6A6670] hover:text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+        <div className="meander" aria-hidden="true" />
 
         <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="bg-[#EFEEEA] border border-[#16141A]/[0.06] rounded-sm p-3.5 text-xs text-[#4B4752] leading-relaxed space-y-1">
