@@ -168,21 +168,24 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
     setMinPrice(null);
     setMaxPrice(null);
     setSort('newest');
+    if (queryString) {
+      onNavigate('/shop');
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-black/[0.08] pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#16141A]/[0.08] pb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#18181B]">فروشگاه تخصصی کفش و کتونی</h1>
-          <p className="text-xs sm:text-sm text-[#6B665F] mt-1 tabular-nums">
+          <h1 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">فروشگاه تخصصی کفش و کتونی</h1>
+          <p className="text-xs sm:text-sm text-[#6A6670] mt-1 tabular-nums">
             نمایش {new Intl.NumberFormat('fa-IR').format(filteredProducts.length)} مدل کفش
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-[#6B665F] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#85818A] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <label htmlFor="shop-search-input" className="sr-only">
               جستجو در کفش‌ها و کتونی‌ها
             </label>
@@ -192,7 +195,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="نام کفش، برند یا مدل..."
-              className="w-full sm:w-64 h-10 ps-9 pe-3 text-sm bg-white border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+              className="w-full sm:w-64 h-10 ps-9 pe-3 text-sm bg-white border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
             />
           </div>
 
@@ -203,23 +206,23 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               aria-expanded={mobileFiltersOpen}
               aria-controls="shop-filters-panel"
               data-testid="mobile-filters-toggle"
-              className="md:hidden inline-flex items-center gap-1.5 h-10 px-3 text-xs font-medium bg-white border border-black/15 rounded-md"
+              className="lg:hidden inline-flex items-center gap-1.5 h-10 px-3 text-xs font-medium bg-white border border-[#16141A]/15 rounded-sm text-[var(--adonis-primary)]"
             >
               <Filter className="w-3.5 h-3.5" />
               <span>فیلترها</span>
               {hasActiveFilters && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#B5945B]" aria-hidden="true" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--adonis-accent)]" aria-hidden="true" />
               )}
             </button>
 
-            <label htmlFor="shop-sort-select" className="text-xs text-[#6B665F] whitespace-nowrap">
+            <label htmlFor="shop-sort-select" className="text-xs text-[#6A6670] whitespace-nowrap">
               مرتب‌سازی:
             </label>
             <select
               id="shop-sort-select"
               value={sort}
               onChange={(e) => setSort(e.target.value as ProductSortOption)}
-              className="h-10 px-3 text-xs sm:text-sm bg-white border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+              className="h-10 px-3 text-xs sm:text-sm bg-white border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
             >
               <option value="newest">جدیدترین</option>
               <option value="bestseller">پرفروش‌ترین</option>
@@ -231,195 +234,202 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
         </div>
       </div>
 
-      {/* Filter Bar (always open on md+, collapsible on mobile) */}
-      <div
-        id="shop-filters-panel"
-        className={`${
-          mobileFiltersOpen ? 'block' : 'hidden md:block'
-        } bg-white border border-black/[0.06] rounded-lg p-4 sm:p-5 space-y-4`}
-      >
-        {/* Categories */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#524E48] me-2">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            دسته‌بندی:
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory(null)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-              selectedCategory === null
-                ? 'bg-[#18181B] text-white'
-                : 'bg-[#FAF7F2] text-[#524E48] hover:text-[#18181B]'
-            }`}
-          >
-            همه
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                selectedCategory === cat.id
-                  ? 'bg-[#18181B] text-white'
-                  : 'bg-[#FAF7F2] text-[#524E48] hover:text-[#18181B]'
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Sticky Desktop Sidebar Filter Rail / Collapsible Mobile Filter Panel */}
+        <aside
+          id="shop-filters-panel"
+          className={`${
+            mobileFiltersOpen ? 'block' : 'hidden lg:block'
+          } lg:col-span-3 lg:sticky lg:top-24 bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-5`}
+        >
+          <div className="flex items-center justify-between border-b border-[#16141A]/[0.06] pb-3">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--adonis-primary)]">
+              <SlidersHorizontal className="w-4 h-4 text-[var(--adonis-accent)]" />
+              <span>فیلترهای تخصصی</span>
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1 text-xs text-[#B01D39] hover:underline font-medium"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>پاک کردن</span>
+              </button>
+            )}
+          </div>
 
-        {/* Brand, Size, Color, Price & Toggles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-black/[0.05]">
-          <div className="space-y-1">
-            <label htmlFor="filter-brand" className="text-[11px] font-medium text-[#524E48]">
-              برند کفش
-            </label>
-            <select
-              id="filter-brand"
-              value={selectedBrand ?? ''}
-              onChange={(e) => setSelectedBrand(e.target.value || null)}
-              className="w-full h-9 px-2.5 text-xs bg-[#FAF7F2] border border-black/15 rounded"
-            >
-              <option value="">همه برندها</option>
-              {availableBrands.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
+          {/* Categories */}
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-[var(--adonis-primary)]">دسته‌بندی</div>
+            <div className="flex flex-wrap lg:flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-colors text-start ${
+                  selectedCategory === null
+                    ? 'bg-[var(--adonis-primary)] text-white'
+                    : 'bg-[#EFEEEA] text-[#6A6670] hover:text-[var(--adonis-primary)] hover:bg-[#E2E0DB]'
+                }`}
+              >
+                همه کفش‌ها
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-2 text-xs font-medium rounded-sm transition-colors text-start ${
+                    selectedCategory === cat.id
+                      ? 'bg-[var(--adonis-primary)] text-white'
+                      : 'bg-[#EFEEEA] text-[#6A6670] hover:text-[var(--adonis-primary)] hover:bg-[#E2E0DB]'
+                  }`}
+                >
+                  {cat.name}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="filter-size" className="text-[11px] font-medium text-[#524E48]">
-              سایز کفش (موجود)
-            </label>
-            <select
-              id="filter-size"
-              value={selectedSize ?? ''}
-              onChange={(e) => setSelectedSize(e.target.value || null)}
-              className="w-full h-9 px-2.5 text-xs bg-[#FAF7F2] border border-black/15 rounded tabular-nums"
-            >
-              <option value="">همه سایزها</option>
-              {availableShoeSizes.map((size) => (
-                <option key={size} value={size}>
-                  سایز {size}
+          {/* Brand, Size, Color, Price */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5 pt-3 border-t border-[#16141A]/[0.06]">
+            <div className="space-y-1">
+              <label htmlFor="filter-brand" className="text-xs font-medium text-[#4B4752]">
+                برند کفش
+              </label>
+              <select
+                id="filter-brand"
+                value={selectedBrand ?? ''}
+                onChange={(e) => setSelectedBrand(e.target.value || null)}
+                className="w-full h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+              >
+                <option value="">همه برندها</option>
+                {availableBrands.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="filter-size" className="text-xs font-medium text-[#4B4752]">
+                سایز کفش (موجود)
+              </label>
+              <select
+                id="filter-size"
+                value={selectedSize ?? ''}
+                onChange={(e) => setSelectedSize(e.target.value || null)}
+                className="w-full h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm tabular-nums"
+              >
+                <option value="">همه سایزها</option>
+                {availableShoeSizes.map((size) => (
+                  <option key={size} value={size}>
+                    سایز {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="filter-color" className="text-xs font-medium text-[#4B4752]">
+                رنگ
+              </label>
+              <select
+                id="filter-color"
+                value={selectedColor ?? ''}
+                onChange={(e) => setSelectedColor(e.target.value || null)}
+                className="w-full h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+              >
+                <option value="">همه رنگ‌ها</option>
+                {availableColors.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="filter-price-range" className="text-xs font-medium text-[#4B4752]">
+                محدوده قیمت
+              </label>
+              <select
+                id="filter-price-range"
+                value={`${minPrice ?? ''}-${maxPrice ?? ''}`}
+                onChange={(e) => {
+                  const [minVal, maxVal] = e.target.value.split('-');
+                  setMinPrice(minVal ? Number(minVal) : null);
+                  setMaxPrice(maxVal ? Number(maxVal) : null);
+                }}
+                className="w-full h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+              >
+                <option value="-">همه قیمت‌ها</option>
+                <option value="-3500000">تا {formatToman(3500000)}</option>
+                <option value="3500000-6500000">
+                  {formatToman(3500000)} تا {formatToman(6500000)}
                 </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="filter-color" className="text-[11px] font-medium text-[#524E48]">
-              رنگ
-            </label>
-            <select
-              id="filter-color"
-              value={selectedColor ?? ''}
-              onChange={(e) => setSelectedColor(e.target.value || null)}
-              className="w-full h-9 px-2.5 text-xs bg-[#FAF7F2] border border-black/15 rounded"
-            >
-              <option value="">همه رنگ‌ها</option>
-              {availableColors.map((c) => (
-                <option key={c.name} value={c.name}>
-                  {c.name}
+                <option value="6500000-9000000">
+                  {formatToman(6500000)} تا {formatToman(9000000)}
                 </option>
-              ))}
-            </select>
+                <option value="9000000-">بالای {formatToman(9000000)}</option>
+              </select>
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="filter-price-range" className="text-[11px] font-medium text-[#524E48]">
-              محدوده قیمت
-            </label>
-            <select
-              id="filter-price-range"
-              value={`${minPrice ?? ''}-${maxPrice ?? ''}`}
-              onChange={(e) => {
-                const [minVal, maxVal] = e.target.value.split('-');
-                setMinPrice(minVal ? Number(minVal) : null);
-                setMaxPrice(maxVal ? Number(maxVal) : null);
-              }}
-              className="w-full h-9 px-2.5 text-xs bg-[#FAF7F2] border border-black/15 rounded"
-            >
-              <option value="-">همه قیمت‌ها</option>
-              <option value="-3500000">تا {formatToman(3500000)}</option>
-              <option value="3500000-6500000">
-                {formatToman(3500000)} تا {formatToman(6500000)}
-              </option>
-              <option value="6500000-9000000">
-                {formatToman(6500000)} تا {formatToman(9000000)}
-              </option>
-              <option value="9000000-">بالای {formatToman(9000000)}</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-black/[0.05]">
-          <div className="flex flex-wrap items-center gap-5 text-xs">
-            <label className="inline-flex items-center gap-2 cursor-pointer">
+          <div className="space-y-2.5 pt-3 border-t border-[#16141A]/[0.06] text-xs">
+            <label className="flex items-center gap-2 cursor-pointer text-[#4B4752]">
               <input
                 type="checkbox"
                 checked={onlyDiscounted}
                 onChange={(e) => setOnlyDiscounted(e.target.checked)}
-                className="accent-[#18181B] w-4 h-4"
+                className="accent-[var(--adonis-accent)] w-4 h-4"
               />
               <span>فقط کفش‌های تخفیف‌دار</span>
             </label>
 
-            <label className="inline-flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer text-[#4B4752]">
               <input
                 type="checkbox"
                 checked={onlyInStock}
                 onChange={(e) => setOnlyInStock(e.target.checked)}
-                className="accent-[#18181B] w-4 h-4"
+                className="accent-[var(--adonis-accent)] w-4 h-4"
               />
               <span>فقط کالاهای موجود</span>
             </label>
           </div>
+        </aside>
 
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1 text-xs text-[#8F6E38] hover:text-[#18181B] font-medium"
-            >
-              <X className="w-3.5 h-3.5" />
-              پاک کردن فیلترها
-            </button>
+        {/* Product Grid */}
+        <div className="lg:col-span-9">
+          {filteredProducts.length === 0 ? (
+            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm py-16 px-4 text-center space-y-3">
+              <p className="text-base font-medium text-[var(--adonis-primary)]">کفشی با فیلترهای انتخابی یافت نشد.</p>
+              <p className="text-xs text-[#85818A]">عبارت جستجو، برند، سایز یا محدوده قیمت را تغییر دهید.</p>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="px-4 py-2 text-xs font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
+              >
+                نمایش همه کفش‌ها
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  category={product.categoryId ? categoryMap.get(product.categoryId) : undefined}
+                  preferredSize={selectedSize}
+                  onNavigate={onNavigate}
+                  onQuickAdd={handleQuickAdd}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
-
-      {/* Product Grid */}
-      {filteredProducts.length === 0 ? (
-        <div className="bg-white border border-black/[0.06] rounded-lg py-16 px-4 text-center space-y-3">
-          <p className="text-base font-medium text-[#18181B]">کفشی با فیلترهای انتخابی یافت نشد.</p>
-          <p className="text-xs text-[#6B665F]">عبارت جستجو، برند، سایز یا محدوده قیمت را تغییر دهید.</p>
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="px-4 py-2 text-xs font-medium bg-[#18181B] text-white rounded-md"
-          >
-            نمایش همه کفش‌ها
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              category={product.categoryId ? categoryMap.get(product.categoryId) : undefined}
-              preferredSize={selectedSize}
-              onNavigate={onNavigate}
-              onQuickAdd={handleQuickAdd}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };

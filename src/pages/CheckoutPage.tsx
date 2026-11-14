@@ -158,48 +158,48 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
   if (completedOrder) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-        <div className="bg-white border border-black/[0.08] rounded-xl p-6 sm:p-10 space-y-6">
+        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-10 space-y-6">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-7 h-7 text-[#8F6E38] shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-7 h-7 text-[var(--adonis-accent)] shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#18181B]">
+              <h1 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">
                 سفارش شما ثبت شد (حالت آزمایشی)
               </h1>
-              <p className="text-sm text-[#524E48]">{completedOrder.notice}</p>
+              <p className="text-sm text-[#6A6670]">{completedOrder.notice}</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] p-4 rounded-lg border border-black/[0.06] text-xs sm:text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#EFEEEA] p-4 rounded-sm border border-[#16141A]/[0.06] text-xs sm:text-sm">
             <div>
-              <span className="text-[#6B665F]">کد پیگیری سفارش: </span>
-              <strong dir="ltr" className="inline-block text-[#18181B] tabular-nums" data-testid="order-number">
+              <span className="text-[#85818A]">کد پیگیری سفارش: </span>
+              <strong dir="ltr" className="inline-block text-[var(--adonis-primary)] tabular-nums" data-testid="order-number">
                 {completedOrder.order.orderNumber}
               </strong>
             </div>
             <div>
-              <span className="text-[#6B665F]">وضعیت پرداخت: </span>
-              <strong className="text-[#8F6E38]">پرداخت آزمایشی شبیه‌سازی‌شده</strong>
+              <span className="text-[#85818A]">وضعیت پرداخت: </span>
+              <strong className="text-[#B01D39]">پرداخت آزمایشی شبیه‌سازی‌شده</strong>
             </div>
             <div>
-              <span className="text-[#6B665F]">تحویل‌گیرنده: </span>
+              <span className="text-[#85818A]">تحویل‌گیرنده: </span>
               <span>{completedOrder.order.customerName}</span>
             </div>
             <div>
-              <span className="text-[#6B665F]">مبلغ نهایی سفارش: </span>
+              <span className="text-[#85818A]">مبلغ نهایی سفارش: </span>
               <strong className="tabular-nums">{formatToman(completedOrder.order.totalAmount)}</strong>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-[#18181B]">اقلام سفارش</h2>
+            <h2 className="text-base text-[var(--adonis-primary)]">اقلام سفارش</h2>
             {completedOrder.items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between text-xs sm:text-sm py-2 border-b border-black/[0.05]"
+                className="flex items-center justify-between text-xs sm:text-sm py-2 border-b border-[#16141A]/[0.05]"
               >
                 <div>
-                  <span className="font-medium text-[#18181B]">{item.productName}</span>
-                  <span className="text-[#6B665F] ms-2">
+                  <span className="font-medium text-[var(--adonis-primary)]">{item.productName}</span>
+                  <span className="text-[#85818A] ms-2">
                     ({item.selectedSize} · {item.selectedColor} × {item.quantity})
                   </span>
                 </div>
@@ -214,14 +214,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => onNavigate('/account?tab=track')}
-              className="px-5 py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
+              className="px-5 py-2.5 text-xs sm:text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
             >
               پیگیری سفارش
             </button>
             <button
               type="button"
               onClick={() => onNavigate('/shop')}
-              className="px-5 py-2.5 text-xs sm:text-sm font-medium border border-black/15 text-[#18181B] rounded-md hover:bg-[#FAF7F2]"
+              className="px-5 py-2.5 text-xs sm:text-sm font-medium border border-[#16141A]/15 text-[var(--adonis-primary)] rounded-sm hover:bg-[#EFEEEA]"
             >
               ادامه خرید
             </button>
@@ -234,13 +234,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
   if (cart.length === 0) {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
-        <ShoppingBag className="w-12 h-12 mx-auto text-[#18181B]/25" strokeWidth={1.25} />
-        <h1 className="text-xl font-bold text-[#18181B]">سبد خرید شما خالی است</h1>
-        <p className="text-sm text-[#6B665F]">ابتدا محصول مورد نظر خود را به سبد خرید اضافه کنید.</p>
+        <ShoppingBag className="w-12 h-12 mx-auto text-[#16141A]/20" strokeWidth={1.25} />
+        <h1 className="text-2xl text-[var(--adonis-primary)]">سبد خرید شما خالی است</h1>
+        <p className="text-sm text-[#85818A]">ابتدا محصول مورد نظر خود را به سبد خرید اضافه کنید.</p>
         <button
           type="button"
           onClick={() => onNavigate('/shop')}
-          className="px-5 py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md"
+          className="px-5 py-2.5 text-xs sm:text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
         >
           مشاهده فروشگاه
         </button>
@@ -250,23 +250,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-[#18181B] border-b border-black/[0.08] pb-4">
+      <h1 className="text-2xl sm:text-3xl text-[var(--adonis-primary)] border-b border-[#16141A]/[0.08] pb-4">
         تکمیل اطلاعات و ثبت سفارش
       </h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-7 bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-6">
-          <h2 className="text-base font-semibold text-[#18181B]">اطلاعات تحویل‌گیرنده</h2>
+        <div className="lg:col-span-7 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-6">
+          <h2 className="text-lg text-[var(--adonis-primary)]">اطلاعات تحویل‌گیرنده</h2>
 
           {error && (
-            <div role="alert" className="p-3.5 rounded-md bg-red-50 border border-red-200 text-xs sm:text-sm text-red-800">
+            <div role="alert" className="p-3.5 rounded-sm bg-red-50 border border-red-200 text-xs sm:text-sm text-red-800">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="checkout-name" className="block text-xs font-medium text-[#18181B]">
+              <label htmlFor="checkout-name" className="block text-xs font-medium text-[var(--adonis-primary)]">
                 نام و نام خانوادگی
               </label>
               <input
@@ -276,12 +276,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="مثال: مریم رضایی"
-                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="checkout-phone" className="block text-xs font-medium text-[#18181B]">
+              <label htmlFor="checkout-phone" className="block text-xs font-medium text-[var(--adonis-primary)]">
                 شماره موبایل
               </label>
               <input
@@ -292,13 +292,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="09123456789"
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="checkout-address" className="block text-xs font-medium text-[#18181B]">
+            <label htmlFor="checkout-address" className="block text-xs font-medium text-[var(--adonis-primary)]">
               آدرس کامل پستی
             </label>
             <textarea
@@ -308,13 +308,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
               value={customerAddress}
               onChange={(e) => setCustomerAddress(e.target.value)}
               placeholder="استان، شهر، خیابان، پلاک، واحد"
-              className="w-full p-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+              className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="checkout-postal" className="block text-xs font-medium text-[#18181B]">
+              <label htmlFor="checkout-postal" className="block text-xs font-medium text-[var(--adonis-primary)]">
                 کد پستی ۱۰ رقمی
               </label>
               <input
@@ -325,12 +325,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
                 placeholder="1968734511"
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="checkout-notes" className="block text-xs font-medium text-[#18181B]">
+              <label htmlFor="checkout-notes" className="block text-xs font-medium text-[var(--adonis-primary)]">
                 یادداشت سفارش (اختیاری)
               </label>
               <input
@@ -339,19 +339,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="توضیحات تحویل یا بسته‌بندی هدیه"
-                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
               />
             </div>
           </div>
 
-          <div className="space-y-3 pt-2 border-t border-black/[0.06]">
-            <h3 className="text-sm font-semibold text-[#18181B]">روش ارسال</h3>
+          <div className="space-y-3 pt-2 border-t border-[#16141A]/[0.06]">
+            <h3 className="text-sm font-semibold text-[var(--adonis-primary)]">روش ارسال</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label
-                className={`flex items-center justify-between p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex items-center justify-between p-3.5 rounded-sm border cursor-pointer transition-colors ${
                   shippingMethod === 'standard'
-                    ? 'border-[#18181B] bg-[#FAF7F2]'
-                    : 'border-black/15 hover:border-black/30'
+                    ? 'border-[var(--adonis-accent)] bg-[#EBDADD]'
+                    : 'border-[#16141A]/15 hover:border-[#16141A]/30'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -360,11 +360,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                     name="shippingMethod"
                     checked={shippingMethod === 'standard'}
                     onChange={() => setShippingMethod('standard')}
-                    className="accent-[#18181B]"
+                    className="accent-[var(--adonis-accent)]"
                   />
                   <div>
-                    <div className="text-xs font-semibold text-[#18181B]">پست / پیک استاندارد</div>
-                    <div className="text-[11px] text-[#6B665F]">۲ تا ۴ روز کاری</div>
+                    <div className="text-xs font-semibold text-[var(--adonis-primary)]">پست / پیک استاندارد</div>
+                    <div className="text-[11px] text-[#85818A]">۲ تا ۴ روز کاری</div>
                   </div>
                 </div>
                 <span className="text-xs font-medium tabular-nums">
@@ -375,10 +375,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
               </label>
 
               <label
-                className={`flex items-center justify-between p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex items-center justify-between p-3.5 rounded-sm border cursor-pointer transition-colors ${
                   shippingMethod === 'express'
-                    ? 'border-[#18181B] bg-[#FAF7F2]'
-                    : 'border-black/15 hover:border-black/30'
+                    ? 'border-[var(--adonis-accent)] bg-[#EBDADD]'
+                    : 'border-[#16141A]/15 hover:border-[#16141A]/30'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -387,11 +387,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                     name="shippingMethod"
                     checked={shippingMethod === 'express'}
                     onChange={() => setShippingMethod('express')}
-                    className="accent-[#18181B]"
+                    className="accent-[var(--adonis-accent)]"
                   />
                   <div>
-                    <div className="text-xs font-semibold text-[#18181B]">ارسال اکسپرس ویژه</div>
-                    <div className="text-[11px] text-[#6B665F]">تحویل سریع ۱ روزه</div>
+                    <div className="text-xs font-semibold text-[var(--adonis-primary)]">ارسال اکسپرس ویژه</div>
+                    <div className="text-[11px] text-[#85818A]">تحویل سریع ۱ روزه</div>
                   </div>
                 </div>
                 <span className="text-xs font-medium tabular-nums">
@@ -402,10 +402,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Demo Payment Transparency Notice */}
-          <div className="p-4 rounded-lg bg-[#F4EFE6] border border-[#B5945B]/35 flex items-start gap-3">
-            <Info className="w-5 h-5 text-[#8F6E38] shrink-0 mt-0.5" />
-            <div className="text-xs text-[#3F3B36] space-y-1 leading-relaxed">
-              <div className="font-semibold text-[#18181B]">پرداخت آزمایشی (نسخه نمایشی)</div>
+          <div className="p-4 rounded-sm bg-[#EBDADD] border border-[#C21E3C]/25 flex items-start gap-3">
+            <Info className="w-5 h-5 text-[var(--adonis-accent)] shrink-0 mt-0.5" />
+            <div className="text-xs text-[#4B4752] space-y-1 leading-relaxed">
+              <div className="font-semibold text-[var(--adonis-primary)]">پرداخت آزمایشی (نسخه نمایشی)</div>
               <p>
                 در این پیش‌نمایش، ثبت سفارش و پرداخت به‌صورت آزمایشی شبیه‌سازی می‌شود و اتصال به درگاه بانکی واقعی انجام نگرفته است.
               </p>
@@ -414,8 +414,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Sticky Order Summary */}
-        <aside className="lg:col-span-5 bg-white border border-black/[0.06] rounded-xl p-6 space-y-5 lg:sticky lg:top-24">
-          <h2 className="text-base font-semibold text-[#18181B] border-b border-black/[0.06] pb-3">
+        <aside className="lg:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-5 lg:sticky lg:top-24">
+          <h2 className="text-lg text-[var(--adonis-primary)] border-b border-[#16141A]/[0.06] pb-3">
             خلاصه سفارش
           </h2>
 
@@ -425,8 +425,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
               return (
                 <div key={item.key} className="flex items-center justify-between gap-3 text-xs sm:text-sm">
                   <div className="min-w-0">
-                    <div className="font-medium text-[#18181B] truncate">{item.name}</div>
-                    <div className="text-xs text-[#6B665F]">
+                    <div className="font-medium text-[var(--adonis-primary)] truncate">{item.name}</div>
+                    <div className="text-xs text-[#85818A]">
                       سایز {item.selectedSize} · {item.selectedColor} × {item.quantity}
                     </div>
                   </div>
@@ -438,13 +438,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
             })}
           </div>
 
-          <div className="pt-3 border-t border-black/[0.06] space-y-2">
-            <label htmlFor="coupon-code" className="block text-xs font-medium text-[#18181B]">
+          <div className="pt-3 border-t border-[#16141A]/[0.06] space-y-2">
+            <label htmlFor="coupon-code" className="block text-xs font-medium text-[var(--adonis-primary)]">
               کد تخفیف (نمونه: ADONIS15)
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Tag className="w-3.5 h-3.5 text-[#6B665F] absolute start-3 top-1/2 -translate-y-1/2" />
+                <Tag className="w-3.5 h-3.5 text-[#85818A] absolute start-3 top-1/2 -translate-y-1/2" />
                 <input
                   id="coupon-code"
                   type="text"
@@ -452,38 +452,38 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value)}
                   placeholder="ADONIS15"
-                  className="w-full h-9 ps-8 pe-3 text-xs uppercase bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                  className="w-full h-9 ps-8 pe-3 text-xs uppercase bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleApplyCoupon}
-                className="px-3.5 h-9 text-xs font-medium border border-[#18181B] text-[#18181B] rounded-md hover:bg-[#18181B] hover:text-white transition-colors whitespace-nowrap"
+                className="px-3.5 h-9 text-xs font-medium border border-[var(--adonis-primary)] text-[var(--adonis-primary)] rounded-sm hover:bg-[var(--adonis-primary)] hover:text-white transition-colors whitespace-nowrap"
               >
                 اعمال کد
               </button>
             </div>
-            {couponMessage && <p className="text-xs text-[#8F6E38]">{couponMessage}</p>}
+            {couponMessage && <p className="text-xs text-[#B01D39] font-medium">{couponMessage}</p>}
           </div>
 
-          <div className="space-y-2 pt-3 border-t border-black/[0.06] text-xs sm:text-sm">
-            <div className="flex justify-between text-[#524E48]">
+          <div className="space-y-2 pt-3 border-t border-[#16141A]/[0.06] text-xs sm:text-sm">
+            <div className="flex justify-between text-[#6A6670]">
               <span>جمع کالاها</span>
               <span className="tabular-nums">{formatToman(totals.subtotal)}</span>
             </div>
             {totals.discountAmount > 0 && (
-              <div className="flex justify-between text-[#8F6E38]">
+              <div className="flex justify-between text-[#B01D39] font-medium">
                 <span>تخفیف ({appliedCoupon?.code})</span>
                 <span className="tabular-nums">-{formatToman(totals.discountAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-[#524E48]">
+            <div className="flex justify-between text-[#6A6670]">
               <span>هزینه ارسال</span>
               <span className="tabular-nums">
                 {totals.shippingCost === 0 ? 'رایگان' : formatToman(totals.shippingCost)}
               </span>
             </div>
-            <div className="flex justify-between text-base font-bold text-[#18181B] pt-2 border-t border-black/[0.06]">
+            <div className="flex justify-between text-base font-bold text-[var(--adonis-primary)] pt-2 border-t border-[#16141A]/[0.06]">
               <span>مبلغ نهایی</span>
               <span className="tabular-nums">{formatToman(totals.totalAmount)}</span>
             </div>
@@ -492,7 +492,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 px-4 bg-[#18181B] text-white text-sm font-medium rounded-md hover:bg-[#2A2A2E] disabled:opacity-50 transition-colors"
+            className="w-full py-3 px-4 bg-[var(--adonis-accent)] text-white text-sm font-semibold rounded-sm hover:bg-[#B01D39] disabled:opacity-50 transition-colors"
           >
             {submitting ? 'در حال ثبت سفارش...' : 'ثبت سفارش و پرداخت آزمایشی'}
           </button>

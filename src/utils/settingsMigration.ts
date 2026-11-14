@@ -146,3 +146,53 @@ export function planStoreSettingsMigration(
     hasChanges: changedFields.length > 0,
   };
 }
+
+export const ADONIS_PALETTE_V2_MIGRATION_KEY = 'adonis-palette-v2';
+export const ADONIS_PALETTE_V3_MIGRATION_KEY = 'adonis-palette-v3-marble';
+
+export const ADONIS_V2_PALETTE = {
+  primaryColor: '#16141A',
+  accentColor: '#C21E3C',
+  backgroundColor: '#EFEEEA',
+} as const;
+
+export const ADONIS_V3_PALETTE = ADONIS_V2_PALETTE;
+
+const LEGACY_HEX_SETS = {
+  primaryColor: new Set(['18181B', '0F172A', '111827']),
+  accentColor: new Set(['B5945B', '1D4ED8', '047857', 'C2410C']),
+  backgroundColor: new Set(['FAF7F2', 'F4F6F9', 'F8FAFC']),
+} as const;
+
+export function planPaletteV2Migration(
+  current: StoreSettingsSnapshotData
+): StoreSettingsMigrationPlan {
+  const previousSnapshot = extractSettingsSnapshot(current);
+  const nextSnapshot: StoreSettingsSnapshotData = { ...previousSnapshot };
+  const changedFields: string[] = [];
+  const preservedCustomFields: string[] = [];
+
+  const colorKeys = ['primaryColor', 'accentColor', 'backgroundColor'] as const;
+  for (const key of colorKeys) {
+    const val = previousSnapshot[key].trim().toUpperCase();
+    const hexDigits = val.replace(/^#/, '');
+    if (!val || LEGACY_HEX_SETS[key].has(hexDigits)) {
+      if (val !== ADONIS_V2_PALETTE[key]) {
+        nextSnapshot[key] = ADONIS_V2_PALETTE[key];
+        changedFields.push(key);
+      }
+    } else if (val !== ADONIS_V2_PALETTE[key]) {
+      preservedCustomFields.push(key);
+    }
+  }
+
+  return {
+    previousSnapshot,
+    nextSnapshot,
+    changedFields,
+    preservedCustomFields,
+    hasChanges: changedFields.length > 0,
+  };
+}
+
+export const planPaletteV3Migration = planPaletteV2Migration;

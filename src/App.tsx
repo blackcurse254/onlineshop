@@ -39,18 +39,18 @@ function AppRouter() {
   let content: React.ReactNode;
   if (loading) {
     content = (
-      <div className="min-h-[60vh] flex items-center justify-center text-sm text-[#6B665F]">
+      <div className="min-h-[60vh] flex items-center justify-center text-sm text-[#6A6670]">
         در حال آماده‌سازی فروشگاه ADONIS...
       </div>
     );
   } else if (error) {
     content = (
       <div className="max-w-md mx-auto py-20 px-4 text-center space-y-4">
-        <p className="text-sm text-red-800 bg-red-50 border border-red-200 p-4 rounded-lg">{error}</p>
+        <p className="text-sm text-red-800 bg-red-50 border border-red-200 p-4 rounded-sm">{error}</p>
         <button
           type="button"
           onClick={refreshStorefront}
-          className="px-5 py-2.5 text-xs font-medium bg-[#18181B] text-white rounded-md"
+          className="px-5 py-2.5 text-xs font-medium bg-[var(--adonis-primary)] text-white rounded-sm hover:opacity-90"
         >
           تلاش مجدد
         </button>
@@ -72,11 +72,11 @@ function AppRouter() {
   } else {
     content = (
       <div className="max-w-md mx-auto py-20 px-4 text-center space-y-4">
-        <h1 className="text-2xl font-bold text-[#18181B]">صفحه مورد نظر یافت نشد</h1>
+        <h1 className="text-2xl text-[var(--adonis-primary)]">صفحه مورد نظر یافت نشد</h1>
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="px-5 py-2.5 text-xs font-medium bg-[#18181B] text-white rounded-md"
+          className="px-5 py-2.5 text-xs font-medium bg-[var(--adonis-primary)] text-white rounded-sm hover:opacity-90"
         >
           بازگشت به صفحه اصلی
         </button>
@@ -85,7 +85,7 @@ function AppRouter() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--vera-bg)] text-[var(--vera-primary)] overflow-x-clip">
+    <div className="min-h-screen flex flex-col bg-[var(--adonis-bg)] text-[var(--adonis-primary)] overflow-x-clip">
       <Header currentPath={locationPath} onNavigate={navigate} onSearchSubmit={handleSearchSubmit} />
       <main className="flex-1">{content}</main>
       <Footer onNavigate={navigate} />

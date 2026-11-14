@@ -143,7 +143,14 @@ function setSessionCookie(
   });
 }
 
-// ---------- Public Storefront Routes ----------
+// ---------- Public Storefront & Health Routes ----------
+
+app.get('/api/health', (_req, res) => {
+  res.json({
+    ok: true,
+    emailConfigured: isEmailServiceConfigured(),
+  });
+});
 
 app.get('/api/storefront', async (_req, res, next) => {
   try {
@@ -605,7 +612,12 @@ app.post(
         const storeName = settingsRow[0]?.storeName || 'ADONIS';
         const configuredAppUrl =
           process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL' ? process.env.APP_URL : '';
-        const requestOrigin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
+        const forwardedHost =
+          typeof req.headers['x-forwarded-host'] === 'string'
+            ? req.headers['x-forwarded-host'].split(',')[0]?.trim()
+            : '';
+        const hostHeader = forwardedHost || req.get('host') || '';
+        const requestOrigin = hostHeader ? `${req.protocol}://${hostHeader}` : 'http://localhost:3000';
         const resetUrl = buildPasswordResetUrl(configuredAppUrl || requestOrigin, rawToken);
 
         try {

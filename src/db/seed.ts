@@ -12,7 +12,7 @@ import {
 } from './schema.ts';
 import { hashPassword } from '../lib/security.ts';
 import { getTotalStockFromSizes, migrateLegacySizeInventory } from '../utils/commerce.ts';
-import { applyAdonisSettingsMigration } from './migrations.ts';
+import { applyAdonisPaletteV3Migration, applyAdonisSettingsMigration } from './migrations.ts';
 
 let seedPromise: Promise<void> | null = null;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -72,9 +72,9 @@ async function runSeed() {
       storeName: 'ADONIS',
       storeSubtitle: 'فروشگاه تخصصی کفش و کتونی',
       logoText: 'ADONIS',
-      primaryColor: '#18181B',
-      accentColor: '#B5945B',
-      backgroundColor: '#FAF7F2',
+      primaryColor: '#16141A',
+      accentColor: '#C21E3C',
+      backgroundColor: '#EFEEEA',
       phone: '',
       email: '',
       instagram: '',
@@ -229,8 +229,8 @@ async function runSeed() {
           { size: '44', stock: 3 },
         ],
         colors: [
-          { name: 'کرم استخوانی', hex: '#EDE4D3' },
-          { name: 'مشکی زغالی', hex: '#232327' },
+          { name: 'کرم استخوانی', hex: '#EBDADD' },
+          { name: 'مشکی زغالی', hex: '#16141A' },
         ],
         images: [
           '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
@@ -264,8 +264,8 @@ async function runSeed() {
           { size: '41', stock: 0 },
         ],
         colors: [
-          { name: 'عاجی طلایی', hex: '#F3EEE5' },
-          { name: 'بژ شنی', hex: '#D8C3AB' },
+          { name: 'عاجی طلایی', hex: '#E9E8E3' },
+          { name: 'بژ شنی', hex: '#D9C4C8' },
         ],
         images: [
           '/src/assets/images/shoe_womens_sneaker_ivory_1794597376257.jpg',
@@ -299,8 +299,8 @@ async function runSeed() {
           { size: '44', stock: 1 },
         ],
         colors: [
-          { name: 'زغالی گرافیتی', hex: '#2A2B2E' },
-          { name: 'نقره‌ای دودی', hex: '#71717A' },
+          { name: 'زغالی گرافیتی', hex: '#2B1A2E' },
+          { name: 'نقره‌ای دودی', hex: '#6A6670' },
         ],
         images: [
           '/src/assets/images/shoe_sport_running_charcoal_1794597377088.jpg',
@@ -335,8 +335,8 @@ async function runSeed() {
           { size: '43', stock: 2 },
         ],
         colors: [
-          { name: 'خاکستری گرم', hex: '#A8A29E' },
-          { name: 'کرم صدفی', hex: '#EDE4D3' },
+          { name: 'خاکستری گرم', hex: '#A4A0A8' },
+          { name: 'کرم صدفی', hex: '#EBDADD' },
         ],
         images: [
           '/src/assets/images/promo_running_capsule_1794597375673.jpg',
@@ -370,8 +370,8 @@ async function runSeed() {
           { size: '44', stock: 1 },
         ],
         colors: [
-          { name: 'شتری عسلی', hex: '#B98C62' },
-          { name: 'قهوه‌ای اسپرسو', hex: '#3D2E27' },
+          { name: 'شتری عسلی', hex: '#C21E3C' },
+          { name: 'قهوه‌ای اسپرسو', hex: '#3B3741' },
         ],
         images: [
           '/src/assets/images/shoe_casual_loafer_camel_1794597377849.jpg',
@@ -404,8 +404,8 @@ async function runSeed() {
           { size: '44', stock: 2 },
         ],
         colors: [
-          { name: 'مشکی متالیک', hex: '#18181B' },
-          { name: 'طلایی شامپاینی', hex: '#C6A87D' },
+          { name: 'مشکی متالیک', hex: '#16141A' },
+          { name: 'رز شقایقی', hex: '#D98A9A' },
         ],
         images: [
           '/src/assets/images/hero_footwear_campaign_1794597375199.jpg',
@@ -438,7 +438,7 @@ async function runSeed() {
           { size: '43', stock: 2 },
           { size: '44', stock: 2 },
         ],
-        colors: [{ name: 'مشکی براق', hex: '#141416' }],
+        colors: [{ name: 'مشکی براق', hex: '#16141A' }],
         images: [
           '/src/assets/images/shoe_formal_oxford_black_1794597377071.jpg',
           '/src/assets/images/shoe_care_accessories_1794597378977.jpg',
@@ -472,8 +472,8 @@ async function runSeed() {
           { size: '42', stock: 2 },
         ],
         colors: [
-          { name: 'قهوه‌ای برنزه', hex: '#A47148' },
-          { name: 'کرم ماسه‌ای', hex: '#E6DCCB' },
+          { name: 'قهوه‌ای برنزه', hex: '#9E1B34' },
+          { name: 'کرم ماسه‌ای', hex: '#D9D7D2' },
         ],
         images: [
           '/src/assets/images/shoe_sandal_slides_tan_1794597377643.jpg',
@@ -507,8 +507,8 @@ async function runSeed() {
           { size: '36', stock: 2 },
         ],
         colors: [
-          { name: 'سفید مریم‌گلی', hex: '#DAE3DC' },
-          { name: 'سفید خاکی', hex: '#EDE8DF' },
+          { name: 'سفید مریم‌گلی', hex: '#E2E0DB' },
+          { name: 'سفید خاکی', hex: '#E9E8E3' },
         ],
         images: [
           '/src/assets/images/shoe_kids_sneaker_pastel_1794597377865.jpg',
@@ -539,7 +539,7 @@ async function runSeed() {
           { size: '43', stock: 2 },
           { size: '44', stock: 1 },
         ],
-        colors: [{ name: 'زغالی شنی', hex: '#3A3A3D' }],
+        colors: [{ name: 'زغالی شنی', hex: '#3B3741' }],
         images: [
           '/src/assets/images/shoe_sport_running_charcoal_1794597377088.jpg',
           '/src/assets/images/hero_footwear_campaign_1794597375199.jpg',
@@ -569,7 +569,7 @@ async function runSeed() {
           { size: '41-42', stock: 8 },
           { size: '43-44', stock: 5 },
         ],
-        colors: [{ name: 'چوب طبیعی سدر', hex: '#A47148' }],
+        colors: [{ name: 'چوب طبیعی سدر', hex: '#9E1B34' }],
         images: [
           '/src/assets/images/shoe_care_accessories_1794597378977.jpg',
         ],
@@ -685,6 +685,7 @@ async function runSeed() {
 
   await migrateLegacyProductsSizeInventory();
   await applyAdonisSettingsMigration();
+  await applyAdonisPaletteV3Migration();
   await bootstrapEnvAdmin();
 }
 

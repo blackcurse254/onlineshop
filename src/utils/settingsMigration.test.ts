@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { StoreSettingsSnapshotData } from '../db/schema.ts';
 import {
+  ADONIS_V2_PALETTE,
   extractSettingsSnapshot,
   isKnownDemoContactValue,
+  planPaletteV2Migration,
   planStoreSettingsMigration,
 } from './settingsMigration.ts';
 
@@ -98,4 +100,29 @@ test('extractSettingsSnapshot returns clean copy without mutating source', () =>
   const snap = extractSettingsSnapshot(src);
   snap.phone = '';
   assert.equal(src.phone, '021-12345678');
+});
+
+test('planPaletteV2Migration upgrades legacy default colors while keeping previous snapshot', () => {
+  const legacy = makeBaseSettings();
+  const plan = planPaletteV2Migration(legacy);
+  assert.equal(plan.hasChanges, true);
+  assert.equal(plan.nextSnapshot.primaryColor, ADONIS_V2_PALETTE.primaryColor);
+  assert.equal(plan.nextSnapshot.accentColor, ADONIS_V2_PALETTE.accentColor);
+  assert.equal(plan.nextSnapshot.backgroundColor, ADONIS_V2_PALETTE.backgroundColor);
+  assert.equal(plan.previousSnapshot.primaryColor, '#18181B');
+  assert.equal(plan.previousSnapshot.accentColor, '#B5945B');
+  assert.equal(plan.previousSnapshot.backgroundColor, '#FAF7F2');
+});
+
+test('planPaletteV2Migration preserves custom owner-configured palette colors', () => {
+  const custom = makeBaseSettings({
+    primaryColor: '#1E293B',
+    accentColor: '#DC2626',
+  });
+  const plan = planPaletteV2Migration(custom);
+  assert.equal(plan.hasChanges, true);
+  assert.equal(plan.nextSnapshot.primaryColor, '#1E293B');
+  assert.equal(plan.nextSnapshot.accentColor, '#DC2626');
+  assert.equal(plan.nextSnapshot.backgroundColor, ADONIS_V2_PALETTE.backgroundColor);
+  assert.deepEqual(plan.preservedCustomFields, ['primaryColor', 'accentColor']);
 });

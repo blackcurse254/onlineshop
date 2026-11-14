@@ -52,17 +52,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
       data-testid="cart-drawer"
     >
       <div
-        className="fixed inset-0 bg-black/45 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px]"
         data-testid="cart-drawer-backdrop"
         onClick={() => setIsCartOpen(false)}
         aria-hidden="true"
       />
 
-      <aside className="relative z-10 w-full max-w-md bg-[#FAF7F2] h-[100dvh] max-h-[100dvh] flex flex-col shadow-2xl border-s border-black/10 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
-        <div className="px-5 py-4 bg-white border-b border-black/[0.08] flex items-center justify-between shrink-0">
+      <aside className="relative z-10 w-full max-w-md bg-[#EFEEEA] h-[100dvh] max-h-[100dvh] flex flex-col shadow-2xl border-s border-[#16141A]/10 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
+        <div className="px-5 py-4 bg-white border-b border-[#16141A]/[0.08] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <ShoppingBag className="w-5 h-5 text-[#18181B]" strokeWidth={1.75} />
-            <h2 id="cart-drawer-title" className="text-base font-semibold text-[#18181B]">
+            <ShoppingBag className="w-5 h-5 text-[var(--adonis-primary)]" strokeWidth={1.75} />
+            <h2 id="cart-drawer-title" className="text-lg text-[var(--adonis-primary)]">
               سبد خرید شما
             </h2>
           </div>
@@ -72,16 +72,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
             onClick={() => setIsCartOpen(false)}
             aria-label="بستن سبد خرید"
             data-testid="cart-drawer-close"
-            className="p-2 text-[#524E48] hover:text-[#18181B] rounded-md min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="p-2 text-[#6A6670] hover:text-[var(--adonis-primary)] rounded-sm min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {cart.length > 0 && (
-          <div className="px-5 py-3 bg-[#F3EDE2] border-b border-black/[0.06] text-xs text-[#3F3B36]">
+          <div className="px-5 py-3 bg-[#E2E0DB] border-b border-[#16141A]/[0.06] text-xs text-[#4B4752]">
             {remainingForFree === 0 ? (
-              <p className="font-medium text-[#18181B]">
+              <p className="font-medium text-[var(--adonis-primary)]">
                 سفارش شما مشمول ارسال رایگان استاندارد است.
               </p>
             ) : (
@@ -89,9 +89,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                 تنها <span className="font-semibold tabular-nums">{formatToman(remainingForFree)}</span> تا ارسال رایگان فاصله دارید.
               </p>
             )}
-            <div className="w-full h-1.5 bg-black/10 rounded-full mt-2 overflow-hidden">
+            <div className="w-full h-1.5 bg-[#16141A]/10 rounded-full mt-2 overflow-hidden">
               <div
-                className="h-full bg-[#B5945B] transition-all duration-300"
+                className="h-full bg-[var(--adonis-accent)] transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -101,9 +101,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12">
-              <ShoppingBag className="w-12 h-12 text-[#18181B]/25 mb-3" strokeWidth={1.25} />
-              <p className="text-sm font-medium text-[#18181B] mb-1">سبد خرید شما خالی است</p>
-              <p className="text-xs text-[#6B665F] mb-6">
+              <ShoppingBag className="w-12 h-12 text-[#16141A]/20 mb-3" strokeWidth={1.25} />
+              <p className="text-sm font-medium text-[var(--adonis-primary)] mb-1">سبد خرید شما خالی است</p>
+              <p className="text-xs text-[#85818A] mb-6">
                 محصولات منتخب کلکسیون جدید را بررسی کنید.
               </p>
               <button
@@ -113,7 +113,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   setIsCartOpen(false);
                   onNavigate('/shop');
                 }}
-                className="px-5 py-2.5 text-xs font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] transition-colors"
+                className="px-5 py-2.5 text-xs font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] transition-colors"
               >
                 مشاهده فروشگاه
               </button>
@@ -124,16 +124,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               return (
                 <div
                   key={item.key}
-                  className="flex gap-3.5 bg-white p-3 rounded-lg border border-black/[0.06]"
+                  className="flex gap-3.5 bg-white p-3 rounded-sm border border-[#16141A]/[0.08]"
                 >
-                  <div className="w-20 h-20 rounded-md overflow-hidden bg-[#F4EFE6] shrink-0">
+                  <div className="w-20 h-20 rounded-sm overflow-hidden bg-[#E2E0DB] shrink-0">
                     <SafeImage src={item.image} alt={item.name} />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="text-sm font-medium text-[#18181B] line-clamp-1">{item.name}</h3>
-                        <p className="text-xs text-[#6B665F] mt-0.5">
+                        <h3 className="text-sm font-medium text-[var(--adonis-primary)] line-clamp-1">{item.name}</h3>
+                        <p className="text-xs text-[#85818A] mt-0.5">
                           سایز {item.selectedSize} · {item.selectedColor}
                         </p>
                       </div>
@@ -141,19 +141,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                         type="button"
                         onClick={() => removeFromCart(item.key)}
                         aria-label={`حذف ${item.name} از سبد خرید`}
-                        className="text-[#8A847C] hover:text-red-700 p-1"
+                        className="text-[#85818A] hover:text-[#B01D39] p-1"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <div className="inline-flex items-center border border-black/15 rounded-md">
+                      <div className="inline-flex items-center border border-[#16141A]/15 rounded-sm">
                         <button
                           type="button"
                           onClick={() => updateCartQty(item.key, item.quantity - 1)}
                           aria-label={`کاهش تعداد ${item.name}`}
-                          className="p-1.5 text-[#18181B] hover:bg-black/5"
+                          className="p-1.5 text-[var(--adonis-primary)] hover:bg-[#16141A]/5"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -165,13 +165,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                           onClick={() => updateCartQty(item.key, item.quantity + 1)}
                           disabled={item.quantity >= item.maxStock}
                           aria-label={`افزایش تعداد ${item.name}`}
-                          className="p-1.5 text-[#18181B] hover:bg-black/5 disabled:opacity-30"
+                          className="p-1.5 text-[var(--adonis-primary)] hover:bg-[#16141A]/5 disabled:opacity-30"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <span className="text-sm font-semibold text-[#18181B] tabular-nums">
+                      <span className="text-sm font-semibold text-[var(--adonis-primary)] tabular-nums">
                         {formatToman(unit * item.quantity)}
                       </span>
                     </div>
@@ -183,18 +183,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         </div>
 
         {cart.length > 0 && (
-          <div className="p-5 bg-white border-t border-black/[0.08] space-y-3">
-            <div className="flex items-center justify-between text-xs text-[#6B665F]">
+          <div className="p-5 bg-white border-t border-[#16141A]/[0.08] space-y-3">
+            <div className="flex items-center justify-between text-xs text-[#6A6670]">
               <span>جمع کل کالاها</span>
-              <span className="tabular-nums font-medium text-[#18181B]">{formatToman(totals.subtotal)}</span>
+              <span className="tabular-nums font-medium text-[var(--adonis-primary)]">{formatToman(totals.subtotal)}</span>
             </div>
-            <div className="flex items-center justify-between text-xs text-[#6B665F]">
+            <div className="flex items-center justify-between text-xs text-[#6A6670]">
               <span>هزینه ارسال استاندارد</span>
-              <span className="tabular-nums font-medium text-[#18181B]">
+              <span className="tabular-nums font-medium text-[var(--adonis-primary)]">
                 {totals.shippingCost === 0 ? 'رایگان' : formatToman(totals.shippingCost)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm font-semibold text-[#18181B] pt-2 border-t border-black/[0.06]">
+            <div className="flex items-center justify-between text-sm font-semibold text-[var(--adonis-primary)] pt-2 border-t border-[#16141A]/[0.06]">
               <span>مبلغ قابل پرداخت</span>
               <span className="tabular-nums">{formatToman(totals.totalAmount)}</span>
             </div>
@@ -207,7 +207,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                 onNavigate('/checkout');
               }}
               data-testid="cart-checkout-button"
-              className="w-full py-3 px-4 bg-[#18181B] text-white text-sm font-medium rounded-md hover:bg-[#2A2A2E] transition-colors"
+              className="w-full py-3 px-4 bg-[var(--adonis-accent)] text-white text-sm font-medium rounded-sm hover:bg-[#B01D39] transition-colors"
             >
               ادامه و ثبت سفارش
             </button>

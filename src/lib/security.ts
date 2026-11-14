@@ -66,12 +66,22 @@ export function getAllowedOrigins(req?: Request): Set<string> {
     }
   }
 
-  if (req && isValidHostHeader(req.headers.host)) {
+  if (req) {
     const proto =
       req.headers['x-forwarded-proto'] === 'https' || req.secure ? 'https' : 'http';
-    allowed.add(`${proto}://${req.headers.host}`);
-    if (process.env.NODE_ENV !== 'production') {
-      allowed.add(`http://${req.headers.host}`);
+    const candidateHosts = [
+      req.headers.host,
+      typeof req.headers['x-forwarded-host'] === 'string'
+        ? req.headers['x-forwarded-host'].split(',')[0]?.trim()
+        : undefined,
+    ];
+    for (const host of candidateHosts) {
+      if (isValidHostHeader(host)) {
+        allowed.add(`${proto}://${host}`);
+        if (process.env.NODE_ENV !== 'production') {
+          allowed.add(`http://${host}`);
+        }
+      }
     }
   }
 

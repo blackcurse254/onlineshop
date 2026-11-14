@@ -105,9 +105,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     if (settings) {
-      document.documentElement.style.setProperty('--vera-primary', settings.primaryColor);
-      document.documentElement.style.setProperty('--vera-accent', settings.accentColor);
-      document.documentElement.style.setProperty('--vera-bg', settings.backgroundColor);
+      document.documentElement.style.setProperty('--adonis-primary', settings.primaryColor);
+      document.documentElement.style.setProperty('--adonis-accent', settings.accentColor);
+      document.documentElement.style.setProperty('--adonis-bg', settings.backgroundColor);
       document.title = `${settings.storeName} | ${settings.storeSubtitle}`;
     }
   }, [settings]);

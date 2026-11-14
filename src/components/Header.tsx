@@ -106,15 +106,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-black/[0.08]">
+      <header className="sticky top-0 z-40 bg-[#EFEEEA]/95 backdrop-blur-md border-b border-[#16141A]/[0.08]">
         {!bannerDismissed && settings?.announcementText && (
-          <div className="bg-[#18181B] text-[#FAF7F2] text-[11px] sm:text-xs py-1.5 px-3 flex items-center justify-between gap-2">
+          <div className="bg-[#2B1A2E] text-[#EFEEEA] text-[11px] sm:text-xs py-1.5 px-3 flex items-center justify-between gap-2">
             <span className="truncate mx-auto text-center font-normal">{settings.announcementText}</span>
             <button
               type="button"
               onClick={() => setBannerDismissed(true)}
               aria-label="بستن نوار اطلاعیه"
-              className="text-white/70 hover:text-white shrink-0 p-0.5"
+              className="text-[#F2B6C0]/80 hover:text-white shrink-0 p-0.5"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-drawer"
               data-testid="mobile-menu-toggle"
-              className="md:hidden p-1.5 -ms-1 text-[#18181B] hover:bg-black/5 rounded-md min-w-[38px] min-h-[38px] flex items-center justify-center shrink-0"
+              className="md:hidden p-1.5 -ms-1 text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm min-w-[38px] min-h-[38px] flex items-center justify-center shrink-0"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -147,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                 e.preventDefault();
                 handleLinkClick('/');
               }}
-              className="font-display-serif text-base sm:text-2xl font-semibold tracking-wide sm:tracking-wider text-[#18181B] whitespace-nowrap min-w-0 truncate flex items-center gap-1.5 sm:gap-2"
+              className="font-display-serif text-base sm:text-2xl tracking-[0.18em] sm:tracking-[0.28em] text-[var(--adonis-primary)] whitespace-nowrap min-w-0 truncate flex items-center gap-2"
             >
               {settings?.logoUrl && !logoFailed ? (
                 <img
@@ -157,13 +157,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                   onError={() => setLogoFailed(true)}
                   className="h-6 sm:h-7 w-auto object-contain shrink-0"
                 />
-              ) : null}
+              ) : (
+                <span className="w-2 h-2 rotate-45 bg-[#C21E3C] shrink-0" aria-hidden="true" />
+              )}
               <span className="truncate">{logoText}</span>
             </a>
           </div>
 
           {/* Zone 2: Desktop nav links */}
-          <nav aria-label="منوی اصلی" className="hidden md:flex items-center gap-6 text-sm font-medium text-[#524E48]">
+          <nav aria-label="منوی اصلی" className="hidden md:flex items-center gap-6 text-sm font-medium text-[#6A6670]">
             {navLinks.map((link) => {
               const isActive = isLinkActive(link.path);
               return (
@@ -175,10 +177,10 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                     e.preventDefault();
                     handleLinkClick(link.path);
                   }}
-                  className={`whitespace-nowrap shrink-0 py-1 border-b transition-colors ${
+                  className={`whitespace-nowrap shrink-0 py-1 border-b-2 transition-colors ${
                     isActive
-                      ? 'text-[#18181B] border-[#B5945B]'
-                      : 'border-transparent hover:text-[#18181B] hover:border-black/20'
+                      ? 'text-[var(--adonis-primary)] font-semibold border-[var(--adonis-accent)]'
+                      : 'border-transparent hover:text-[#B01D39] hover:border-[#16141A]/20'
                   }`}
                 >
                   {link.label}
@@ -199,7 +201,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               aria-label="جستجوی کفش و کتونی"
               aria-expanded={searchOpen}
               data-testid="header-search-toggle"
-              className="p-1.5 sm:p-2 text-[#18181B] hover:bg-black/5 rounded-md transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
+              className="p-1.5 sm:p-2 text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
             >
               <Search className="w-[18px] h-[18px]" strokeWidth={1.75} />
             </button>
@@ -209,11 +211,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               onClick={() => handleLinkClick('/account?tab=wishlist')}
               aria-label={`لیست علاقه‌مندی‌ها (${wishlistIds.length})`}
               data-testid="header-wishlist-button"
-              className="relative p-1.5 sm:p-2 text-[#18181B] hover:bg-black/5 rounded-md transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
+              className="relative p-1.5 sm:p-2 text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm transition-colors min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center"
             >
               <Heart className="w-[18px] h-[18px]" strokeWidth={1.75} />
               {wishlistIds.length > 0 && (
-                <span className="absolute top-0.5 end-0.5 w-4 h-4 rounded-full bg-[#B5945B] text-white text-[10px] font-semibold flex items-center justify-center tabular-nums">
+                <span className="absolute top-0.5 end-0.5 w-4 h-4 rounded-full bg-[var(--adonis-accent)] text-white text-[10px] font-semibold flex items-center justify-center tabular-nums">
                   {new Intl.NumberFormat('fa-IR').format(wishlistIds.length)}
                 </span>
               )}
@@ -224,7 +226,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               onClick={() => handleLinkClick('/account')}
               aria-label={user ? `حساب کاربری ${user.fullName}` : 'ورود یا ثبت‌نام'}
               data-testid="header-account-button"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#18181B] hover:bg-black/5 rounded-md transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm transition-colors whitespace-nowrap shrink-0"
             >
               <User className="w-4 h-4" strokeWidth={1.75} />
               <span className="max-w-[110px] truncate">{user ? user.fullName : 'حساب کاربری'}</span>
@@ -239,7 +241,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
               }}
               aria-label={`سبد خرید (${totalQty} جفت)`}
               data-testid="cart-button"
-              className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs font-medium bg-[#18181B] text-[#FAF7F2] rounded-md hover:bg-[#2A2A2E] transition-colors whitespace-nowrap shrink-0 min-h-[38px] sm:min-h-[40px]"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs font-medium bg-[var(--adonis-primary)] text-white rounded-sm hover:bg-[#B01D39] transition-colors whitespace-nowrap shrink-0 min-h-[38px] sm:min-h-[40px]"
             >
               <ShoppingBag className="w-4 h-4" strokeWidth={1.75} />
               <span className="hidden sm:inline">سبد</span>
@@ -252,7 +254,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
 
         {/* Expandable Search Bar */}
         {searchOpen && (
-          <div className="border-t border-black/[0.06] bg-white px-4 py-3">
+          <div className="border-t border-[#16141A]/[0.08] bg-white px-4 py-3">
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex items-center gap-2">
               <label htmlFor="header-search-input" className="sr-only">
                 جستجو در کفش‌ها و کتونی‌ها
@@ -264,11 +266,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder="جستجوی نام کفش، کتونی، برند (مثلاً Nike) یا مدل..."
                 autoFocus
-                className="flex-1 h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md focus:outline-none focus:border-[#18181B]"
+                className="flex-1 h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:outline-none focus:border-[var(--adonis-accent)]"
               />
               <button
                 type="submit"
-                className="px-4 h-10 text-xs font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] transition-colors whitespace-nowrap"
+                className="px-4 h-10 text-xs font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] transition-colors whitespace-nowrap"
               >
                 جستجو
               </button>
@@ -289,22 +291,23 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
           className="fixed inset-0 z-50 md:hidden flex"
         >
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-[1px]"
+            className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px]"
             data-testid="mobile-menu-backdrop"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
-          <aside className="relative z-10 w-full max-w-[340px] h-[100dvh] max-h-[100dvh] bg-[#FAF7F2] shadow-2xl border-e border-black/10 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
-            <div className="px-4 h-16 bg-white border-b border-black/[0.08] flex items-center justify-between shrink-0">
+          <aside className="relative z-10 w-full max-w-[340px] h-[100dvh] max-h-[100dvh] bg-[#EFEEEA] shadow-2xl border-e border-[#16141A]/10 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
+            <div className="px-4 h-16 bg-white border-b border-[#16141A]/[0.08] flex items-center justify-between shrink-0">
               <div className="flex flex-col min-w-0">
                 <span
                   id="mobile-menu-title"
-                  className="font-display-serif text-xl font-semibold tracking-wider text-[#18181B] truncate"
+                  className="font-display-serif text-xl tracking-[0.22em] text-[var(--adonis-primary)] truncate flex items-center gap-2"
                 >
-                  {logoText}
+                  <span className="w-2 h-2 rotate-45 bg-[#C21E3C] shrink-0" aria-hidden="true" />
+                  <span>{logoText}</span>
                 </span>
-                <span className="text-[11px] text-[#6B665F] truncate">فروشگاه تخصصی کفش و کتونی</span>
+                <span className="text-[11px] text-[#6A6670] truncate">فروشگاه تخصصی کفش و کتونی</span>
               </div>
               <button
                 ref={mobileCloseBtnRef}
@@ -312,7 +315,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="بستن منوی موبایل"
                 data-testid="mobile-menu-close"
-                className="p-2 text-[#18181B] hover:bg-black/5 rounded-md min-w-[40px] min-h-[40px] flex items-center justify-center"
+                className="p-2 text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm min-w-[40px] min-h-[40px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -333,17 +336,17 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                       e.preventDefault();
                       handleLinkClick(link.path);
                     }}
-                    className={`flex items-center justify-between px-3.5 py-3 text-sm rounded-lg transition-colors ${
+                    className={`flex items-center justify-between px-3.5 py-3 text-sm rounded-sm transition-colors ${
                       active
-                        ? 'bg-white text-[#18181B] font-semibold border border-black/[0.08] shadow-xs'
-                        : 'text-[#3F3B36] font-medium hover:bg-white/70 hover:text-[#18181B]'
+                        ? 'bg-white text-[var(--adonis-primary)] font-semibold border border-[#16141A]/[0.08] shadow-xs'
+                        : 'text-[#4B4752] font-medium hover:bg-white/80 hover:text-[var(--adonis-primary)]'
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      {link.path === '/admin' && <Shield className="w-4 h-4 text-[#8F6E38]" />}
+                      {link.path === '/admin' && <Shield className="w-4 h-4 text-[var(--adonis-accent)]" />}
                       <span>{link.label}</span>
                     </span>
-                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[#B5945B]" aria-hidden="true" />}
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[var(--adonis-accent)]" aria-hidden="true" />}
                   </a>
                 );
               })}
@@ -359,23 +362,23 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                   e.preventDefault();
                   handleLinkClick('/account?tab=wishlist');
                 }}
-                className={`flex items-center justify-between px-3.5 py-3 text-sm rounded-lg transition-colors ${
+                className={`flex items-center justify-between px-3.5 py-3 text-sm rounded-sm transition-colors ${
                   currentPath.startsWith('/account') && currentPath.includes('tab=wishlist')
-                    ? 'bg-white text-[#18181B] font-semibold border border-black/[0.08] shadow-xs'
-                    : 'text-[#3F3B36] font-medium hover:bg-white/70 hover:text-[#18181B]'
+                    ? 'bg-white text-[var(--adonis-primary)] font-semibold border border-[#16141A]/[0.08] shadow-xs'
+                    : 'text-[#4B4752] font-medium hover:bg-white/80 hover:text-[var(--adonis-primary)]'
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-[#8F6E38]" />
+                  <Heart className="w-4 h-4 text-[var(--adonis-accent)]" />
                   <span>علاقه‌مندی‌ها</span>
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded bg-[#EFEAE0] text-[#18181B] tabular-nums">
+                <span className="text-xs px-2 py-0.5 rounded-sm bg-[#E2E0DB] text-[var(--adonis-primary)] tabular-nums font-medium">
                   {new Intl.NumberFormat('fa-IR').format(wishlistIds.length)}
                 </span>
               </a>
             </nav>
 
-            <div className="p-4 bg-white border-t border-black/[0.08] space-y-2.5 shrink-0">
+            <div className="p-4 bg-white border-t border-[#16141A]/[0.08] space-y-2.5 shrink-0">
               <a
                 href="/account"
                 aria-current={
@@ -390,7 +393,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onSearc
                   e.preventDefault();
                   handleLinkClick('/account');
                 }}
-                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-md bg-[#18181B] text-[#FAF7F2] text-sm font-medium hover:bg-[#2A2A2E] transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-sm bg-[var(--adonis-primary)] text-white text-sm font-medium hover:bg-[#B01D39] transition-colors"
               >
                 <User className="w-4 h-4" />
                 <span>{user ? `حساب کاربری: ${user.fullName}` : 'ورود و ثبت‌نام'}</span>

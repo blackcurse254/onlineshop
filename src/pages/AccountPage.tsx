@@ -237,32 +237,32 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
 
   const renderWishlistView = () => (
     <section aria-labelledby="wishlist-heading" className="space-y-5" data-testid="account-wishlist-view">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/[0.06] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#16141A]/[0.08] pb-4">
         <div>
-          <h2 id="wishlist-heading" className="text-lg sm:text-xl font-bold text-[#18181B] flex items-center gap-2">
-            <Heart className="w-5 h-5 text-[#8F6E38]" fill="currentColor" />
+          <h2 id="wishlist-heading" className="text-xl sm:text-2xl text-[var(--adonis-primary)] flex items-center gap-2">
+            <Heart className="w-5 h-5 text-[var(--adonis-accent)]" fill="currentColor" />
             <span>لیست علاقه‌مندی‌های شما</span>
           </h2>
-          <p className="text-xs text-[#6B665F] mt-1">
+          <p className="text-xs text-[#6A6670] mt-1">
             مدل‌های کفش و کتونی ذخیره‌شده برای مقایسه، بررسی سایز و خرید بعدی
           </p>
         </div>
-        <span className="text-xs font-medium text-[#524E48] tabular-nums">
+        <span className="text-xs font-medium text-[#6A6670] tabular-nums">
           {new Intl.NumberFormat('fa-IR').format(wishlistedProducts.length)} محصول ذخیره‌شده
         </span>
       </div>
 
       {wishlistedProducts.length === 0 ? (
-        <div className="max-w-lg mx-auto bg-white border border-black/[0.06] rounded-xl p-10 text-center space-y-4">
-          <Heart className="w-10 h-10 mx-auto text-[#18181B]/25" strokeWidth={1.25} />
+        <div className="max-w-lg mx-auto bg-white border border-[#16141A]/[0.08] rounded-sm p-10 text-center space-y-4">
+          <Heart className="w-10 h-10 mx-auto text-[#16141A]/20" strokeWidth={1.25} />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-[#18181B]">لیست علاقه‌مندی‌های شما خالی است.</p>
-            <p className="text-xs text-[#6B665F]">با زدن آیکون قلب روی هر کفش، آن را اینجا ذخیره کنید.</p>
+            <p className="text-sm font-medium text-[var(--adonis-primary)]">لیست علاقه‌مندی‌های شما خالی است.</p>
+            <p className="text-xs text-[#85818A]">با زدن آیکون قلب روی هر کفش، آن را اینجا ذخیره کنید.</p>
           </div>
           <button
             type="button"
             onClick={() => onNavigate('/shop')}
-            className="px-5 py-2.5 text-xs font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] transition-colors"
+            className="px-5 py-2.5 text-xs font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] transition-colors"
           >
             مشاهده فروشگاه کفش
           </button>
@@ -285,10 +285,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
   if (user) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.08] pb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#16141A]/[0.08] pb-5">
           <div>
-            <h1 className="text-2xl font-bold text-[#18181B]">حساب کاربری: {user.fullName}</h1>
-            <p className="text-xs sm:text-sm text-[#6B665F] mt-1">
+            <h1 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">حساب کاربری: {user.fullName}</h1>
+            <p className="text-xs sm:text-sm text-[#6A6670] mt-1">
               {user.email} · {user.role === 'admin' ? 'مدیر فروشگاه' : 'مشتری آدونیس'}
             </p>
           </div>
@@ -297,7 +297,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
               <button
                 type="button"
                 onClick={() => onNavigate('/admin')}
-                className="px-4 py-2 text-xs font-medium bg-[#B5945B] text-white rounded-md hover:bg-[#9C7D47]"
+                className="px-4 py-2 text-xs font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
               >
                 ورود به پنل مدیریت
               </button>
@@ -305,7 +305,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium border border-black/15 text-[#18181B] rounded-md hover:bg-white"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium border border-[#16141A]/15 text-[var(--adonis-primary)] rounded-sm hover:bg-white"
             >
               <LogOut className="w-4 h-4" />
               <span>خروج</span>
@@ -313,7 +313,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
           </div>
         </div>
 
-        <div className="inline-flex flex-wrap items-center gap-1 p-1 bg-[#EFEAE0] rounded-lg">
+        <div className="inline-flex flex-wrap items-center gap-1 p-1 bg-[#E2E0DB] rounded-sm">
           {[
             { id: 'overview' as const, label: 'پروفایل و سفارش‌ها' },
             {
@@ -329,8 +329,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 setAuthTab(item.id);
                 onNavigate(item.id === 'overview' ? '/account' : `/account?tab=${item.id}`);
               }}
-              className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                authTab === item.id ? 'bg-white text-[#18181B] shadow-sm' : 'text-[#524E48] hover:text-[#18181B]'
+              className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-sm transition-colors whitespace-nowrap ${
+                authTab === item.id ? 'bg-white text-[var(--adonis-primary)] shadow-sm font-semibold' : 'text-[#6A6670] hover:text-[var(--adonis-primary)]'
               }`}
             >
               {item.label}
@@ -341,19 +341,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
         {authTab === 'wishlist' ? (
           renderWishlistView()
         ) : authTab === 'track' ? (
-          <div className="max-w-lg bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
+          <div className="max-w-lg bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-5">
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-[#18181B]">پیگیری سفارش</h2>
-              <p className="text-xs text-[#6B665F]">
+              <h2 className="text-xl text-[var(--adonis-primary)]">پیگیری سفارش</h2>
+              <p className="text-xs text-[#85818A]">
                 برای استعلام وضعیت سفارش، کد پیگیری و شماره موبایل ثبت‌شده هنگام خرید را وارد کنید.
               </p>
             </div>
             {trackError && (
-              <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-800">{trackError}</div>
+              <div className="p-3 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800">{trackError}</div>
             )}
             <form onSubmit={handleTrackOrder} className="space-y-4">
               <div className="space-y-1">
-                <label htmlFor="auth-track-code" className="text-xs font-medium text-[#18181B]">
+                <label htmlFor="auth-track-code" className="text-xs font-medium text-[var(--adonis-primary)]">
                   کد پیگیری سفارش
                 </label>
                 <input
@@ -364,11 +364,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                   value={trackOrderNumber}
                   onChange={(e) => setTrackOrderNumber(e.target.value)}
                   placeholder="ADONIS-251113-XXXXXX"
-                  className="w-full h-10 px-3 text-sm text-end uppercase bg-[#FAF7F2] border border-black/15 rounded-md"
+                  className="w-full h-10 px-3 text-sm text-end uppercase bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="auth-track-phone" className="text-xs font-medium text-[#18181B]">
+                <label htmlFor="auth-track-phone" className="text-xs font-medium text-[var(--adonis-primary)]">
                   شماره موبایل سفارش
                 </label>
                 <input
@@ -379,29 +379,29 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                   value={trackPhone}
                   onChange={(e) => setTrackPhone(e.target.value)}
                   placeholder="09123456789"
-                  className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                  className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-2.5 inline-flex items-center justify-center gap-2 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
+                className="w-full py-2.5 inline-flex items-center justify-center gap-2 text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
               >
                 <Search className="w-4 h-4" />
                 <span>استعلام وضعیت سفارش</span>
               </button>
             </form>
             {trackedOrder && (
-              <div className="mt-4 p-4 rounded-lg bg-[#FAF7F2] border border-black/[0.08] space-y-2 text-xs sm:text-sm">
+              <div className="mt-4 p-4 rounded-sm bg-[#EFEEEA] border border-[#16141A]/[0.08] space-y-2 text-xs sm:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#6B665F]">وضعیت فعلی:</span>
-                  <strong className="text-[#8F6E38]">{getOrderStatusLabel(trackedOrder.orderStatus)}</strong>
+                  <span className="text-[#85818A]">وضعیت فعلی:</span>
+                  <strong className="text-[#B01D39]">{getOrderStatusLabel(trackedOrder.orderStatus)}</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#6B665F]">تحویل‌گیرنده:</span>
+                  <span className="text-[#85818A]">تحویل‌گیرنده:</span>
                   <span>{trackedOrder.customerName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#6B665F]">مبلغ کل:</span>
+                  <span className="text-[#85818A]">مبلغ کل:</span>
                   <strong className="tabular-nums">{formatToman(trackedOrder.totalAmount)}</strong>
                 </div>
               </div>
@@ -412,26 +412,26 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
           {/* Profile Form */}
           <form
             onSubmit={handleProfileSave}
-            className="lg:col-span-5 bg-white border border-black/[0.06] rounded-xl p-6 space-y-4"
+            className="lg:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#18181B] flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-[#8F6E38]" />
+            <h2 className="text-lg text-[var(--adonis-primary)] flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-[var(--adonis-accent)]" />
               <span>مشخصات و نشانی پیش‌فرض</span>
             </h2>
 
             {authError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-sm text-xs text-red-800">
                 {authError}
               </div>
             )}
             {profileSaved && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800">
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-sm text-xs text-emerald-800">
                 {profileSaved}
               </div>
             )}
 
             <div className="space-y-1">
-              <label htmlFor="prof-name" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="prof-name" className="text-xs font-medium text-[var(--adonis-primary)]">
                 نام و نام خانوادگی
               </label>
               <input
@@ -440,12 +440,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 required
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
-                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="prof-phone" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="prof-phone" className="text-xs font-medium text-[var(--adonis-primary)]">
                 شماره موبایل
               </label>
               <input
@@ -454,12 +454,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 dir="ltr"
                 value={profilePhone}
                 onChange={(e) => setProfilePhone(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="prof-postal" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="prof-postal" className="text-xs font-medium text-[var(--adonis-primary)]">
                 کد پستی
               </label>
               <input
@@ -468,12 +468,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 dir="ltr"
                 value={profilePostal}
                 onChange={(e) => setProfilePostal(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="prof-address" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="prof-address" className="text-xs font-medium text-[var(--adonis-primary)]">
                 آدرس پستی
               </label>
               <textarea
@@ -481,13 +481,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 rows={3}
                 value={profileAddress}
                 onChange={(e) => setProfileAddress(e.target.value)}
-                className="w-full p-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 text-xs sm:text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
+              className="w-full py-2.5 text-xs sm:text-sm font-medium bg-[var(--adonis-primary)] text-white rounded-sm hover:bg-[#B01D39] transition-colors"
             >
               ذخیره تغییرات پروفایل
             </button>
@@ -495,13 +495,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
 
           {/* Order History */}
           <div className="lg:col-span-7 space-y-4">
-            <h2 className="text-base font-semibold text-[#18181B] flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#8F6E38]" />
+            <h2 className="text-lg text-[var(--adonis-primary)] flex items-center gap-2">
+              <Package className="w-4 h-4 text-[var(--adonis-accent)]" />
               <span>سفارش‌های من</span>
             </h2>
 
             {myOrders.length === 0 ? (
-              <div className="bg-white border border-black/[0.06] rounded-xl p-10 text-center text-sm text-[#6B665F]">
+              <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-10 text-center text-sm text-[#85818A]">
                 شما هنوز سفارشی ثبت نکرده‌اید.
               </div>
             ) : (
@@ -509,24 +509,24 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 {myOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="bg-white border border-black/[0.06] rounded-xl p-5 space-y-3"
+                    className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.05] pb-3 text-xs sm:text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#16141A]/[0.06] pb-3 text-xs sm:text-sm">
                       <div>
-                        <span className="text-[#6B665F]">کد سفارش: </span>
-                        <strong dir="ltr" className="inline-block tabular-nums text-[#18181B]">
+                        <span className="text-[#85818A]">کد سفارش: </span>
+                        <strong dir="ltr" className="inline-block tabular-nums text-[var(--adonis-primary)]">
                           {order.orderNumber}
                         </strong>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-medium text-[#8F6E38]">
+                        <span className="text-xs font-medium text-[#B01D39]">
                           {getOrderStatusLabel(order.orderStatus)}
                         </span>
                         <span className="tabular-nums font-semibold">{formatToman(order.totalAmount)}</span>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 text-xs text-[#524E48]">
+                    <div className="space-y-1.5 text-xs text-[#6A6670]">
                       {(order.items ?? []).map((item) => (
                         <div key={item.id} className="flex justify-between">
                           <span>
@@ -549,7 +549,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
 
   return (
     <div className={`${tab === 'wishlist' ? 'max-w-6xl' : 'max-w-lg'} mx-auto px-4 sm:px-6 py-10 space-y-6`}>
-      <div className="max-w-lg mx-auto flex items-center gap-1 p-1 bg-[#EFEAE0] rounded-lg">
+      <div className="max-w-lg mx-auto flex items-center gap-1 p-1 bg-[#E2E0DB] rounded-sm">
         {[
           { id: 'login' as const, label: 'ورود' },
           { id: 'register' as const, label: 'ثبت‌نام' },
@@ -569,8 +569,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
               setTab(item.id);
               setAuthError(null);
             }}
-            className={`flex-1 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-              tab === item.id ? 'bg-white text-[#18181B] shadow-sm' : 'text-[#524E48]'
+            className={`flex-1 py-2 text-xs sm:text-sm font-medium rounded-sm transition-colors whitespace-nowrap ${
+              tab === item.id ? 'bg-white text-[var(--adonis-primary)] shadow-sm font-semibold' : 'text-[#6A6670]'
             }`}
           >
             {item.label}
@@ -579,12 +579,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
       </div>
 
       {tab === 'login' && (
-        <div className="bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
+        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-5">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-[#18181B]">
+            <h1 className="text-2xl text-[var(--adonis-primary)]">
               {passwordResetEnabled && showResetMode ? 'بازیابی رمز عبور' : 'ورود به حساب کاربری'}
             </h1>
-            <p className="text-xs text-[#6B665F]">
+            <p className="text-xs text-[#85818A]">
               {passwordResetEnabled && showResetMode
                 ? 'ایمیل خود را برای ارسال لینک یک‌بارمصرف بازیابی وارد کنید یا کد دریافتی را ثبت نمایید.'
                 : 'برای مشاهده سفارش‌ها و مدیریت لیست علاقه‌مندی‌ها وارد شوید.'}
@@ -592,10 +592,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
           </div>
 
           {authError && (
-            <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-800">{authError}</div>
+            <div className="p-3 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800">{authError}</div>
           )}
           {resetMessage && (
-            <div className="p-3 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+            <div className="p-3 rounded-sm bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
               {resetMessage}
             </div>
           )}
@@ -604,7 +604,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
             <div className="space-y-5">
               <form onSubmit={handleForgotPassword} className="space-y-3">
                 <div className="space-y-1">
-                  <label htmlFor="forgot-email" className="text-xs font-medium text-[#18181B]">
+                  <label htmlFor="forgot-email" className="text-xs font-medium text-[var(--adonis-primary)]">
                     ایمیل حساب کاربری
                   </label>
                   <input
@@ -615,21 +615,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
+                  className="w-full py-2.5 text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] disabled:opacity-50"
                 >
                   {authLoading ? 'در حال ارسال...' : 'درخواست بازیابی رمز عبور'}
                 </button>
               </form>
 
-              <form onSubmit={handleResetPassword} className="space-y-3 pt-4 border-t border-black/10">
+              <form onSubmit={handleResetPassword} className="space-y-3 pt-4 border-t border-[#16141A]/10">
                 <div className="space-y-1">
-                  <label htmlFor="reset-token" className="text-xs font-medium text-[#18181B]">
+                  <label htmlFor="reset-token" className="text-xs font-medium text-[var(--adonis-primary)]">
                     کد بازیابی دریافت‌شده
                   </label>
                   <input
@@ -640,11 +640,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     dir="ltr"
                     value={resetToken}
                     onChange={(e) => setResetToken(e.target.value)}
-                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="reset-new-pass" className="text-xs font-medium text-[#18181B]">
+                  <label htmlFor="reset-new-pass" className="text-xs font-medium text-[var(--adonis-primary)]">
                     رمز عبور جدید (حداقل ۸ کاراکتر)
                   </label>
                   <input
@@ -655,13 +655,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     dir="ltr"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full py-2.5 text-sm font-medium border border-[#18181B] text-[#18181B] rounded-md hover:bg-[#FAF7F2] disabled:opacity-50"
+                  className="w-full py-2.5 text-sm font-medium border border-[var(--adonis-primary)] text-[var(--adonis-primary)] rounded-sm hover:bg-[#EFEEEA] disabled:opacity-50"
                 >
                   ثبت رمز عبور جدید
                 </button>
@@ -674,7 +674,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                   setAuthError(null);
                   setResetMessage(null);
                 }}
-                className="w-full text-center text-xs font-medium text-[#8F6E38] hover:underline"
+                className="w-full text-center text-xs font-medium text-[#B01D39] hover:underline"
               >
                 بازگشت به فرم ورود
               </button>
@@ -683,7 +683,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
             <>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
-                  <label htmlFor="login-email" className="text-xs font-medium text-[#18181B]">
+                  <label htmlFor="login-email" className="text-xs font-medium text-[var(--adonis-primary)]">
                     ایمیل
                   </label>
                   <input
@@ -694,13 +694,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label htmlFor="login-password" className="text-xs font-medium text-[#18181B]">
+                    <label htmlFor="login-password" className="text-xs font-medium text-[var(--adonis-primary)]">
                       رمز عبور
                     </label>
                     {passwordResetEnabled && (
@@ -712,7 +712,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                           setAuthError(null);
                           setResetMessage(null);
                         }}
-                        className="text-xs text-[#8F6E38] hover:underline"
+                        className="text-xs text-[#B01D39] hover:underline"
                       >
                         فراموشی رمز عبور؟
                       </button>
@@ -725,30 +725,30 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                     dir="ltr"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                    className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
+                  className="w-full py-2.5 text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] disabled:opacity-50"
                 >
                   {authLoading ? 'در حال بررسی...' : 'ورود'}
                 </button>
               </form>
 
               <div className="relative flex items-center py-1">
-                <div className="flex-grow border-t border-black/10" />
-                <span className="shrink mx-3 text-xs text-[#8A847C]">یا</span>
-                <div className="flex-grow border-t border-black/10" />
+                <div className="flex-grow border-t border-[#16141A]/10" />
+                <span className="shrink mx-3 text-xs text-[#85818A]">یا</span>
+                <div className="flex-grow border-t border-[#16141A]/10" />
               </div>
 
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={authLoading}
-                className="w-full py-2.5 px-4 text-xs sm:text-sm font-medium border border-black/20 text-[#18181B] rounded-md hover:bg-[#FAF7F2] transition-colors"
+                className="w-full py-2.5 px-4 text-xs sm:text-sm font-medium border border-[#16141A]/20 text-[var(--adonis-primary)] rounded-sm hover:bg-[#EFEEEA] transition-colors"
               >
                 ورود سریع با حساب گوگل
               </button>
@@ -758,19 +758,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
       )}
 
       {tab === 'register' && (
-        <div className="bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
+        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-5">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-[#18181B]">ایجاد حساب کاربری</h1>
-            <p className="text-xs text-[#6B665F]">ثبت‌نام سریع در فروشگاه تخصصی کفش و کتونی</p>
+            <h1 className="text-2xl text-[var(--adonis-primary)]">ایجاد حساب کاربری</h1>
+            <p className="text-xs text-[#85818A]">ثبت‌نام سریع در فروشگاه تخصصی کفش و کتونی</p>
           </div>
 
           {authError && (
-            <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-800">{authError}</div>
+            <div className="p-3 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800">{authError}</div>
           )}
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-1">
-              <label htmlFor="reg-name" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="reg-name" className="text-xs font-medium text-[var(--adonis-primary)]">
                 نام و نام خانوادگی
               </label>
               <input
@@ -779,12 +779,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full h-10 px-3 text-sm bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="reg-email" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="reg-email" className="text-xs font-medium text-[var(--adonis-primary)]">
                 ایمیل
               </label>
               <input
@@ -794,12 +794,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 dir="ltr"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="reg-phone" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="reg-phone" className="text-xs font-medium text-[var(--adonis-primary)]">
                 شماره موبایل (اختیاری)
               </label>
               <input
@@ -809,12 +809,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="09123456789"
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="reg-pass" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="reg-pass" className="text-xs font-medium text-[var(--adonis-primary)]">
                 رمز عبور (حداقل ۸ کاراکتر)
               </label>
               <input
@@ -825,14 +825,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-2.5 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E] disabled:opacity-50"
+              className="w-full py-2.5 text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39] disabled:opacity-50"
             >
               {authLoading ? 'در حال ثبت‌نام...' : 'ثبت‌نام'}
             </button>
@@ -841,21 +841,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
       )}
 
       {tab === 'track' && (
-        <div className="bg-white border border-black/[0.06] rounded-xl p-6 sm:p-8 space-y-5">
+        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-5">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-[#18181B]">پیگیری سفارش</h1>
-            <p className="text-xs text-[#6B665F]">
+            <h1 className="text-2xl text-[var(--adonis-primary)]">پیگیری سفارش</h1>
+            <p className="text-xs text-[#85818A]">
               برای استعلام وضعیت سفارش، کد پیگیری و شماره موبایل ثبت‌شده هنگام خرید را وارد کنید.
             </p>
           </div>
 
           {trackError && (
-            <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-800">{trackError}</div>
+            <div className="p-3 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800">{trackError}</div>
           )}
 
           <form onSubmit={handleTrackOrder} className="space-y-4">
             <div className="space-y-1">
-              <label htmlFor="track-code" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="track-code" className="text-xs font-medium text-[var(--adonis-primary)]">
                 کد پیگیری سفارش
               </label>
               <input
@@ -866,12 +866,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 value={trackOrderNumber}
                 onChange={(e) => setTrackOrderNumber(e.target.value)}
                 placeholder="ADONIS-251113-XXXXXX"
-                className="w-full h-10 px-3 text-sm text-end uppercase bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end uppercase bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="track-phone" className="text-xs font-medium text-[#18181B]">
+              <label htmlFor="track-phone" className="text-xs font-medium text-[var(--adonis-primary)]">
                 شماره موبایل سفارش
               </label>
               <input
@@ -882,13 +882,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
                 value={trackPhone}
                 onChange={(e) => setTrackPhone(e.target.value)}
                 placeholder="09123456789"
-                className="w-full h-10 px-3 text-sm text-end bg-[#FAF7F2] border border-black/15 rounded-md"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 inline-flex items-center justify-center gap-2 text-sm font-medium bg-[#18181B] text-white rounded-md hover:bg-[#2A2A2E]"
+              className="w-full py-2.5 inline-flex items-center justify-center gap-2 text-sm font-medium bg-[var(--adonis-accent)] text-white rounded-sm hover:bg-[#B01D39]"
             >
               <Search className="w-4 h-4" />
               <span>استعلام وضعیت سفارش</span>
@@ -896,17 +896,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({ queryString, onNavigat
           </form>
 
           {trackedOrder && (
-            <div className="mt-4 p-4 rounded-lg bg-[#FAF7F2] border border-black/[0.08] space-y-2 text-xs sm:text-sm">
+            <div className="mt-4 p-4 rounded-sm bg-[#EFEEEA] border border-[#16141A]/[0.08] space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between">
-                <span className="text-[#6B665F]">وضعیت فعلی:</span>
-                <strong className="text-[#8F6E38]">{getOrderStatusLabel(trackedOrder.orderStatus)}</strong>
+                <span className="text-[#85818A]">وضعیت فعلی:</span>
+                <strong className="text-[#B01D39]">{getOrderStatusLabel(trackedOrder.orderStatus)}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B665F]">تحویل‌گیرنده:</span>
+                <span className="text-[#85818A]">تحویل‌گیرنده:</span>
                 <span>{trackedOrder.customerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B665F]">مبلغ کل:</span>
+                <span className="text-[#85818A]">مبلغ کل:</span>
                 <strong className="tabular-nums">{formatToman(trackedOrder.totalAmount)}</strong>
               </div>
             </div>

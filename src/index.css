@@ -2,30 +2,58 @@
 
 @layer base {
   :root {
-    --vera-primary: #18181b;
-    --vera-accent: #b5945b;
-    --vera-bg: #faf7f2;
+    --adonis-primary: #16141a;
+    --adonis-accent: #c21e3c;
+    --adonis-bg: #efeeea;
+    --adonis-plum: #2b1a2e;
     --font-sans: 'Vazirmatn', system-ui, -apple-system, sans-serif;
-    --font-display: 'Cormorant Garamond', 'Vazirmatn', serif;
+    --font-display: 'Lalezar', 'Vazirmatn', system-ui, sans-serif;
+    --font-logo: 'Cinzel', 'Vazirmatn', serif;
   }
 
   html {
     font-family: var(--font-sans);
-    background-color: var(--vera-bg);
-    color: var(--vera-primary);
+    background-color: var(--adonis-bg);
+    color: var(--adonis-primary);
     scroll-behavior: smooth;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--vera-bg);
-    color: var(--vera-primary);
+    background-color: var(--adonis-bg);
+    color: var(--adonis-primary);
     overflow-x: hidden;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-synthesis: none;
   }
 }
 
 .font-display-serif {
-  font-family: var(--font-display);
+  font-family: var(--font-logo);
+  font-weight: 600;
+}
+
+.meander {
+  height: 10px;
+  width: 100%;
+  background-repeat: repeat-x;
+  background-size: 20px 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10' fill='none'%3E%3Cpath d='M0 9H5V1H15V9H20' stroke='%23c21e3c' stroke-width='1.2' stroke-opacity='0.85'/%3E%3C/svg%3E");
+}
+
+.meander-light {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10' fill='none'%3E%3Cpath d='M0 9H5V1H15V9H20' stroke='%23f2b6c0' stroke-width='1.2' stroke-opacity='0.85'/%3E%3C/svg%3E");
+}
+
+.arch-frame {
+  border-top-left-radius: 9999px;
+  border-top-right-radius: 9999px;
+  overflow: hidden;
 }
 
 .tabular-nums {

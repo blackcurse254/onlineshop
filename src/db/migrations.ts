@@ -2,8 +2,11 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from './index.ts';
 import { storeSettings, storeSettingsSnapshots } from './schema.ts';
 import {
+  ADONIS_PALETTE_V2_MIGRATION_KEY,
+  ADONIS_PALETTE_V3_MIGRATION_KEY,
   ADONIS_SETTINGS_MIGRATION_KEY,
   extractSettingsSnapshot,
+  planPaletteV2Migration,
   planStoreSettingsMigration,
 } from '../utils/settingsMigration.ts';
 
@@ -39,7 +42,11 @@ export async function applyAdonisSettingsMigration(
     }
 
     const current = rows[0];
-    const plan = planStoreSettingsMigration(current);
+    const plan =
+      migrationKey === ADONIS_PALETTE_V2_MIGRATION_KEY ||
+      migrationKey === ADONIS_PALETTE_V3_MIGRATION_KEY
+        ? planPaletteV2Migration(current)
+        : planStoreSettingsMigration(current);
 
     if (plan.hasChanges) {
       await tx
@@ -53,7 +60,7 @@ export async function applyAdonisSettingsMigration(
 
     const notes = plan.hasChanges
       ? `Changed: ${plan.changedFields.join(', ')}; Preserved: ${plan.preservedCustomFields.join(', ') || 'none'}`
-      : `Baseline verified ADONIS settings; Preserved: ${plan.preservedCustomFields.join(', ') || 'none'}`;
+      : `Baseline verified ADONIS settings (${migrationKey}); Preserved: ${plan.preservedCustomFields.join(', ') || 'none'}`;
 
     await tx.insert(storeSettingsSnapshots).values({
       migrationKey,
@@ -70,6 +77,14 @@ export async function applyAdonisSettingsMigration(
       preservedCustomFields: plan.preservedCustomFields,
     };
   });
+}
+
+export async function applyAdonisPaletteV2Migration() {
+  return applyAdonisSettingsMigration(ADONIS_PALETTE_V2_MIGRATION_KEY);
+}
+
+export async function applyAdonisPaletteV3Migration() {
+  return applyAdonisSettingsMigration(ADONIS_PALETTE_V3_MIGRATION_KEY);
 }
 
 export async function rollbackAdonisSettingsMigration(
