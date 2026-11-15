@@ -259,6 +259,33 @@ app.get('/api/products/:slug', async (req, res, next) => {
   }
 });
 
+app.get('/product/:slug', async (req, res, next) => {
+  try {
+    const slug = sanitizeString(req.params.slug);
+    if (!slug.startsWith('vera-')) {
+      return next();
+    }
+
+    await ensureSeeded();
+    const targetSlug = `adonis-${slug.slice('vera-'.length)}`;
+    const matching = await db
+      .select({ slug: products.slug })
+      .from(products)
+      .where(eq(products.slug, targetSlug))
+      .limit(1);
+
+    if (matching.length === 0) {
+      return next();
+    }
+
+    const qsIndex = req.originalUrl.indexOf('?');
+    const querySuffix = qsIndex >= 0 ? req.originalUrl.slice(qsIndex) : '';
+    return res.redirect(301, `/product/${encodeURIComponent(matching[0].slug)}${querySuffix}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
 const createReviewSchema = z.object({
   productId: z.number().int().positive(),
   authorName: z.string().min(2, 'نام خود را وارد کنید').max(60),

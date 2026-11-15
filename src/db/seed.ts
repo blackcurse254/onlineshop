@@ -12,7 +12,13 @@ import {
 } from './schema.ts';
 import { hashPassword } from '../lib/security.ts';
 import { getTotalStockFromSizes, migrateLegacySizeInventory } from '../utils/commerce.ts';
-import { applyAdonisPaletteV3Migration, applyAdonisSettingsMigration } from './migrations.ts';
+import {
+  applyAdonisOrderNumberMigration,
+  applyAdonisPaletteV3Migration,
+  applyAdonisPaletteV4Migration,
+  applyAdonisProductSlugMigration,
+  applyAdonisSettingsMigration,
+} from './migrations.ts';
 
 let seedPromise: Promise<void> | null = null;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -72,8 +78,8 @@ async function runSeed() {
       storeName: 'ADONIS',
       storeSubtitle: 'فروشگاه تخصصی کفش و کتونی',
       logoText: 'ADONIS',
-      primaryColor: '#16141A',
-      accentColor: '#C21E3C',
+      primaryColor: '#0F1A1F',
+      accentColor: '#0B7A5F',
       backgroundColor: '#EFEEEA',
       phone: '',
       email: '',
@@ -209,7 +215,7 @@ async function runSeed() {
       {
         categoryId: catMap.get('mens-sneakers') ?? null,
         name: 'کتونی چرم مردانه مدل کورت آدونیس',
-        slug: 'vera-court-leather-mens-sneaker',
+        slug: 'adonis-court-leather-mens-sneaker',
         sku: 'AD-101',
         brand: 'ADONIS Studio',
         model: 'Court Classic 01',
@@ -229,8 +235,8 @@ async function runSeed() {
           { size: '44', stock: 3 },
         ],
         colors: [
-          { name: 'کرم استخوانی', hex: '#EBDADD' },
-          { name: 'مشکی زغالی', hex: '#16141A' },
+          { name: 'کرم استخوانی', hex: '#DCEBE5' },
+          { name: 'مشکی زغالی', hex: '#0F1A1F' },
         ],
         images: [
           '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
@@ -244,7 +250,7 @@ async function runSeed() {
       {
         categoryId: catMap.get('womens-sneakers') ?? null,
         name: 'کتونی زنانه عاجی مدل میلانو ایر',
-        slug: 'vera-milano-ivory-womens-sneaker',
+        slug: 'adonis-milano-ivory-womens-sneaker',
         sku: 'AD-201',
         brand: 'ADONIS Studio',
         model: 'Milano Air W',
@@ -265,7 +271,7 @@ async function runSeed() {
         ],
         colors: [
           { name: 'عاجی طلایی', hex: '#E9E8E3' },
-          { name: 'بژ شنی', hex: '#D9C4C8' },
+          { name: 'بژ شنی', hex: '#CFE0D9' },
         ],
         images: [
           '/src/assets/images/shoe_womens_sneaker_ivory_1794597376257.jpg',
@@ -299,8 +305,8 @@ async function runSeed() {
           { size: '44', stock: 1 },
         ],
         colors: [
-          { name: 'زغالی گرافیتی', hex: '#2B1A2E' },
-          { name: 'نقره‌ای دودی', hex: '#6A6670' },
+          { name: 'زغالی گرافیتی', hex: '#0B1F2E' },
+          { name: 'نقره‌ای دودی', hex: '#5F6B70' },
         ],
         images: [
           '/src/assets/images/shoe_sport_running_charcoal_1794597377088.jpg',
@@ -335,8 +341,8 @@ async function runSeed() {
           { size: '43', stock: 2 },
         ],
         colors: [
-          { name: 'خاکستری گرم', hex: '#A4A0A8' },
-          { name: 'کرم صدفی', hex: '#EBDADD' },
+          { name: 'خاکستری گرم', hex: '#9BA6AB' },
+          { name: 'کرم صدفی', hex: '#DCEBE5' },
         ],
         images: [
           '/src/assets/images/promo_running_capsule_1794597375673.jpg',
@@ -370,8 +376,8 @@ async function runSeed() {
           { size: '44', stock: 1 },
         ],
         colors: [
-          { name: 'شتری عسلی', hex: '#C21E3C' },
-          { name: 'قهوه‌ای اسپرسو', hex: '#3B3741' },
+          { name: 'شتری عسلی', hex: '#0B7A5F' },
+          { name: 'قهوه‌ای اسپرسو', hex: '#33424A' },
         ],
         images: [
           '/src/assets/images/shoe_casual_loafer_camel_1794597377849.jpg',
@@ -404,8 +410,8 @@ async function runSeed() {
           { size: '44', stock: 2 },
         ],
         colors: [
-          { name: 'مشکی متالیک', hex: '#16141A' },
-          { name: 'رز شقایقی', hex: '#D98A9A' },
+          { name: 'مشکی متالیک', hex: '#0F1A1F' },
+          { name: 'رز شقایقی', hex: '#6DBFA3' },
         ],
         images: [
           '/src/assets/images/hero_footwear_campaign_1794597375199.jpg',
@@ -419,7 +425,7 @@ async function runSeed() {
       {
         categoryId: catMap.get('formal-shoes') ?? null,
         name: 'کفش رسمی آکسفورد چرم مشکی دست‌دوز',
-        slug: 'vera-oxford-black-leather-formal',
+        slug: 'adonis-oxford-black-leather-formal',
         sku: 'AD-701',
         brand: 'ADONIS Studio',
         model: 'Savile Oxford',
@@ -438,7 +444,7 @@ async function runSeed() {
           { size: '43', stock: 2 },
           { size: '44', stock: 2 },
         ],
-        colors: [{ name: 'مشکی براق', hex: '#16141A' }],
+        colors: [{ name: 'مشکی براق', hex: '#0F1A1F' }],
         images: [
           '/src/assets/images/shoe_formal_oxford_black_1794597377071.jpg',
           '/src/assets/images/shoe_care_accessories_1794597378977.jpg',
@@ -451,7 +457,7 @@ async function runSeed() {
       {
         categoryId: catMap.get('sandals-slides') ?? null,
         name: 'صندل و اسلاید چرم برنزه مدل ریویرا',
-        slug: 'vera-riviera-tan-leather-slides',
+        slug: 'adonis-riviera-tan-leather-slides',
         sku: 'AD-801',
         brand: 'ADONIS Studio',
         model: 'Riviera Cork',
@@ -472,7 +478,7 @@ async function runSeed() {
           { size: '42', stock: 2 },
         ],
         colors: [
-          { name: 'قهوه‌ای برنزه', hex: '#9E1B34' },
+          { name: 'قهوه‌ای برنزه', hex: '#085544' },
           { name: 'کرم ماسه‌ای', hex: '#D9D7D2' },
         ],
         images: [
@@ -539,7 +545,7 @@ async function runSeed() {
           { size: '43', stock: 2 },
           { size: '44', stock: 1 },
         ],
-        colors: [{ name: 'زغالی شنی', hex: '#3B3741' }],
+        colors: [{ name: 'زغالی شنی', hex: '#33424A' }],
         images: [
           '/src/assets/images/shoe_sport_running_charcoal_1794597377088.jpg',
           '/src/assets/images/hero_footwear_campaign_1794597375199.jpg',
@@ -552,7 +558,7 @@ async function runSeed() {
       {
         categoryId: catMap.get('shoe-accessories') ?? null,
         name: 'پک تخصصی مراقبت از کفش و قالب چوب سدر',
-        slug: 'vera-cedar-shoe-care-kit',
+        slug: 'adonis-cedar-shoe-care-kit',
         sku: 'AC-010',
         brand: 'ADONIS Studio',
         model: 'Care Kit Pro',
@@ -569,7 +575,7 @@ async function runSeed() {
           { size: '41-42', stock: 8 },
           { size: '43-44', stock: 5 },
         ],
-        colors: [{ name: 'چوب طبیعی سدر', hex: '#9E1B34' }],
+        colors: [{ name: 'چوب طبیعی سدر', hex: '#085544' }],
         images: [
           '/src/assets/images/shoe_care_accessories_1794597378977.jpg',
         ],
@@ -686,6 +692,9 @@ async function runSeed() {
   await migrateLegacyProductsSizeInventory();
   await applyAdonisSettingsMigration();
   await applyAdonisPaletteV3Migration();
+  await applyAdonisPaletteV4Migration();
+  await applyAdonisProductSlugMigration();
+  await applyAdonisOrderNumberMigration();
   await bootstrapEnvAdmin();
 }
 

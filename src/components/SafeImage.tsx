@@ -48,7 +48,7 @@ export const SafeImage: React.FC<SafeImageProps> = ({
       return (
         <div
           onClick={onClick}
-          className={`flex flex-col items-center justify-center bg-gradient-to-br from-[#E2E0DB] to-[#D9D7D2] text-[#6A6670] ${aspectClass} ${className}`}
+          className={`flex flex-col items-center justify-center bg-gradient-to-br from-[#E2E0DB] to-[#D9D7D2] text-[#5F6B70] ${aspectClass} ${className}`}
           role="img"
           aria-label={alt}
         >

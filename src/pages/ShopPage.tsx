@@ -6,11 +6,13 @@ import { useReveal } from '../hooks/useReveal';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import {
   calculateDiscountPercent,
+  deduplicateColorSwatches,
   filterAndSortProducts,
   formatToman,
   getAvailableSizes,
   getEffectiveTotalStock,
   getSizeStock,
+  normalizeHexColor,
   type ProductSortOption,
 } from '../utils/commerce';
 import type { Product } from '../types/store';
@@ -108,15 +110,20 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
   }, [products]);
 
-  const availableColors = useMemo(() => {
-    const map = new Map<string, string>();
-    products.forEach((p) => {
-      p.colors.forEach((c) => {
-        if (!map.has(c.name)) map.set(c.name, c.hex);
-      });
-    });
-    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
-  }, [products]);
+  const availableColors = useMemo(() => deduplicateColorSwatches(products), [products]);
+
+  const selectedColorSwatch = useMemo(() => {
+    if (!selectedColor) return null;
+    const normalizedSelected = normalizeHexColor(selectedColor);
+    return (
+      availableColors.find(
+        (c) =>
+          c.name === selectedColor ||
+          c.names.includes(selectedColor) ||
+          c.normalizedHex === normalizedSelected
+      ) ?? null
+    );
+  }, [availableColors, selectedColor]);
 
   const maxDiscountPercent = useMemo(() => {
     let max = 0;
@@ -135,6 +142,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
         brand: selectedBrand,
         size: selectedSize,
         color: selectedColor,
+        colorHex: selectedColorSwatch?.normalizedHex ?? null,
         onlyDiscounted,
         onlyInStock,
         minPrice,
@@ -148,6 +156,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
       selectedBrand,
       selectedSize,
       selectedColor,
+      selectedColorSwatch,
       onlyDiscounted,
       onlyInStock,
       minPrice,
@@ -180,9 +189,14 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
       discountPrice: product.discountPrice,
       selectedSize: chosenSize,
       selectedColor:
-        selectedColor && product.colors.some((c) => c.name === selectedColor)
-          ? selectedColor
-          : product.colors[0]?.name || 'استاندارد',
+        (selectedColor &&
+          product.colors.find(
+            (c) =>
+              c.name === selectedColor ||
+              (selectedColorSwatch && normalizeHexColor(c.hex) === selectedColorSwatch.normalizedHex)
+          )?.name) ||
+        product.colors[0]?.name ||
+        'استاندارد',
       quantity: 1,
       maxStock,
     });
@@ -282,9 +296,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
   const filterFormBody = (
     <>
-      <div className="flex items-center justify-between border-b border-[#16141A]/[0.08] pb-3.5">
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#16141A]">
-          <SlidersHorizontal className="w-4 h-4 text-[#C21E3C]" />
+      <div className="flex items-center justify-between border-b border-[#0F1A1F]/[0.08] pb-3.5">
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#0F1A1F]">
+          <SlidersHorizontal className="w-4 h-4 text-[#0B7A5F]" />
           <span>فیلترهای تخصصی</span>
         </span>
         <div className="flex items-center gap-2">
@@ -292,7 +306,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 text-xs text-[#B01D39] hover:underline font-medium min-h-[36px]"
+              className="inline-flex items-center gap-1 text-xs text-[#0A6B54] hover:underline font-medium min-h-[36px]"
             >
               <X className="w-3.5 h-3.5" />
               <span>پاک کردن</span>
@@ -303,7 +317,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
             aria-label="بستن فیلترها"
-            className="lg:hidden p-2 text-[#16141A] hover:bg-[#EFEEEA] rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="lg:hidden p-2 text-[#0F1A1F] hover:bg-[#EFEEEA] rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -312,14 +326,14 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
       {/* 01 — Brand */}
       <div className="space-y-2">
-        <label htmlFor="filter-brand" className="block text-[11px] font-semibold tracking-widest text-[#B01D39]">
+        <label htmlFor="filter-brand" className="block text-[11px] font-semibold tracking-widest text-[#0A6B54]">
           ۰۱ — برند
         </label>
         <select
           id="filter-brand"
           value={selectedBrand ?? ''}
           onChange={(e) => setSelectedBrand(e.target.value || null)}
-          className="w-full min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[#C21E3C]"
+          className="w-full min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[#0B7A5F]"
         >
           <option value="">همه برندها</option>
           {availableBrands.map((b) => (
@@ -332,14 +346,14 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
       {/* 02 — Size */}
       {availableShoeSizes.length > 0 && (
-        <div className="space-y-2.5 pt-3 border-t border-[#16141A]/[0.06]">
+        <div className="space-y-2.5 pt-3 border-t border-[#0F1A1F]/[0.06]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۲ — سایز</span>
+            <span className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">۰۲ — سایز</span>
             {selectedSize && (
               <button
                 type="button"
                 onClick={() => setSelectedSize(null)}
-                className="text-[11px] text-[#6A6670] hover:text-[#B01D39]"
+                className="text-[11px] text-[#5F6B70] hover:text-[#0A6B54]"
               >
                 همه سایزها
               </button>
@@ -356,8 +370,8 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                   aria-pressed={active}
                   className={`min-w-[44px] min-h-[44px] px-2.5 text-xs font-semibold rounded-sm border tabular-nums transition-colors ${
                     active
-                      ? 'bg-[#16141A] text-[#EFEEEA] border-[#16141A]'
-                      : 'bg-[#EFEEEA] text-[#16141A] border-[#16141A]/15 hover:border-[#C21E3C]'
+                      ? 'bg-[#0F1A1F] text-[#EFEEEA] border-[#0F1A1F]'
+                      : 'bg-[#EFEEEA] text-[#0F1A1F] border-[#0F1A1F]/15 hover:border-[#0B7A5F]'
                   }`}
                 >
                   {size}
@@ -370,14 +384,14 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
       {/* 03 — Color */}
       {availableColors.length > 0 && (
-        <div className="space-y-2.5 pt-3 border-t border-[#16141A]/[0.06]">
+        <div className="space-y-2.5 pt-3 border-t border-[#0F1A1F]/[0.06]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۳ — رنگ</span>
+            <span className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">۰۳ — رنگ</span>
             {selectedColor && (
               <button
                 type="button"
                 onClick={() => setSelectedColor(null)}
-                className="text-[11px] text-[#6A6670] hover:text-[#B01D39]"
+                className="text-[11px] text-[#5F6B70] hover:text-[#0A6B54]"
               >
                 {selectedColor} ×
               </button>
@@ -385,10 +399,15 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
           </div>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="فیلتر بر اساس رنگ">
             {availableColors.map((c) => {
-              const active = selectedColor === c.name;
+              const active = Boolean(
+                selectedColor &&
+                  (selectedColorSwatch
+                    ? selectedColorSwatch.normalizedHex === c.normalizedHex
+                    : c.names.includes(selectedColor))
+              );
               return (
                 <button
-                  key={c.name}
+                  key={c.normalizedHex}
                   type="button"
                   onClick={() => setSelectedColor(active ? null : c.name)}
                   aria-label={`فیلتر رنگ ${c.name}`}
@@ -396,12 +415,12 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                   title={c.name}
                   className={`min-w-[44px] min-h-[44px] rounded-sm border flex items-center justify-center transition-colors ${
                     active
-                      ? 'border-[#C21E3C] bg-[#EBDADD]/60'
-                      : 'border-[#16141A]/10 bg-[#EFEEEA]/60 hover:border-[#16141A]/40'
+                      ? 'border-[#0B7A5F] bg-[#DCEBE5]/60'
+                      : 'border-[#0F1A1F]/10 bg-[#EFEEEA]/60 hover:border-[#0F1A1F]/40'
                   }`}
                 >
                   <span
-                    className="w-6 h-6 rounded-full border border-[#16141A]/25 flex items-center justify-center shadow-xs"
+                    className="w-6 h-6 rounded-full border border-[#0F1A1F]/25 flex items-center justify-center shadow-xs"
                     style={{ backgroundColor: c.hex }}
                   >
                     {active && <Check className="w-3.5 h-3.5 text-white drop-shadow" strokeWidth={2.5} />}
@@ -414,8 +433,8 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
       )}
 
       {/* 04 — Price */}
-      <div className="space-y-2 pt-3 border-t border-[#16141A]/[0.06]">
-        <label htmlFor="filter-price-range" className="block text-[11px] font-semibold tracking-widest text-[#B01D39]">
+      <div className="space-y-2 pt-3 border-t border-[#0F1A1F]/[0.06]">
+        <label htmlFor="filter-price-range" className="block text-[11px] font-semibold tracking-widest text-[#0A6B54]">
           ۰۴ — قیمت
         </label>
         <select
@@ -426,7 +445,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
             setMinPrice(minVal ? Number(minVal) : null);
             setMaxPrice(maxVal ? Number(maxVal) : null);
           }}
-          className="w-full min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[#C21E3C]"
+          className="w-full min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[#0B7A5F]"
         >
           <option value="-">همه قیمت‌ها</option>
           <option value="-3500000">تا {formatToman(3500000)}</option>
@@ -441,23 +460,23 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
       </div>
 
       {/* Availability & Discount toggles */}
-      <div className="space-y-1 pt-3 border-t border-[#16141A]/[0.06] text-xs">
-        <label className="flex items-center gap-2.5 min-h-[44px] cursor-pointer text-[#16141A] font-medium">
+      <div className="space-y-1 pt-3 border-t border-[#0F1A1F]/[0.06] text-xs">
+        <label className="flex items-center gap-2.5 min-h-[44px] cursor-pointer text-[#0F1A1F] font-medium">
           <input
             type="checkbox"
             checked={onlyDiscounted}
             onChange={(e) => setOnlyDiscounted(e.target.checked)}
-            className="accent-[#C21E3C] w-4 h-4 rounded-sm"
+            className="accent-[#0B7A5F] w-4 h-4 rounded-sm"
           />
           <span>فقط کفش‌های تخفیف‌دار</span>
         </label>
 
-        <label className="flex items-center gap-2.5 min-h-[44px] cursor-pointer text-[#16141A] font-medium">
+        <label className="flex items-center gap-2.5 min-h-[44px] cursor-pointer text-[#0F1A1F] font-medium">
           <input
             type="checkbox"
             checked={onlyInStock}
             onChange={(e) => setOnlyInStock(e.target.checked)}
-            className="accent-[#C21E3C] w-4 h-4 rounded-sm"
+            className="accent-[#0B7A5F] w-4 h-4 rounded-sm"
           />
           <span>فقط کالاهای موجود</span>
         </label>
@@ -469,18 +488,18 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
     <div className="space-y-8 pb-12">
       {/* Top Editorial Header Band */}
       {onlyDiscounted ? (
-        <section className="relative overflow-hidden bg-gradient-to-l from-[#2B1A2E] via-[#4C1730] to-[#7A1630] text-[#EFEEEA]">
+        <section className="relative overflow-hidden bg-gradient-to-l from-[#0B1F2E] to-[#0B5A47] agate-bg text-[#EFEEEA]">
           <div
             aria-hidden="true"
-            className="pointer-events-none select-none absolute -top-12 -end-10 w-56 h-56 rotate-45 border border-[#F2B6C0]/25"
+            className="pointer-events-none select-none absolute -top-12 -end-10 w-56 h-56 rotate-45 border border-[#8FE3C8]/25"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none select-none absolute -bottom-16 end-24 w-44 h-44 rotate-45 border border-[#F2B6C0]/15"
+            className="pointer-events-none select-none absolute -bottom-16 end-24 w-44 h-44 rotate-45 border border-[#8FE3C8]/15"
           />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-4">
-            <nav aria-label="مسیر صفحه" className="flex items-center gap-2 text-xs text-[#F2B6C0]/90">
+            <nav aria-label="مسیر صفحه" className="flex items-center gap-2 text-xs text-[#8FE3C8]/90">
               <button type="button" onClick={() => onNavigate('/')} className="hover:text-white transition-colors">
                 خانه
               </button>
@@ -490,7 +509,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
-                <div className="text-[11px] font-semibold tracking-widest text-[#F2B6C0]">
+                <div className="text-[11px] font-semibold tracking-widest text-[#8FE3C8]">
                   ۰۱ — پیشنهادهای ویژه فصل
                 </div>
                 <h1 className="text-4xl sm:text-5xl text-[#EFEEEA]">تخفیف‌های ویژه آدونیس</h1>
@@ -500,7 +519,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               </div>
 
               {maxDiscountPercent > 0 && (
-                <div className="inline-flex items-center gap-3 self-start md:self-auto bg-[#C21E3C] text-white px-5 py-3 rounded-sm border border-[#F2B6C0]/40 shadow-lg">
+                <div className="inline-flex items-center gap-3 self-start md:self-auto bg-[#0B7A5F] text-white px-5 py-3 rounded-sm border border-[#8FE3C8]/40 shadow-lg">
                   <span className="text-xl sm:text-2xl font-bold tabular-nums">تا ٪{faMaxDiscount} تخفیف</span>
                 </div>
               )}
@@ -510,17 +529,17 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
           <div className="relative z-10 meander meander-light" aria-hidden="true" />
         </section>
       ) : (
-        <section className="relative overflow-hidden bg-[#2B1A2E] text-[#EFEEEA]">
+        <section className="relative overflow-hidden bg-[#0B1F2E] agate-bg text-[#EFEEEA]">
           <div
             aria-hidden="true"
-            className="pointer-events-none select-none font-display-serif text-[84px] sm:text-[150px] lg:text-[210px] leading-none tracking-[0.14em] text-transparent opacity-30 absolute -bottom-2 inset-x-0 text-center whitespace-nowrap overflow-hidden"
-            style={{ WebkitTextStroke: '1px #F2B6C0' }}
+            className="pointer-events-none select-none font-display-serif text-[84px] sm:text-[150px] lg:text-[210px] leading-none tracking-[0.14em] text-transparent opacity-20 absolute -bottom-2 inset-x-0 text-center whitespace-nowrap overflow-hidden"
+            style={{ WebkitTextStroke: '1px #8FE3C8' }}
           >
             ADONIS
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-4">
-            <nav aria-label="مسیر صفحه" className="flex items-center gap-2 text-xs text-[#F2B6C0]/90">
+            <nav aria-label="مسیر صفحه" className="relative z-10 flex items-center gap-2 text-xs text-[#8FE3C8]/90">
               <button type="button" onClick={() => onNavigate('/')} className="hover:text-white transition-colors">
                 خانه
               </button>
@@ -528,12 +547,12 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               <span className="text-[#EFEEEA] font-medium">فروشگاه کفش</span>
             </nav>
 
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div className="space-y-2">
-                <div className="text-[11px] font-semibold tracking-widest text-[#F2B6C0]">۰۱ — کلکسیون کفش</div>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div className="relative z-10 space-y-2">
+                <div className="text-[11px] font-semibold tracking-widest text-[#8FE3C8]">۰۱ — کلکسیون کفش</div>
                 <h1 className="text-4xl sm:text-5xl text-[#EFEEEA]">فروشگاه تخصصی کفش و کتونی</h1>
               </div>
-              <p className="text-xs sm:text-sm text-[#F2B6C0] font-medium tabular-nums">
+              <p className="relative z-10 text-xs sm:text-sm text-[#8FE3C8] font-medium tabular-nums">
                 نمایش {faCount} مدل کفش
               </p>
             </div>
@@ -555,8 +574,8 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
             onClick={() => setSelectedCategory(null)}
             className={`min-h-[44px] px-4 text-xs sm:text-sm font-medium rounded-sm border transition-colors whitespace-nowrap shrink-0 ${
               selectedCategory === null
-                ? 'bg-[#16141A] text-[#EFEEEA] border-[#16141A]'
-                : 'bg-white text-[#16141A] border-[#16141A]/15 hover:border-[#C21E3C]'
+                ? 'bg-[#0F1A1F] text-[#EFEEEA] border-[#0F1A1F]'
+                : 'bg-white text-[#0F1A1F] border-[#0F1A1F]/15 hover:border-[#0B7A5F]'
             }`}
           >
             همه کفش‌ها
@@ -570,8 +589,8 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                 onClick={() => setSelectedCategory(active ? null : cat.id)}
                 className={`min-h-[44px] px-4 text-xs sm:text-sm font-medium rounded-sm border transition-colors whitespace-nowrap shrink-0 ${
                   active
-                    ? 'bg-[#16141A] text-[#EFEEEA] border-[#16141A]'
-                    : 'bg-white text-[#16141A] border-[#16141A]/15 hover:border-[#C21E3C]'
+                    ? 'bg-[#0F1A1F] text-[#EFEEEA] border-[#0F1A1F]'
+                    : 'bg-white text-[#0F1A1F] border-[#0F1A1F]/15 hover:border-[#0B7A5F]'
                 }`}
               >
                 {cat.name}
@@ -599,19 +618,19 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
           >
             {mobileFiltersOpen && (
               <div
-                className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px] lg:hidden"
+                className="fixed inset-0 bg-[#0B1F2E]/60 backdrop-blur-[1px] lg:hidden"
                 onClick={() => setMobileFiltersOpen(false)}
                 aria-hidden="true"
               />
             )}
 
-            <div className="relative z-10 w-full max-w-[340px] lg:max-w-none h-[100dvh] lg:h-auto bg-white border border-[#16141A]/10 border-t-2 border-t-[#16141A] rounded-sm flex flex-col lg:block shadow-2xl lg:shadow-none">
+            <div className="relative z-10 w-full max-w-[340px] lg:max-w-none h-[100dvh] lg:h-auto bg-white border border-[#0F1A1F]/10 border-t-2 border-t-[#0F1A1F] rounded-sm flex flex-col lg:block shadow-2xl lg:shadow-none">
               <div className="flex-1 overflow-y-auto p-5 space-y-5">{filterFormBody}</div>
-              <div className="p-4 border-t border-[#16141A]/10 bg-[#EFEEEA] lg:hidden shrink-0">
+              <div className="p-4 border-t border-[#0F1A1F]/10 bg-[#EFEEEA] lg:hidden shrink-0">
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="w-full min-h-[44px] bg-[#C21E3C] text-white text-sm font-semibold rounded-sm hover:bg-[#16141A] transition-colors"
+                  className="w-full min-h-[44px] bg-[#0B7A5F] text-white text-sm font-semibold rounded-sm hover:bg-[#0F1A1F] transition-colors"
                 >
                   اعمال فیلتر ({faCount} مدل)
                 </button>
@@ -622,10 +641,10 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
           {/* Products Area */}
           <div className="lg:col-span-9 space-y-5">
             {/* Toolbar Above Grid */}
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-3.5 sm:p-4 space-y-3">
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-3.5 sm:p-4 space-y-3">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="relative flex-1 sm:max-w-sm">
-                  <Search className="w-4 h-4 text-[#6A6670] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Search className="w-4 h-4 text-[#5F6B70] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <label htmlFor="shop-search-input" className="sr-only">
                     جستجو در کفش‌ها و کتونی‌ها
                   </label>
@@ -635,7 +654,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="جستجوی نام کفش، برند یا مدل..."
-                    className="w-full min-h-[44px] ps-9 pe-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[#C21E3C]"
+                    className="w-full min-h-[44px] ps-9 pe-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[#0B7A5F]"
                   />
                 </div>
 
@@ -647,24 +666,24 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                     aria-expanded={mobileFiltersOpen}
                     aria-controls="shop-filters-panel"
                     data-testid="mobile-filters-toggle"
-                    className="lg:hidden inline-flex items-center gap-1.5 min-h-[44px] px-3.5 text-xs font-semibold bg-[#EFEEEA] border border-[#16141A]/20 rounded-sm text-[#16141A]"
+                    className="lg:hidden inline-flex items-center gap-1.5 min-h-[44px] px-3.5 text-xs font-semibold bg-[#EFEEEA] border border-[#0F1A1F]/20 rounded-sm text-[#0F1A1F]"
                   >
-                    <Filter className="w-3.5 h-3.5 text-[#C21E3C]" />
+                    <Filter className="w-3.5 h-3.5 text-[#0B7A5F]" />
                     <span>فیلترها</span>
                     {hasActiveFilters && (
-                      <span className="w-2 h-2 rounded-full bg-[#C21E3C]" aria-hidden="true" />
+                      <span className="w-2 h-2 rounded-full bg-[#0B7A5F]" aria-hidden="true" />
                     )}
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <label htmlFor="shop-sort-select" className="text-xs text-[#6A6670] whitespace-nowrap">
+                    <label htmlFor="shop-sort-select" className="text-xs text-[#5F6B70] whitespace-nowrap">
                       مرتب‌سازی:
                     </label>
                     <select
                       id="shop-sort-select"
                       value={sort}
                       onChange={(e) => setSort(e.target.value as ProductSortOption)}
-                      className="min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[#C21E3C] font-medium text-[#16141A]"
+                      className="min-h-[44px] px-3 text-xs sm:text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[#0B7A5F] font-medium text-[#0F1A1F]"
                     >
                       <option value="newest">جدیدترین</option>
                       <option value="bestseller">پرفروش‌ترین</option>
@@ -677,22 +696,22 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
               </div>
 
               {activeFilterChips.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#16141A]/[0.06]">
+                <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#0F1A1F]/[0.06]">
                   {activeFilterChips.map((chip) => (
                     <button
                       key={chip.id}
                       type="button"
                       onClick={chip.onRemove}
-                      className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-xs font-medium bg-[#EFEEEA] text-[#16141A] border border-[#16141A]/15 rounded-sm hover:border-[#C21E3C] transition-colors"
+                      className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-xs font-medium bg-[#EFEEEA] text-[#0F1A1F] border border-[#0F1A1F]/15 rounded-sm hover:border-[#0B7A5F] transition-colors"
                     >
                       <span>{chip.label}</span>
-                      <X className="w-3.5 h-3.5 text-[#B01D39]" />
+                      <X className="w-3.5 h-3.5 text-[#0A6B54]" />
                     </button>
                   ))}
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="text-xs font-semibold text-[#B01D39] hover:underline px-2 min-h-[36px]"
+                    className="text-xs font-semibold text-[#0A6B54] hover:underline px-2 min-h-[36px]"
                   >
                     پاک کردن همه
                   </button>
@@ -705,7 +724,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="bg-white border border-[#16141A]/[0.08] rounded-sm overflow-hidden flex flex-col"
+                    className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm overflow-hidden flex flex-col"
                   >
                     <div className="aspect-[4/5] w-full skeleton-shimmer" />
                     <div className="p-4 space-y-3">
@@ -717,17 +736,17 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                 ))}
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="bg-white border border-[#16141A]/[0.08] rounded-sm py-16 px-6 text-center space-y-5">
-                <div className="arch-frame w-28 h-36 mx-auto bg-[#E2E0DB] border border-[#16141A]/10 flex items-center justify-center">
-                  <Footprints className="w-10 h-10 text-[#16141A]/35" strokeWidth={1.25} />
+              <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm py-16 px-6 text-center space-y-5">
+                <div className="arch-frame w-28 h-36 mx-auto bg-[#E2E0DB] border border-[#0F1A1F]/10 flex items-center justify-center">
+                  <Footprints className="w-10 h-10 text-[#0F1A1F]/35" strokeWidth={1.25} />
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-base sm:text-lg font-semibold text-[#16141A]">
+                  <p className="text-base sm:text-lg font-semibold text-[#0F1A1F]">
                     {onlyDiscounted
                       ? 'فعلاً تخفیفی فعال نیست؛ به‌زودی برمی‌گردیم'
                       : 'کفشی با این مشخصات پیدا نشد'}
                   </p>
-                  <p className="text-xs sm:text-sm text-[#6A6670] max-w-md mx-auto">
+                  <p className="text-xs sm:text-sm text-[#5F6B70] max-w-md mx-auto">
                     {onlyDiscounted
                       ? 'می‌توانید کلکسیون اصلی کفش‌ها و کتونی‌های آدونیس را مشاهده کنید.'
                       : 'عبارت جستجو، برند، سایز یا محدوده قیمت را تغییر دهید.'}
@@ -736,7 +755,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ queryString, onNavigate }) =
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="min-h-[44px] px-6 py-2.5 text-xs sm:text-sm font-semibold bg-[#C21E3C] text-white rounded-sm hover:bg-[#16141A] transition-colors"
+                  className="min-h-[44px] px-6 py-2.5 text-xs sm:text-sm font-semibold bg-[#0B7A5F] text-white rounded-sm hover:bg-[#0F1A1F] transition-colors"
                 >
                   نمایش همه کفش‌ها
                 </button>

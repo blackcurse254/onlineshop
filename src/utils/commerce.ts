@@ -255,12 +255,49 @@ export function calculateOrderTotals(input: OrderCalculationInput): OrderTotals 
   };
 }
 
+export interface DeduplicatedColorSwatch {
+  name: string;
+  hex: string;
+  normalizedHex: string;
+  names: string[];
+}
+
+export function normalizeHexColor(hex: string): string {
+  return hex.trim().toLowerCase();
+}
+
+export function deduplicateColorSwatches(
+  products: ReadonlyArray<Pick<ProductFilterItem, 'colors'>>
+): DeduplicatedColorSwatch[] {
+  const byHex = new Map<string, DeduplicatedColorSwatch>();
+  for (const product of products) {
+    for (const color of product.colors ?? []) {
+      const normalizedHex = normalizeHexColor(color.hex ?? '');
+      const cleanName = String(color.name ?? '').trim();
+      if (!normalizedHex || !cleanName) continue;
+      const existing = byHex.get(normalizedHex);
+      if (!existing) {
+        byHex.set(normalizedHex, {
+          name: cleanName,
+          hex: color.hex.trim(),
+          normalizedHex,
+          names: [cleanName],
+        });
+      } else if (!existing.names.includes(cleanName)) {
+        existing.names.push(cleanName);
+      }
+    }
+  }
+  return Array.from(byHex.values());
+}
+
 export interface FilterCriteria {
   search?: string;
   categoryId?: number | null;
   brand?: string | null;
   size?: string | null;
   color?: string | null;
+  colorHex?: string | null;
   onlyDiscounted?: boolean;
   onlyInStock?: boolean;
   minPrice?: number | null;
@@ -288,8 +325,13 @@ export function filterAndSortProducts<T extends ProductFilterItem>(
       if (sizeCount <= 0) return false;
     }
 
-    if (criteria.color) {
-      const hasColor = item.colors.some((c) => c.name === criteria.color);
+    if (criteria.color || criteria.colorHex) {
+      const targetHex = criteria.colorHex ? normalizeHexColor(criteria.colorHex) : '';
+      const hasColor = item.colors.some(
+        (c) =>
+          (criteria.color && c.name === criteria.color) ||
+          (targetHex && normalizeHexColor(c.hex) === targetHex)
+      );
       if (!hasColor) return false;
     }
 

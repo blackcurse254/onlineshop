@@ -196,3 +196,129 @@ export function planPaletteV2Migration(
 }
 
 export const planPaletteV3Migration = planPaletteV2Migration;
+
+export const ADONIS_PALETTE_V4_MIGRATION_KEY = 'adonis-palette-v4-emerald-agate';
+
+export const ADONIS_V4_PALETTE = {
+  primaryColor: '#0F1A1F',
+  accentColor: '#0B7A5F',
+  backgroundColor: '#EFEEEA',
+} as const;
+
+const LEGACY_V4_INK_PRIMARY_HEX = new Set(['18181B', '0F172A', '111827', '16141A', '171615']);
+const LEGACY_V4_NAVY_PRIMARY_HEX = new Set(['2B1A2E', '1F1D1C']);
+const LEGACY_V4_ACCENT_HEX = new Set(['B5945B', '1D4ED8', '047857', 'C2410C', 'C21E3C', 'B01D39', '9E1B34']);
+
+export function planPaletteV4Migration(
+  current: StoreSettingsSnapshotData
+): StoreSettingsMigrationPlan {
+  const previousSnapshot = extractSettingsSnapshot(current);
+  const nextSnapshot: StoreSettingsSnapshotData = { ...previousSnapshot };
+  const changedFields: string[] = [];
+  const preservedCustomFields: string[] = [];
+
+  const primaryVal = previousSnapshot.primaryColor.trim().toUpperCase();
+  const primaryHex = primaryVal.replace(/^#/, '');
+  if (!primaryVal || LEGACY_V4_INK_PRIMARY_HEX.has(primaryHex)) {
+    if (primaryVal !== ADONIS_V4_PALETTE.primaryColor) {
+      nextSnapshot.primaryColor = ADONIS_V4_PALETTE.primaryColor;
+      changedFields.push('primaryColor');
+    }
+  } else if (LEGACY_V4_NAVY_PRIMARY_HEX.has(primaryHex)) {
+    if (primaryVal !== '#0B1F2E') {
+      nextSnapshot.primaryColor = '#0B1F2E';
+      changedFields.push('primaryColor');
+    }
+  } else if (primaryVal !== ADONIS_V4_PALETTE.primaryColor && primaryVal !== '#0B1F2E') {
+    preservedCustomFields.push('primaryColor');
+  }
+
+  const accentVal = previousSnapshot.accentColor.trim().toUpperCase();
+  const accentHex = accentVal.replace(/^#/, '');
+  if (!accentVal || LEGACY_V4_ACCENT_HEX.has(accentHex)) {
+    if (accentVal !== ADONIS_V4_PALETTE.accentColor) {
+      nextSnapshot.accentColor = ADONIS_V4_PALETTE.accentColor;
+      changedFields.push('accentColor');
+    }
+  } else if (accentVal !== ADONIS_V4_PALETTE.accentColor) {
+    preservedCustomFields.push('accentColor');
+  }
+
+  return {
+    previousSnapshot,
+    nextSnapshot,
+    changedFields,
+    preservedCustomFields,
+    hasChanges: changedFields.length > 0,
+  };
+}
+
+export interface ProductSlugRow {
+  id: number;
+  slug: string;
+}
+
+export interface ProductSlugMigrationPlan {
+  updates: { id: number; fromSlug: string; toSlug: string }[];
+  skipped: { id: number; slug: string; conflictingSlug: string }[];
+}
+
+export function planProductSlugMigration(rows: ProductSlugRow[]): ProductSlugMigrationPlan {
+  const existingSlugs = new Set(rows.map((r) => r.slug));
+  const updates: { id: number; fromSlug: string; toSlug: string }[] = [];
+  const skipped: { id: number; slug: string; conflictingSlug: string }[] = [];
+
+  for (const row of rows) {
+    if (!row.slug.startsWith('vera-')) continue;
+    const toSlug = `adonis-${row.slug.slice('vera-'.length)}`;
+    if (existingSlugs.has(toSlug)) {
+      skipped.push({ id: row.id, slug: row.slug, conflictingSlug: toSlug });
+      continue;
+    }
+    updates.push({ id: row.id, fromSlug: row.slug, toSlug });
+    existingSlugs.delete(row.slug);
+    existingSlugs.add(toSlug);
+  }
+
+  return { updates, skipped };
+}
+
+export interface OrderNumberRow {
+  id: number;
+  orderNumber: string;
+}
+
+export interface OrderNumberMigrationPlan {
+  updates: { id: number; fromOrderNumber: string; toOrderNumber: string }[];
+  skipped: { id: number; orderNumber: string; conflictingOrderNumber: string }[];
+}
+
+export function planOrderNumberMigration(rows: OrderNumberRow[]): OrderNumberMigrationPlan {
+  const existingNumbers = new Set(rows.map((r) => r.orderNumber));
+  const updates: { id: number; fromOrderNumber: string; toOrderNumber: string }[] = [];
+  const skipped: { id: number; orderNumber: string; conflictingOrderNumber: string }[] = [];
+
+  for (const row of rows) {
+    if (!row.orderNumber.startsWith('VERA-')) continue;
+    const toOrderNumber = `ADONIS-${row.orderNumber.slice('VERA-'.length)}`;
+    if (existingNumbers.has(toOrderNumber)) {
+      skipped.push({
+        id: row.id,
+        orderNumber: row.orderNumber,
+        conflictingOrderNumber: toOrderNumber,
+      });
+      continue;
+    }
+    updates.push({
+      id: row.id,
+      fromOrderNumber: row.orderNumber,
+      toOrderNumber,
+    });
+    existingNumbers.delete(row.orderNumber);
+    existingNumbers.add(toOrderNumber);
+  }
+
+  return { updates, skipped };
+}
+
+

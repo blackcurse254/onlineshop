@@ -29,8 +29,8 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
       aria-modal="true"
       aria-labelledby="size-guide-title"
     >
-      <div className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-xl bg-white rounded-sm border border-[#16141A]/15 border-t-2 border-t-[#C21E3C] shadow-2xl overflow-hidden">
+      <div className="fixed inset-0 bg-[#0B1F2E]/60 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
+      <div className="relative z-10 w-full max-w-xl bg-white rounded-sm border border-[#0F1A1F]/15 border-t-2 border-t-[#0B7A5F] shadow-2xl overflow-hidden">
         <div className="px-5 py-4 bg-[#EFEEEA] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Ruler className="w-5 h-5 text-[var(--adonis-accent)]" />
@@ -43,7 +43,7 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
             type="button"
             onClick={onClose}
             aria-label="بستن راهنمای سایز"
-            className="p-2 text-[#6A6670] hover:text-[var(--adonis-primary)] hover:bg-[#16141A]/5 rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
+            className="p-2 text-[#5F6B70] hover:text-[var(--adonis-primary)] hover:bg-[#0F1A1F]/5 rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -51,7 +51,7 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
         <div className="meander" aria-hidden="true" />
 
         <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-          <div className="bg-[#EFEEEA] border border-[#16141A]/[0.06] rounded-sm p-3.5 text-xs text-[#4B4752] leading-relaxed space-y-1">
+          <div className="bg-[#EFEEEA] border border-[#0F1A1F]/[0.06] rounded-sm p-3.5 text-xs text-[#44525A] leading-relaxed space-y-1">
             <div className="font-semibold text-[var(--adonis-primary)]">روش دقیق اندازه‌گیری طول پا:</div>
             <p>
               پاشنه پا را به دیوار تکیه دهید، روی یک برگ کاغذ بایستید و خط جلوی بلندترین انگشت را علامت بزنید. فاصله پاشنه تا نوک انگشت را با خط‌کش (بر حسب سانتی‌متر) اندازه گرفته و با جدول زیر تطبیق دهید.
@@ -69,21 +69,21 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ open, onClose })
                   <th className="py-2.5 px-3 font-medium">US مردانه</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#16141A]/[0.06] tabular-nums">
+              <tbody className="divide-y divide-[#0F1A1F]/[0.06] tabular-nums">
                 {SHOE_SIZE_GUIDE.map((row) => (
                   <tr key={row.eu} className="hover:bg-[#EFEEEA]">
                     <td className="py-2 px-3 font-semibold text-[var(--adonis-primary)]">{row.eu}</td>
-                    <td className="py-2 px-3 text-[#B01D39] font-medium">{row.cm} cm</td>
-                    <td className="py-2 px-3 text-[#6A6670]">{row.uk}</td>
-                    <td className="py-2 px-3 text-[#6A6670]">{row.usWomen}</td>
-                    <td className="py-2 px-3 text-[#6A6670]">{row.usMen}</td>
+                    <td className="py-2 px-3 text-[#0A6B54] font-medium">{row.cm} cm</td>
+                    <td className="py-2 px-3 text-[#5F6B70]">{row.uk}</td>
+                    <td className="py-2 px-3 text-[#5F6B70]">{row.usWomen}</td>
+                    <td className="py-2 px-3 text-[#5F6B70]">{row.usMen}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <p className="text-[11px] text-[#85818A]">
+          <p className="text-[11px] text-[#7C888D]">
             توصیه تخصصی: برای کفش‌های ورزشی و پیاده‌روی اگر پنجه پای پهنی دارید، نیم سایز آزادتر (حدود ۰.۵ سانتی‌متر فضای اضافه جلو پنجه) انتخاب کنید.
           </p>
         </div>

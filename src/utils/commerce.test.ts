@@ -4,6 +4,7 @@ import {
   calculateDiscountPercent,
   calculateOrderTotals,
   decrementSizeInventory,
+  deduplicateColorSwatches,
   filterAndSortProducts,
   getAvailableSizes,
   getEffectivePrice,
@@ -175,4 +176,71 @@ test('filterAndSortProducts filters by brand, shoe size stock, color, price, and
   const byBrand = filterAndSortProducts(sample, { brand: 'ADONIS Studio', color: 'کرم' });
   assert.equal(byBrand.length, 1);
   assert.equal(byBrand[0].id, 1);
+});
+
+test('deduplicateColorSwatches merges case-insensitive hexes and colorHex matches all products of that color', () => {
+  const sample = [
+    {
+      id: 1,
+      categoryId: 10,
+      name: 'کفش ۱',
+      slug: 'shoe-1',
+      brand: 'ADONIS Studio',
+      model: 'M1',
+      upperMaterial: 'چرم',
+      soleMaterial: 'لاستیک',
+      description: 'توضیح',
+      price: 5000000,
+      discountPrice: null,
+      stock: 2,
+      sizes: ['41'],
+      sizeInventory: [{ size: '41', stock: 2 }],
+      colors: [
+        { name: 'مشکی زغالی', hex: '#16141A' },
+        { name: 'کرم استخوانی', hex: '#EBDADD' },
+      ],
+      isNew: true,
+      isBestseller: false,
+      isFeatured: false,
+      isActive: true,
+    },
+    {
+      id: 2,
+      categoryId: 10,
+      name: 'کفش ۲',
+      slug: 'shoe-2',
+      brand: 'ADONIS Studio',
+      model: 'M2',
+      upperMaterial: 'چرم',
+      soleMaterial: 'لاستیک',
+      description: 'توضیح',
+      price: 6000000,
+      discountPrice: null,
+      stock: 3,
+      sizes: ['42'],
+      sizeInventory: [{ size: '42', stock: 3 }],
+      colors: [
+        { name: 'مشکی براق', hex: ' #16141a ' },
+        { name: 'کرم صدفی', hex: '#ebdadd' },
+      ],
+      isNew: false,
+      isBestseller: true,
+      isFeatured: false,
+      isActive: true,
+    },
+  ];
+
+  const swatches = deduplicateColorSwatches(sample);
+  assert.equal(swatches.length, 2);
+  assert.equal(swatches[0].normalizedHex, '#16141a');
+  assert.equal(swatches[0].name, 'مشکی زغالی');
+  assert.deepEqual(swatches[0].names, ['مشکی زغالی', 'مشکی براق']);
+  assert.equal(swatches[1].normalizedHex, '#ebdadd');
+  assert.deepEqual(swatches[1].names, ['کرم استخوانی', 'کرم صدفی']);
+
+  const matched = filterAndSortProducts(sample, {
+    color: swatches[0].name,
+    colorHex: swatches[0].normalizedHex,
+  });
+  assert.equal(matched.length, 2);
 });

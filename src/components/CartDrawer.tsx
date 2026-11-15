@@ -52,21 +52,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
       data-testid="cart-drawer"
     >
       <div
-        className="fixed inset-0 bg-[#2B1A2E]/60 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-[#0B1F2E]/60 backdrop-blur-[1px]"
         data-testid="cart-drawer-backdrop"
         onClick={() => setIsCartOpen(false)}
         aria-hidden="true"
       />
 
-      <aside className="relative z-10 w-full max-w-md bg-[#EFEEEA] h-[100dvh] max-h-[100dvh] flex flex-col shadow-2xl border-s border-[#16141A]/10 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
-        <div className="px-5 py-4 bg-[#2B1A2E] text-[#EFEEEA] flex items-center justify-between shrink-0">
+      <aside className="relative z-10 w-full max-w-md bg-[#EFEEEA] h-[100dvh] max-h-[100dvh] flex flex-col shadow-2xl border-s border-[#0F1A1F]/10 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overscroll-contain">
+        <div className="px-5 py-4 bg-[#0B1F2E] text-[#EFEEEA] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <ShoppingBag className="w-5 h-5 text-[#F2B6C0]" strokeWidth={1.75} />
+            <ShoppingBag className="w-5 h-5 text-[#8FE3C8]" strokeWidth={1.75} />
             <h2 id="cart-drawer-title" className="text-xl text-[#EFEEEA]">
               سبد خرید شما
             </h2>
             {cart.length > 0 && (
-              <span className="px-2 py-0.5 text-[11px] font-semibold bg-[#C21E3C] text-white rounded-sm tabular-nums">
+              <span className="px-2 py-0.5 text-[11px] font-semibold bg-[#0B7A5F] text-white rounded-sm tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(cart.reduce((s, i) => s + i.quantity, 0))}
               </span>
             )}
@@ -77,26 +77,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
             onClick={() => setIsCartOpen(false)}
             aria-label="بستن سبد خرید"
             data-testid="cart-drawer-close"
-            className="p-2 text-[#F2B6C0] hover:text-white hover:bg-white/10 rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
+            className="p-2 text-[#8FE3C8] hover:text-white hover:bg-white/10 rounded-sm min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {cart.length > 0 && (
-          <div className="px-5 py-3 bg-[#E2E0DB] border-b border-[#16141A]/[0.08] text-xs text-[#4B4752]">
+          <div className="px-5 py-3 bg-[#E2E0DB] border-b border-[#0F1A1F]/[0.08] text-xs text-[#44525A]">
             {remainingForFree === 0 ? (
-              <p className="font-medium text-[#16141A]">
+              <p className="font-medium text-[#0F1A1F]">
                 سفارش شما مشمول ارسال رایگان استاندارد است.
               </p>
             ) : (
               <p>
-                تنها <span className="font-semibold text-[#B01D39] tabular-nums">{formatToman(remainingForFree)}</span> تا ارسال رایگان فاصله دارید.
+                تنها <span className="font-semibold text-[#0A6B54] tabular-nums">{formatToman(remainingForFree)}</span> تا ارسال رایگان فاصله دارید.
               </p>
             )}
-            <div className="w-full h-1.5 bg-[#16141A]/10 rounded-sm mt-2 overflow-hidden">
+            <div className="w-full h-1.5 bg-[#0F1A1F]/10 rounded-sm mt-2 overflow-hidden">
               <div
-                className="h-full bg-[#C21E3C] transition-all duration-300"
+                className="h-full bg-[#0B7A5F] transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -106,11 +106,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12">
-              <div className="arch-frame w-24 h-28 bg-[#E2E0DB] border border-[#16141A]/10 flex items-center justify-center mb-4">
-                <ShoppingBag className="w-9 h-9 text-[#16141A]/35" strokeWidth={1.25} />
+              <div className="arch-frame w-24 h-28 bg-[#E2E0DB] border border-[#0F1A1F]/10 flex items-center justify-center mb-4">
+                <ShoppingBag className="w-9 h-9 text-[#0F1A1F]/35" strokeWidth={1.25} />
               </div>
-              <p className="text-base font-semibold text-[#16141A] mb-1">سبد خرید شما خالی است</p>
-              <p className="text-xs text-[#6A6670] mb-6 max-w-xs leading-relaxed">
+              <p className="text-base font-semibold text-[#0F1A1F] mb-1">سبد خرید شما خالی است</p>
+              <p className="text-xs text-[#5F6B70] mb-6 max-w-xs leading-relaxed">
                 مدل‌های منتخب کفش و کتونی کلکسیون جدید را بررسی کنید.
               </p>
               <button
@@ -120,7 +120,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   setIsCartOpen(false);
                   onNavigate('/shop');
                 }}
-                className="min-h-[44px] px-6 py-2.5 text-xs font-semibold bg-[#C21E3C] text-white rounded-sm hover:bg-[#16141A] transition-colors"
+                className="min-h-[44px] px-6 py-2.5 text-xs font-semibold bg-[#0B7A5F] text-white rounded-sm hover:bg-[#0F1A1F] transition-colors"
               >
                 مشاهده فروشگاه
               </button>
@@ -131,39 +131,39 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               return (
                 <div
                   key={item.key}
-                  className="flex gap-3.5 bg-white p-3.5 rounded-sm border border-[#16141A]/[0.08]"
+                  className="flex gap-3.5 bg-white p-3.5 rounded-sm border border-[#0F1A1F]/[0.08]"
                 >
-                  <div className="w-20 h-20 rounded-sm overflow-hidden bg-[#E2E0DB] border border-[#16141A]/[0.06] shrink-0">
+                  <div className="w-20 h-20 rounded-sm overflow-hidden bg-[#E2E0DB] border border-[#0F1A1F]/[0.06] shrink-0">
                     <SafeImage src={item.image} alt={item.name} />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 space-y-1">
-                        <h3 className="text-sm font-semibold text-[#16141A] line-clamp-1">{item.name}</h3>
+                        <h3 className="text-sm font-semibold text-[#0F1A1F] line-clamp-1">{item.name}</h3>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium bg-[#EFEEEA] border border-[#16141A]/10 rounded-sm text-[#16141A] tabular-nums">
+                          <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium bg-[#EFEEEA] border border-[#0F1A1F]/10 rounded-sm text-[#0F1A1F] tabular-nums">
                             سایز {item.selectedSize}
                           </span>
-                          <span className="text-[11px] text-[#6A6670]">{item.selectedColor}</span>
+                          <span className="text-[11px] text-[#5F6B70]">{item.selectedColor}</span>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeFromCart(item.key)}
                         aria-label={`حذف ${item.name} از سبد خرید`}
-                        className="text-[#6A6670] hover:text-[#B01D39] p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-sm transition-colors"
+                        className="text-[#5F6B70] hover:text-[#0A6B54] p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-sm transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <div className="inline-flex items-center border border-[#16141A]/15 rounded-sm bg-[#EFEEEA]/50">
+                      <div className="inline-flex items-center border border-[#0F1A1F]/15 rounded-sm bg-[#EFEEEA]/50">
                         <button
                           type="button"
                           onClick={() => updateCartQty(item.key, item.quantity - 1)}
                           aria-label={`کاهش تعداد ${item.name}`}
-                          className="w-9 h-9 flex items-center justify-center text-[#16141A] hover:bg-[#16141A]/5 transition-colors"
+                          className="w-9 h-9 flex items-center justify-center text-[#0F1A1F] hover:bg-[#0F1A1F]/5 transition-colors"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -175,13 +175,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                           onClick={() => updateCartQty(item.key, item.quantity + 1)}
                           disabled={item.quantity >= item.maxStock}
                           aria-label={`افزایش تعداد ${item.name}`}
-                          className="w-9 h-9 flex items-center justify-center text-[#16141A] hover:bg-[#16141A]/5 disabled:opacity-30 transition-colors"
+                          className="w-9 h-9 flex items-center justify-center text-[#0F1A1F] hover:bg-[#0F1A1F]/5 disabled:opacity-30 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <span className="text-sm font-semibold text-[#16141A] tabular-nums">
+                      <span className="text-sm font-semibold text-[#0F1A1F] tabular-nums">
                         {formatToman(unit * item.quantity)}
                       </span>
                     </div>
@@ -193,20 +193,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         </div>
 
         {cart.length > 0 && (
-          <div className="bg-white border-t border-[#16141A]/[0.08]">
+          <div className="bg-white border-t border-[#0F1A1F]/[0.08]">
             <div className="meander" aria-hidden="true" />
             <div className="p-5 space-y-3">
-              <div className="flex items-center justify-between text-xs text-[#6A6670]">
+              <div className="flex items-center justify-between text-xs text-[#5F6B70]">
                 <span>جمع کل کالاها</span>
-                <span className="tabular-nums font-medium text-[#16141A]">{formatToman(totals.subtotal)}</span>
+                <span className="tabular-nums font-medium text-[#0F1A1F]">{formatToman(totals.subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs text-[#6A6670]">
+              <div className="flex items-center justify-between text-xs text-[#5F6B70]">
                 <span>هزینه ارسال استاندارد</span>
-                <span className="tabular-nums font-medium text-[#16141A]">
+                <span className="tabular-nums font-medium text-[#0F1A1F]">
                   {totals.shippingCost === 0 ? 'رایگان' : formatToman(totals.shippingCost)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm font-bold text-[#16141A] pt-2.5 border-t border-[#16141A]/[0.08]">
+              <div className="flex items-center justify-between text-sm font-bold text-[#0F1A1F] pt-2.5 border-t border-[#0F1A1F]/[0.08]">
                 <span>مبلغ قابل پرداخت</span>
                 <span className="tabular-nums text-base">{formatToman(totals.totalAmount)}</span>
               </div>
@@ -219,7 +219,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   onNavigate('/checkout');
                 }}
                 data-testid="cart-checkout-button"
-                className="w-full min-h-[48px] py-3 px-4 bg-[#C21E3C] text-white text-sm font-semibold rounded-sm hover:bg-[#16141A] transition-colors"
+                className="w-full min-h-[48px] py-3 px-4 bg-[#0B7A5F] text-white text-sm font-semibold rounded-sm hover:bg-[#0F1A1F] transition-colors"
               >
                 ادامه و ثبت سفارش
               </button>

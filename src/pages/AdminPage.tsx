@@ -84,7 +84,7 @@ export const AdminPage: React.FC = () => {
     price: '',
     discountPrice: '',
     colorName: 'مشکی جوهر',
-    colorHex: '#16141A',
+    colorHex: '#0F1A1F',
     imageUrlsText: '/src/assets/images/shoe_mens_sneaker_cream_1794597375882.jpg',
     isNew: true,
     isBestseller: false,
@@ -177,10 +177,10 @@ export const AdminPage: React.FC = () => {
   if (user && user.role !== 'admin') {
     return (
       <div className="max-w-md mx-auto px-4 py-14" data-testid="admin-forbidden">
-        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-4 text-center shadow-sm">
+        <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 sm:p-8 space-y-4 text-center shadow-sm">
           <Lock className="w-8 h-8 text-red-700 mx-auto" />
-          <h1 className="text-xl text-[#16141A]">دسترسی غیرمجاز</h1>
-          <p className="text-xs sm:text-sm text-[#6A6670] leading-relaxed">
+          <h1 className="text-xl text-[#0F1A1F]">دسترسی غیرمجاز</h1>
+          <p className="text-xs sm:text-sm text-[#5F6B70] leading-relaxed">
             حساب کاربری فعلی شما مجوز دسترسی به پنل مدیریت فروشگاه ADONIS را ندارد.
           </p>
           <a
@@ -197,12 +197,12 @@ export const AdminPage: React.FC = () => {
   if (!user) {
     return (
       <div className="max-w-md mx-auto px-4 py-14">
-        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-5 shadow-sm">
-          <div className="flex items-center gap-2.5 text-[#16141A]">
+        <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 sm:p-8 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2.5 text-[#0F1A1F]">
             <Lock className="w-5 h-5 text-[var(--adonis-accent)]" />
             <h1 className="text-xl">ورود به پنل مدیریت</h1>
           </div>
-          <p className="text-xs text-[#6A6670] leading-relaxed">
+          <p className="text-xs text-[#5F6B70] leading-relaxed">
             دسترسی به داشبورد، موجودی سایز کفش‌ها و تنظیمات فروشگاه تنها با احراز هویت مدیر در سمت سرور مجاز است.
           </p>
 
@@ -214,7 +214,7 @@ export const AdminPage: React.FC = () => {
 
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="space-y-1">
-              <label htmlFor="admin-email" className="text-xs font-medium text-[#16141A]">
+              <label htmlFor="admin-email" className="text-xs font-medium text-[#0F1A1F]">
                 ایمیل مدیر
               </label>
               <input
@@ -225,12 +225,12 @@ export const AdminPage: React.FC = () => {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="admin@yourstore.ir"
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[var(--adonis-accent)] focus:outline-none"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[var(--adonis-accent)] focus:outline-none"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="admin-password" className="text-xs font-medium text-[#16141A]">
+              <label htmlFor="admin-password" className="text-xs font-medium text-[#0F1A1F]">
                 رمز عبور مدیر
               </label>
               <input
@@ -240,7 +240,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm focus:border-[var(--adonis-accent)] focus:outline-none"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm focus:border-[var(--adonis-accent)] focus:outline-none"
               />
             </div>
 
@@ -255,7 +255,7 @@ export const AdminPage: React.FC = () => {
           <button
             type="button"
             onClick={() => loginWithGoogle().catch((e) => setError(e.message))}
-            className="w-full py-2.5 text-xs sm:text-sm font-medium border border-[#16141A]/20 rounded-sm hover:bg-[#EFEEEA] transition-colors"
+            className="w-full py-2.5 text-xs sm:text-sm font-medium border border-[#0F1A1F]/20 rounded-sm hover:bg-[#EFEEEA] transition-colors"
           >
             ورود با حساب گوگل مدیر
           </button>
@@ -368,7 +368,7 @@ export const AdminPage: React.FC = () => {
       price: String(p.price),
       discountPrice: p.discountPrice ? String(p.discountPrice) : '',
       colorName: p.colors[0]?.name || 'مشکی',
-      colorHex: p.colors[0]?.hex || '#16141A',
+      colorHex: p.colors[0]?.hex || '#0F1A1F',
       imageUrlsText: (p.images || []).join('\n'),
       isNew: p.isNew,
       isBestseller: p.isBestseller,
@@ -550,10 +550,10 @@ export const AdminPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#16141A]/[0.08] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#0F1A1F]/[0.08] pb-4">
         <div>
-          <h1 className="text-2xl text-[#16141A]">پنل مدیریت فروشگاه کفش و کتونی</h1>
-          <p className="text-xs sm:text-sm text-[#6A6670]">
+          <h1 className="text-2xl text-[#0F1A1F]">پنل مدیریت فروشگاه کفش و کتونی</h1>
+          <p className="text-xs sm:text-sm text-[#5F6B70]">
             مدیریت کفش‌ها، موجودی مستقل هر سایز، دسته‌بندی‌ها، برندها، سفارش‌ها و هویت بصری برند
           </p>
         </div>
@@ -581,7 +581,7 @@ export const AdminPage: React.FC = () => {
               setError(null);
             }}
             className={`px-3.5 py-2 text-xs font-medium rounded-sm transition-colors whitespace-nowrap ${
-              tab === item.id ? 'bg-white text-[#16141A] shadow-sm' : 'text-[#4B4752] hover:text-[#16141A]'
+              tab === item.id ? 'bg-white text-[#0F1A1F] shadow-sm' : 'text-[#44525A] hover:text-[#0F1A1F]'
             }`}
           >
             {item.label}
@@ -601,50 +601,50 @@ export const AdminPage: React.FC = () => {
       )}
 
       {loading && !data ? (
-        <div className="py-12 text-center text-sm text-[#6A6670]">در حال بارگذاری اطلاعات مدیریت...</div>
+        <div className="py-12 text-center text-sm text-[#5F6B70]">در حال بارگذاری اطلاعات مدیریت...</div>
       ) : null}
 
       {/* 1. Overview */}
       {data && tab === 'overview' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-1">
-              <div className="text-xs text-[#6A6670]">کل سفارش‌ها</div>
-              <div className="text-2xl font-bold text-[#16141A] tabular-nums">
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-1">
+              <div className="text-xs text-[#5F6B70]">کل سفارش‌ها</div>
+              <div className="text-2xl font-bold text-[#0F1A1F] tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.totalOrders)}
               </div>
             </div>
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-1">
-              <div className="text-xs text-[#6A6670]">سفارش‌های جدید</div>
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-1">
+              <div className="text-xs text-[#5F6B70]">سفارش‌های جدید</div>
               <div className="text-2xl font-bold text-[var(--adonis-accent)] tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.newOrdersCount)}
               </div>
             </div>
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-1">
-              <div className="text-xs text-[#6A6670]">ارزش کل فروش</div>
-              <div className="text-lg sm:text-xl font-bold text-[#16141A] tabular-nums">
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-1">
+              <div className="text-xs text-[#5F6B70]">ارزش کل فروش</div>
+              <div className="text-lg sm:text-xl font-bold text-[#0F1A1F] tabular-nums">
                 {formatToman(data.stats.totalRevenue)}
               </div>
             </div>
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-1">
-              <div className="text-xs text-[#6A6670]">کفش‌های کم‌موجودی (≤۵)</div>
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-1">
+              <div className="text-xs text-[#5F6B70]">کفش‌های کم‌موجودی (≤۵)</div>
               <div className="text-2xl font-bold text-red-700 tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.lowStockCount)}
               </div>
             </div>
-            <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-1">
-              <div className="text-xs text-[#6A6670]">مشتریان ثبت‌نام‌شده</div>
-              <div className="text-2xl font-bold text-[#16141A] tabular-nums">
+            <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-1">
+              <div className="text-xs text-[#5F6B70]">مشتریان ثبت‌نام‌شده</div>
+              <div className="text-2xl font-bold text-[#0F1A1F] tabular-nums">
                 {new Intl.NumberFormat('fa-IR').format(data.stats.totalCustomers)}
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4">
-            <h2 className="text-base font-semibold text-[#16141A]">آخرین سفارش‌های ثبت‌شده</h2>
+          <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4">
+            <h2 className="text-base font-semibold text-[#0F1A1F]">آخرین سفارش‌های ثبت‌شده</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm text-start">
-                <thead className="border-b border-[#16141A]/[0.08] text-[#6A6670]">
+                <thead className="border-b border-[#0F1A1F]/[0.08] text-[#5F6B70]">
                   <tr>
                     <th className="py-2.5 text-start font-medium">کد سفارش</th>
                     <th className="py-2.5 text-start font-medium">خریدار</th>
@@ -652,7 +652,7 @@ export const AdminPage: React.FC = () => {
                     <th className="py-2.5 text-start font-medium">وضعیت</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#16141A]/[0.06]">
+                <tbody className="divide-y divide-[#0F1A1F]/[0.06]">
                   {data.orders.slice(0, 6).map((o) => (
                     <tr key={o.id}>
                       <td dir="ltr" className="py-3 font-medium tabular-nums text-end">
@@ -675,9 +675,9 @@ export const AdminPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <form
             onSubmit={handleSaveProduct}
-            className="lg:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4"
+            className="lg:col-span-5 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#16141A]">
+            <h2 className="text-base font-semibold text-[#0F1A1F]">
               {editingProductId ? 'ویرایش کفش' : 'افزودن کفش / کتونی جدید'}
             </h2>
 
@@ -690,7 +690,7 @@ export const AdminPage: React.FC = () => {
                 value={prodForm.name}
                 onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })}
                 placeholder="مثال: کتونی رانینگ مدل کورت"
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
 
@@ -704,7 +704,7 @@ export const AdminPage: React.FC = () => {
                   list="brand-suggestions"
                   value={prodForm.brand}
                   onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })}
-                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
                 <datalist id="brand-suggestions">
                   {data.brands.map((b) => (
@@ -720,7 +720,7 @@ export const AdminPage: React.FC = () => {
                   value={prodForm.model}
                   onChange={(e) => setProdForm({ ...prodForm, model: e.target.value })}
                   placeholder="Court Classic 01"
-                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
@@ -736,7 +736,7 @@ export const AdminPage: React.FC = () => {
                   value={prodForm.slug}
                   onChange={(e) => setProdForm({ ...prodForm, slug: e.target.value })}
                   placeholder="adonis-runner-pro"
-                  className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -749,7 +749,7 @@ export const AdminPage: React.FC = () => {
                   value={prodForm.sku}
                   onChange={(e) => setProdForm({ ...prodForm, sku: e.target.value })}
                   placeholder="AD-105"
-                  className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
@@ -761,7 +761,7 @@ export const AdminPage: React.FC = () => {
                   id="p-cat"
                   value={prodForm.categoryId}
                   onChange={(e) => setProdForm({ ...prodForm, categoryId: e.target.value })}
-                  className="w-full h-9 px-2 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-2 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 >
                   <option value="">بدون دسته‌بندی</option>
                   {data.categories.map((c) => (
@@ -777,14 +777,14 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={prodForm.colorName}
                     onChange={(e) => setProdForm({ ...prodForm, colorName: e.target.value })}
-                    className="flex-1 h-9 px-2 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                    className="flex-1 h-9 px-2 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                   />
                   <input
                     type="color"
                     aria-label="کد رنگ"
                     value={prodForm.colorHex}
                     onChange={(e) => setProdForm({ ...prodForm, colorHex: e.target.value })}
-                    className="w-9 h-9 p-0.5 bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                    className="w-9 h-9 p-0.5 bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                   />
                 </div>
               </div>
@@ -798,7 +798,7 @@ export const AdminPage: React.FC = () => {
                   type="text"
                   value={prodForm.upperMaterial}
                   onChange={(e) => setProdForm({ ...prodForm, upperMaterial: e.target.value })}
-                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -808,7 +808,7 @@ export const AdminPage: React.FC = () => {
                   type="text"
                   value={prodForm.soleMaterial}
                   onChange={(e) => setProdForm({ ...prodForm, soleMaterial: e.target.value })}
-                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
@@ -823,7 +823,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={prodForm.price}
                   onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
-                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -833,15 +833,15 @@ export const AdminPage: React.FC = () => {
                   type="number"
                   value={prodForm.discountPrice}
                   onChange={(e) => setProdForm({ ...prodForm, discountPrice: e.target.value })}
-                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
 
             {/* Per-Size Independent Stock Matrix */}
-            <div className="space-y-2 p-3 bg-[#EFEEEA] border border-[#16141A]/10 rounded-sm">
+            <div className="space-y-2 p-3 bg-[#EFEEEA] border border-[#0F1A1F]/10 rounded-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#16141A]">
+                <span className="text-xs font-semibold text-[#0F1A1F]">
                   موجودی مستقل هر سایز (مجموع: {new Intl.NumberFormat('fa-IR').format(calculatedTotalStock)} جفت)
                 </span>
                 <button
@@ -854,7 +854,7 @@ export const AdminPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {sizeInventory.map((entry, idx) => (
-                  <div key={idx} className="flex items-center gap-1 bg-white p-1.5 rounded-sm border border-[#16141A]/10">
+                  <div key={idx} className="flex items-center gap-1 bg-white p-1.5 rounded-sm border border-[#0F1A1F]/10">
                     <input
                       type="text"
                       aria-label={`سایز ${idx + 1}`}
@@ -864,7 +864,7 @@ export const AdminPage: React.FC = () => {
                           prev.map((row, i) => (i === idx ? { ...row, size: e.target.value } : row))
                         )
                       }
-                      className="w-14 h-7 px-1.5 text-xs text-center border border-[#16141A]/10 rounded-sm tabular-nums"
+                      className="w-14 h-7 px-1.5 text-xs text-center border border-[#0F1A1F]/10 rounded-sm tabular-nums"
                     />
                     <input
                       type="number"
@@ -876,7 +876,7 @@ export const AdminPage: React.FC = () => {
                           prev.map((row, i) => (i === idx ? { ...row, stock: Number(e.target.value) } : row))
                         )
                       }
-                      className="flex-1 min-w-0 h-7 px-1.5 text-xs text-center border border-[#16141A]/10 rounded-sm tabular-nums"
+                      className="flex-1 min-w-0 h-7 px-1.5 text-xs text-center border border-[#0F1A1F]/10 rounded-sm tabular-nums"
                     />
                     {sizeInventory.length > 1 && (
                       <button
@@ -927,7 +927,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={prodForm.imageUrlsText}
                 onChange={(e) => setProdForm({ ...prodForm, imageUrlsText: e.target.value })}
-                className="w-full p-2 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full p-2 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
 
@@ -938,7 +938,7 @@ export const AdminPage: React.FC = () => {
                 rows={2}
                 value={prodForm.featuresText}
                 onChange={(e) => setProdForm({ ...prodForm, featuresText: e.target.value })}
-                className="w-full p-2 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full p-2 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
 
@@ -950,7 +950,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={prodForm.description}
                 onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })}
-                className="w-full p-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full p-2.5 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
 
@@ -1003,7 +1003,7 @@ export const AdminPage: React.FC = () => {
                     setEditingProductId(null);
                     setSizeInventory(DEFAULT_SIZE_INVENTORY);
                   }}
-                  className="px-4 py-2.5 text-xs border border-[#16141A]/15 rounded-sm hover:bg-[#EFEEEA]"
+                  className="px-4 py-2.5 text-xs border border-[#0F1A1F]/15 rounded-sm hover:bg-[#EFEEEA]"
                 >
                   انصراف
                 </button>
@@ -1011,9 +1011,9 @@ export const AdminPage: React.FC = () => {
             </div>
           </form>
 
-          <div className="lg:col-span-7 bg-white border border-[#16141A]/[0.08] rounded-sm p-5 overflow-x-auto">
+          <div className="lg:col-span-7 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 overflow-x-auto">
             <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-[#16141A]/[0.08] text-[#6A6670]">
+              <thead className="border-b border-[#0F1A1F]/[0.08] text-[#5F6B70]">
                 <tr>
                   <th className="py-2 text-start font-medium">مدل و برند</th>
                   <th className="py-2 text-start font-medium">قیمت</th>
@@ -1021,19 +1021,19 @@ export const AdminPage: React.FC = () => {
                   <th className="py-2 text-end font-medium">عملیات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#16141A]/[0.06]">
+              <tbody className="divide-y divide-[#0F1A1F]/[0.06]">
                 {data.products.map((p) => (
                   <tr key={p.id}>
-                    <td className="py-3 font-medium text-[#16141A]">
+                    <td className="py-3 font-medium text-[#0F1A1F]">
                       <div>{p.name}</div>
-                      <div className="text-[11px] text-[#6A6670]">
+                      <div className="text-[11px] text-[#5F6B70]">
                         {p.brand} · {p.sku} {!p.isActive && '· غیرفعال'}
                       </div>
                     </td>
                     <td className="py-3 tabular-nums">{formatToman(p.discountPrice ?? p.price)}</td>
                     <td className="py-3 text-xs tabular-nums">
                       <span className={p.stock <= 5 ? 'text-red-700 font-semibold' : ''}>{p.stock} جفت</span>
-                      <div className="text-[10px] text-[#6A6670]">
+                      <div className="text-[10px] text-[#5F6B70]">
                         {(p.sizeInventory || []).map((s) => `${s.size}:${s.stock}`).join(' · ')}
                       </div>
                     </td>
@@ -1067,9 +1067,9 @@ export const AdminPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <form
             onSubmit={handleSaveCategory}
-            className="md:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4"
+            className="md:col-span-5 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#16141A]">
+            <h2 className="text-base font-semibold text-[#0F1A1F]">
               {editingCatId ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی کفش'}
             </h2>
             <div className="space-y-1">
@@ -1080,7 +1080,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={catName}
                 onChange={(e) => setCatName(e.target.value)}
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1092,7 +1092,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
-                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1102,7 +1102,7 @@ export const AdminPage: React.FC = () => {
                 type="text"
                 value={catDesc}
                 onChange={(e) => setCatDesc(e.target.value)}
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1114,7 +1114,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={catImg}
                 onChange={(e) => setCatImg(e.target.value)}
-                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="flex gap-2">
@@ -1134,7 +1134,7 @@ export const AdminPage: React.FC = () => {
                     setCatSlug('');
                     setCatDesc('');
                   }}
-                  className="px-4 py-2 text-xs border border-[#16141A]/15 rounded-sm hover:bg-[#EFEEEA]"
+                  className="px-4 py-2 text-xs border border-[#0F1A1F]/15 rounded-sm hover:bg-[#EFEEEA]"
                 >
                   انصراف
                 </button>
@@ -1142,25 +1142,25 @@ export const AdminPage: React.FC = () => {
             </div>
           </form>
 
-          <div className="md:col-span-7 bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3">
+          <div className="md:col-span-7 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-3">
             {data.categories.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between gap-3 py-2.5 border-b border-[#16141A]/[0.06] last:border-0"
+                className="flex items-center justify-between gap-3 py-2.5 border-b border-[#0F1A1F]/[0.06] last:border-0"
               >
                 <div>
-                  <div className="text-sm font-medium text-[#16141A]">
+                  <div className="text-sm font-medium text-[#0F1A1F]">
                     {c.name}{' '}
-                    <span className="text-[11px] text-[#85818A] tabular-nums">(#{c.sortOrder})</span>
+                    <span className="text-[11px] text-[#7C888D] tabular-nums">(#{c.sortOrder})</span>
                   </div>
-                  <div className="text-xs text-[#6A6670]">{c.description || c.slug}</div>
+                  <div className="text-xs text-[#5F6B70]">{c.description || c.slug}</div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => handleMoveCategory(c, -1)}
                     aria-label={`اولویت بالاتر ${c.name}`}
-                    className="p-1.5 border border-[#16141A]/10 rounded-sm hover:bg-[#EFEEEA]"
+                    className="p-1.5 border border-[#0F1A1F]/10 rounded-sm hover:bg-[#EFEEEA]"
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
                   </button>
@@ -1168,7 +1168,7 @@ export const AdminPage: React.FC = () => {
                     type="button"
                     onClick={() => handleMoveCategory(c, 1)}
                     aria-label={`اولویت پایین‌تر ${c.name}`}
-                    className="p-1.5 border border-[#16141A]/10 rounded-sm hover:bg-[#EFEEEA]"
+                    className="p-1.5 border border-[#0F1A1F]/10 rounded-sm hover:bg-[#EFEEEA]"
                   >
                     <ArrowDown className="w-3.5 h-3.5" />
                   </button>
@@ -1214,9 +1214,9 @@ export const AdminPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <form
             onSubmit={handleCreateBrand}
-            className="md:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4"
+            className="md:col-span-5 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#16141A]">افزودن برند کفش</h2>
+            <h2 className="text-base font-semibold text-[#0F1A1F]">افزودن برند کفش</h2>
             <div className="space-y-1">
               <label htmlFor="b-name" className="text-xs font-medium">نام برند</label>
               <input
@@ -1226,7 +1226,7 @@ export const AdminPage: React.FC = () => {
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
                 placeholder="Puma"
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1239,7 +1239,7 @@ export const AdminPage: React.FC = () => {
                 value={brandSlug}
                 onChange={(e) => setBrandSlug(e.target.value)}
                 placeholder="puma"
-                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1250,7 +1250,7 @@ export const AdminPage: React.FC = () => {
                 value={brandCountry}
                 onChange={(e) => setBrandCountry(e.target.value)}
                 placeholder="آلمان"
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <button
@@ -1261,15 +1261,15 @@ export const AdminPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="md:col-span-7 bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3">
+          <div className="md:col-span-7 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-3">
             {data.brands.map((b) => (
               <div
                 key={b.id}
-                className="flex items-center justify-between py-2.5 border-b border-[#16141A]/[0.06] last:border-0"
+                className="flex items-center justify-between py-2.5 border-b border-[#0F1A1F]/[0.06] last:border-0"
               >
                 <div>
-                  <div className="text-sm font-semibold text-[#16141A]">{b.name}</div>
-                  <div className="text-xs text-[#6A6670]">{b.country || b.slug}</div>
+                  <div className="text-sm font-semibold text-[#0F1A1F]">{b.name}</div>
+                  <div className="text-xs text-[#5F6B70]">{b.country || b.slug}</div>
                 </div>
                 <button
                   type="button"
@@ -1300,14 +1300,14 @@ export const AdminPage: React.FC = () => {
           {data.orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3"
+              className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#16141A]/[0.06] pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#0F1A1F]/[0.06] pb-3">
                 <div className="space-y-0.5">
-                  <div className="text-sm font-bold text-[#16141A] tabular-nums">
+                  <div className="text-sm font-bold text-[#0F1A1F] tabular-nums">
                     <span dir="ltr" className="inline-block">{order.orderNumber}</span> · {order.customerName}
                   </div>
-                  <div className="text-xs text-[#6A6670]">
+                  <div className="text-xs text-[#5F6B70]">
                     <span dir="ltr" className="inline-block">{order.customerPhone}</span> · {order.customerAddress} (کد پستی: <span dir="ltr" className="inline-block">{order.postalCode}</span>)
                   </div>
                   {order.notes && <div className="text-[11px] text-[var(--adonis-accent)]">یادداشت: {order.notes}</div>}
@@ -1319,7 +1319,7 @@ export const AdminPage: React.FC = () => {
                     aria-label={`تغییر وضعیت سفارش ${order.orderNumber}`}
                     value={order.orderStatus}
                     onChange={(e) => handleOrderStatusChange(order.id, e.target.value)}
-                    className="h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                    className="h-9 px-2.5 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                   >
                     <option value="pending">ثبت اولیه</option>
                     <option value="processing">در حال آماده‌سازی</option>
@@ -1330,7 +1330,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-xs text-[#4B4752] space-y-1">
+              <div className="text-xs text-[#44525A] space-y-1">
                 {(order.items ?? []).map((item) => (
                   <div key={item.id} className="flex justify-between">
                     <span>
@@ -1347,17 +1347,17 @@ export const AdminPage: React.FC = () => {
 
       {/* 6. Reviews Moderation */}
       {data && tab === 'reviews' && (
-        <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3">
+        <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-3">
           {data.reviews.map((rev) => (
             <div
               key={rev.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-[#16141A]/[0.06] last:border-0"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-[#0F1A1F]/[0.06] last:border-0"
             >
               <div className="space-y-1">
-                <div className="text-xs sm:text-sm font-semibold text-[#16141A]">
+                <div className="text-xs sm:text-sm font-semibold text-[#0F1A1F]">
                   {rev.authorName} · <span className="text-[var(--adonis-accent)]">{rev.productName || 'عمومی'}</span>
                 </div>
-                <p className="text-xs text-[#4B4752]">{rev.comment}</p>
+                <p className="text-xs text-[#44525A]">{rev.comment}</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <button
@@ -1408,9 +1408,9 @@ export const AdminPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <form
             onSubmit={handleCreateDiscount}
-            className="md:col-span-5 bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4"
+            className="md:col-span-5 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4"
           >
-            <h2 className="text-base font-semibold text-[#16141A]">ایجاد کد تخفیف جدید</h2>
+            <h2 className="text-base font-semibold text-[#0F1A1F]">ایجاد کد تخفیف جدید</h2>
             <div className="space-y-1">
               <label htmlFor="d-code" className="text-xs font-medium">کد تخفیف (انگلیسی)</label>
               <input
@@ -1421,7 +1421,7 @@ export const AdminPage: React.FC = () => {
                 value={discCode}
                 onChange={(e) => setDiscCode(e.target.value)}
                 placeholder="SNEAKER20"
-                className="w-full h-9 px-3 text-xs text-end uppercase bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-xs text-end uppercase bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1432,7 +1432,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={discTitle}
                 onChange={(e) => setDiscTitle(e.target.value)}
-                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1446,7 +1446,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={discPercent}
                   onChange={(e) => setDiscPercent(e.target.value)}
-                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -1458,7 +1458,7 @@ export const AdminPage: React.FC = () => {
                   required
                   value={discMin}
                   onChange={(e) => setDiscMin(e.target.value)}
-                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
@@ -1470,15 +1470,15 @@ export const AdminPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="md:col-span-7 bg-white border border-[#16141A]/[0.08] rounded-sm p-5 space-y-3">
+          <div className="md:col-span-7 bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 space-y-3">
             {data.discounts.map((d) => (
               <div
                 key={d.id}
-                className="flex items-center justify-between py-2.5 border-b border-[#16141A]/[0.06] last:border-0 text-xs sm:text-sm"
+                className="flex items-center justify-between py-2.5 border-b border-[#0F1A1F]/[0.06] last:border-0 text-xs sm:text-sm"
               >
                 <div>
-                  <strong className="text-[#16141A]">{d.code}</strong>
-                  <span className="text-[#6A6670] ms-2">
+                  <strong className="text-[#0F1A1F]">{d.code}</strong>
+                  <span className="text-[#5F6B70] ms-2">
                     ({d.percent}٪ · {d.title})
                   </span>
                 </div>
@@ -1498,7 +1498,7 @@ export const AdminPage: React.FC = () => {
                         setError(err.message || 'خطا در تغییر وضعیت کد تخفیف');
                       }
                     }}
-                    className={`text-xs font-medium ${d.isActive ? 'text-emerald-700' : 'text-[#85818A]'}`}
+                    className={`text-xs font-medium ${d.isActive ? 'text-emerald-700' : 'text-[#7C888D]'}`}
                   >
                     {d.isActive ? 'فعال' : 'غیرفعال'}
                   </button>
@@ -1538,13 +1538,13 @@ export const AdminPage: React.FC = () => {
       {settingsForm && tab === 'settings' && (
         <form
           onSubmit={handleSaveSettings}
-          className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-8 space-y-6"
+          className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 sm:p-8 space-y-6"
         >
           <div>
-            <h2 className="text-base font-semibold text-[#16141A]">
+            <h2 className="text-base font-semibold text-[#0F1A1F]">
               شخصی‌سازی برند، رنگ‌بندی و اطلاعات فروشگاه کفش (White-Label)
             </h2>
-            <p className="text-xs text-[#6A6670] mt-1">
+            <p className="text-xs text-[#5F6B70] mt-1">
               تمامی تغییرات پس از ذخیره فوراً در کل فروشگاه اعمال می‌شوند.
             </p>
           </div>
@@ -1558,7 +1558,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={settingsForm.storeName}
                 onChange={(e) => setSettingsForm({ ...settingsForm, storeName: e.target.value })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1569,7 +1569,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={settingsForm.logoText}
                 onChange={(e) => setSettingsForm({ ...settingsForm, logoText: e.target.value })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1580,7 +1580,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={settingsForm.storeSubtitle}
                 onChange={(e) => setSettingsForm({ ...settingsForm, storeSubtitle: e.target.value })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1591,32 +1591,32 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.logoUrl}
                 onChange={(e) => setSettingsForm({ ...settingsForm, logoUrl: e.target.value })}
-                className="w-full h-10 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
           </div>
 
-          <div className="space-y-3 p-4 bg-[#EFEEEA] border border-[#16141A]/[0.08] rounded-sm">
+          <div className="space-y-3 p-4 bg-[#EFEEEA] border border-[#0F1A1F]/[0.08] rounded-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-[#16141A]">پالت‌های آماده فروشگاه</span>
+              <span className="text-xs font-semibold text-[#0F1A1F]">پالت‌های آماده فروشگاه</span>
               <div className="flex flex-wrap gap-2">
                 {[
                   {
-                    label: 'مرمر و شقایق (پیش‌فرض ADONIS)',
-                    primaryColor: '#16141A',
-                    accentColor: '#C21E3C',
+                    label: 'زمرد و مرمر (پیش‌فرض ADONIS)',
+                    primaryColor: '#0F1A1F',
+                    accentColor: '#0B7A5F',
                     backgroundColor: '#EFEEEA',
                   },
                   {
-                    label: 'آلویی و شقایق',
-                    primaryColor: '#2B1A2E',
-                    accentColor: '#C21E3C',
+                    label: 'سرمه‌ای عقیق و زمرد',
+                    primaryColor: '#0B1F2E',
+                    accentColor: '#0B7A5F',
                     backgroundColor: '#EFEEEA',
                   },
                   {
-                    label: 'جوهر و اناری تیره',
-                    primaryColor: '#16141A',
-                    accentColor: '#9E1B34',
+                    label: 'جوهر و زمرد تیره',
+                    primaryColor: '#0F1A1F',
+                    accentColor: '#085544',
                     backgroundColor: '#E8E7E2',
                   },
                 ].map((preset) => (
@@ -1631,14 +1631,14 @@ export const AdminPage: React.FC = () => {
                         backgroundColor: preset.backgroundColor,
                       })
                     }
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-[#16141A]/15 rounded-sm text-[11px] font-medium text-[#16141A] hover:border-[var(--adonis-accent)] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-[#0F1A1F]/15 rounded-sm text-[11px] font-medium text-[#0F1A1F] hover:border-[var(--adonis-accent)] transition-colors"
                   >
                     <span
-                      className="w-3 h-3 rounded-full border border-[#16141A]/20"
+                      className="w-3 h-3 rounded-full border border-[#0F1A1F]/20"
                       style={{ backgroundColor: preset.primaryColor }}
                     />
                     <span
-                      className="w-3 h-3 rounded-full border border-[#16141A]/20"
+                      className="w-3 h-3 rounded-full border border-[#0F1A1F]/20"
                       style={{ backgroundColor: preset.accentColor }}
                     />
                     <span>{preset.label}</span>
@@ -1655,7 +1655,7 @@ export const AdminPage: React.FC = () => {
                   type="color"
                   value={settingsForm.primaryColor}
                   onChange={(e) => setSettingsForm({ ...settingsForm, primaryColor: e.target.value })}
-                  className="w-full h-10 p-1 bg-white border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-10 p-1 bg-white border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -1665,7 +1665,7 @@ export const AdminPage: React.FC = () => {
                   type="color"
                   value={settingsForm.accentColor}
                   onChange={(e) => setSettingsForm({ ...settingsForm, accentColor: e.target.value })}
-                  className="w-full h-10 p-1 bg-white border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-10 p-1 bg-white border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -1675,7 +1675,7 @@ export const AdminPage: React.FC = () => {
                   type="color"
                   value={settingsForm.backgroundColor}
                   onChange={(e) => setSettingsForm({ ...settingsForm, backgroundColor: e.target.value })}
-                  className="w-full h-10 p-1 bg-white border border-[#16141A]/15 rounded-sm"
+                  className="w-full h-10 p-1 bg-white border border-[#0F1A1F]/15 rounded-sm"
                 />
               </div>
             </div>
@@ -1690,7 +1690,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.phone}
                 onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1701,7 +1701,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.email}
                 onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1712,7 +1712,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.instagram}
                 onChange={(e) => setSettingsForm({ ...settingsForm, instagram: e.target.value })}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1723,7 +1723,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.telegram}
                 onChange={(e) => setSettingsForm({ ...settingsForm, telegram: e.target.value })}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
           </div>
@@ -1737,7 +1737,7 @@ export const AdminPage: React.FC = () => {
                 dir="ltr"
                 value={settingsForm.whatsapp}
                 onChange={(e) => setSettingsForm({ ...settingsForm, whatsapp: e.target.value })}
-                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1747,7 +1747,7 @@ export const AdminPage: React.FC = () => {
                 type="text"
                 value={settingsForm.address}
                 onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
           </div>
@@ -1760,7 +1760,7 @@ export const AdminPage: React.FC = () => {
                 type="number"
                 value={settingsForm.shippingBaseCost}
                 onChange={(e) => setSettingsForm({ ...settingsForm, shippingBaseCost: Number(e.target.value) })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1770,7 +1770,7 @@ export const AdminPage: React.FC = () => {
                 type="number"
                 value={settingsForm.expressShippingCost}
                 onChange={(e) => setSettingsForm({ ...settingsForm, expressShippingCost: Number(e.target.value) })}
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1782,7 +1782,7 @@ export const AdminPage: React.FC = () => {
                 onChange={(e) =>
                   setSettingsForm({ ...settingsForm, freeShippingThreshold: Number(e.target.value) })
                 }
-                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
           </div>
@@ -1794,7 +1794,7 @@ export const AdminPage: React.FC = () => {
               type="text"
               value={settingsForm.announcementText}
               onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
-              className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+              className="w-full h-10 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
             />
           </div>
 
@@ -1806,7 +1806,7 @@ export const AdminPage: React.FC = () => {
                 rows={2}
                 value={settingsForm.shippingPolicy}
                 onChange={(e) => setSettingsForm({ ...settingsForm, shippingPolicy: e.target.value })}
-                className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
             <div className="space-y-1">
@@ -1816,7 +1816,7 @@ export const AdminPage: React.FC = () => {
                 rows={2}
                 value={settingsForm.returnPolicy}
                 onChange={(e) => setSettingsForm({ ...settingsForm, returnPolicy: e.target.value })}
-                className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+                className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
               />
             </div>
           </div>
@@ -1828,7 +1828,7 @@ export const AdminPage: React.FC = () => {
               rows={2}
               value={settingsForm.aboutText}
               onChange={(e) => setSettingsForm({ ...settingsForm, aboutText: e.target.value })}
-              className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+              className="w-full p-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
             />
           </div>
 
@@ -1850,7 +1850,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
 }) => {
   const [form, setForm] = useState(banner);
   return (
-    <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 space-y-4">
+    <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 space-y-4">
       <div className="text-xs font-semibold text-[var(--adonis-accent)]">
         بنر {banner.position === 'hero' ? 'اصلی (Hero)' : 'تبلیغاتی میانی'}
       </div>
@@ -1860,7 +1860,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
           type="text"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+          className="w-full h-9 px-3 text-sm bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
         />
       </div>
       <div className="space-y-1">
@@ -1869,7 +1869,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
           rows={2}
           value={form.subtitle}
           onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-          className="w-full p-2.5 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+          className="w-full p-2.5 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -1879,7 +1879,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
             type="text"
             value={form.ctaText}
             onChange={(e) => setForm({ ...form, ctaText: e.target.value })}
-            className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+            className="w-full h-9 px-3 text-xs bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
           />
         </div>
         <div className="space-y-1">
@@ -1889,7 +1889,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
             dir="ltr"
             value={form.ctaLink}
             onChange={(e) => setForm({ ...form, ctaLink: e.target.value })}
-            className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+            className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
           />
         </div>
       </div>
@@ -1900,7 +1900,7 @@ const BannerEditorCard: React.FC<{ banner: Banner; onSave: (banner: Banner) => v
           dir="ltr"
           value={form.imageUrl}
           onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-          className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#16141A]/15 rounded-sm"
+          className="w-full h-9 px-3 text-xs text-end bg-[#EFEEEA] border border-[#0F1A1F]/15 rounded-sm"
         />
       </div>
       <button

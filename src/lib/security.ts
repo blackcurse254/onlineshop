@@ -112,7 +112,7 @@ export function validateStartupSecurityConfig(): void {
   }
 }
 
-export const SESSION_COOKIE_NAME = 'vera_session';
+export const SESSION_COOKIE_NAME = 'adonis_session';
 
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex');

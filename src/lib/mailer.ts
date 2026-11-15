@@ -124,25 +124,25 @@ export function buildPasswordResetEmailContent(params: {
 
   const html = `<!doctype html>
 <html lang="fa" dir="rtl">
-<body style="margin:0;padding:24px;background:#EFEEEA;font-family:Tahoma,Arial,sans-serif;color:#16141A;">
+<body style="margin:0;padding:24px;background:#EFEEEA;font-family:Tahoma,Arial,sans-serif;color:#0F1A1F;">
   <div style="max-width:540px;margin:0 auto;background:#FFFFFF;border:1px solid #DAD8D3;border-radius:2px;padding:28px;">
-    <div style="font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:16px;color:#16141A;">${safeStore}</div>
+    <div style="font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:16px;color:#0F1A1F;">${safeStore}</div>
     <p style="font-size:14px;line-height:1.8;margin:0 0 12px;">${safeName} سلام،</p>
-    <p style="font-size:14px;line-height:1.8;margin:0 0 20px;color:#4B4752;">
+    <p style="font-size:14px;line-height:1.8;margin:0 0 20px;color:#44525A;">
       درخواست بازیابی رمز عبور برای حساب کاربری شما ثبت شده است. لینک زیر فقط یک بار قابل استفاده است و پس از ${params.expiresMinutes} دقیقه منقضی می‌شود:
     </p>
     <div style="text-align:center;margin:24px 0;">
-      <a href="${safeUrl}" style="display:inline-block;background:#C21E3C;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:2px;font-size:14px;font-weight:600;">
+      <a href="${safeUrl}" style="display:inline-block;background:#0B7A5F;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:2px;font-size:14px;font-weight:600;">
         تنظیم رمز عبور جدید
       </a>
     </div>
-    <p style="font-size:12px;color:#6A6670;line-height:1.7;margin:0 0 8px;">
+    <p style="font-size:12px;color:#5F6B70;line-height:1.7;margin:0 0 8px;">
       در صورت نیاز می‌توانید کد یک‌بارمصرف زیر را در صفحه بازیابی وارد کنید:
     </p>
-    <div dir="ltr" style="background:#EFEEEA;border:1px solid #CFCDC8;border-radius:2px;padding:10px 12px;font-family:monospace;font-size:12px;word-break:break-all;text-align:center;color:#16141A;">
+    <div dir="ltr" style="background:#EFEEEA;border:1px solid #CFCDC8;border-radius:2px;padding:10px 12px;font-family:monospace;font-size:12px;word-break:break-all;text-align:center;color:#0F1A1F;">
       ${safeToken}
     </div>
-    <p style="font-size:12px;color:#6A6670;line-height:1.7;margin:20px 0 0;">
+    <p style="font-size:12px;color:#5F6B70;line-height:1.7;margin:20px 0 0;">
       اگر این درخواست از طرف شما نبوده است، این پیام را نادیده بگیرید؛ رمز عبور فعلی شما تغییری نکرده است.
     </p>
   </div>

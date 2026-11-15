@@ -61,6 +61,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     [products]
   );
 
+  const toPersianSectionIndex = (num: number) =>
+    String(num)
+      .padStart(2, '0')
+      .replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+
+  let sectionStep = 1;
+  const categoriesKickerNum = toPersianSectionIndex(sectionStep++);
+  const showcaseKickerNum = toPersianSectionIndex(sectionStep++);
+  const promoKickerNum = promoBanner ? toPersianSectionIndex(sectionStep++) : '';
+  const discountKickerNum = discountedProducts.length > 0 ? toPersianSectionIndex(sectionStep++) : '';
+  const advantagesKickerNum = toPersianSectionIndex(sectionStep++);
+  const reviewsKickerNum = reviews.length > 0 ? toPersianSectionIndex(sectionStep++) : '';
+
   const handleQuickAdd = (product: Product, cardChosenSize?: string) => {
     const totalStock = getEffectiveTotalStock(product);
     if (totalStock <= 0) return;
@@ -92,19 +105,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     <div className="space-y-14 sm:space-y-20">
       {/* 1. Editorial Adonis Myth Hero Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
-        <div className="relative overflow-hidden bg-[#2B1A2E] text-[#EFEEEA] rounded-sm">
+        <div className="relative overflow-hidden bg-[#0B1F2E] agate-bg text-[#EFEEEA] rounded-sm">
           <div
             aria-hidden="true"
-            className="pointer-events-none select-none font-display-serif text-[96px] sm:text-[180px] lg:text-[240px] leading-none tracking-[0.12em] text-transparent opacity-30 absolute bottom-4 sm:bottom-2 inset-x-0 text-center whitespace-nowrap overflow-hidden"
-            style={{ WebkitTextStroke: '1px #F2B6C0' }}
+            className="hidden sm:block pointer-events-none select-none font-display-serif text-[96px] sm:text-[180px] lg:text-[240px] leading-none tracking-[0.12em] text-transparent opacity-30 absolute bottom-4 sm:bottom-2 inset-x-0 text-center whitespace-nowrap overflow-hidden"
+            style={{ WebkitTextStroke: '1px #8FE3C8' }}
           >
             ADONIS
           </div>
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-10 p-6 sm:p-10 lg:p-14">
             <div className="lg:col-span-7 space-y-5 order-2 lg:order-1">
-              <p className="inline-flex items-center gap-3 text-xs sm:text-sm text-[#F2B6C0] font-semibold tracking-wide">
-                <span className="w-8 h-px bg-[#F2B6C0] shrink-0" aria-hidden="true" />
+              <p className="inline-flex items-center gap-3 text-xs sm:text-sm text-[#8FE3C8] font-semibold tracking-wide">
+                <span className="w-8 h-px bg-[#8FE3C8] shrink-0" aria-hidden="true" />
                 <span>
                   {settings?.storeName || 'ADONIS'} · {settings?.storeSubtitle || 'فروشگاه تخصصی کفش و کتونی'}
                 </span>
@@ -123,7 +136,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => onNavigate(heroBanner?.ctaLink || '/shop')}
-                  className="inline-flex items-center gap-2 px-6 py-3 min-h-[48px] bg-[#C21E3C] text-white text-xs sm:text-sm font-semibold rounded-sm hover:bg-[#EFEEEA] hover:text-[#16141A] transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 min-h-[48px] bg-[#0B7A5F] text-white text-xs sm:text-sm font-semibold rounded-sm hover:bg-[#EFEEEA] hover:text-[#0F1A1F] transition-colors"
                 >
                   <span>{heroBanner?.ctaText || 'مشاهده کلکسیون کفش'}</span>
                   <ArrowLeft className="w-4 h-4" />
@@ -131,7 +144,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => onNavigate('/shop?discount=1')}
-                  className="inline-flex items-center gap-2 px-5 py-3 min-h-[48px] text-[#EFEEEA] border border-[#EFEEEA]/40 text-xs sm:text-sm font-medium rounded-sm hover:border-[#F2B6C0] hover:text-[#F2B6C0] transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3 min-h-[48px] bg-[#0B1F2E] text-[#EFEEEA] border border-[#EFEEEA]/40 text-xs sm:text-sm font-medium rounded-sm hover:border-[#8FE3C8] hover:text-[#8FE3C8] transition-colors"
                 >
                   <span>تخفیف‌های ویژه</span>
                 </button>
@@ -139,7 +152,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </div>
 
             <div className="lg:col-span-5 flex justify-center lg:justify-end order-1 lg:order-2">
-              <div className="arch-frame w-full max-w-[340px] aspect-[3/4] bg-[#3B2A3E] border border-[#F2B6C0]/40 shadow-2xl">
+              <div className="arch-frame w-full max-w-[340px] aspect-[3/4] bg-[#123347] border border-[#8FE3C8]/40 shadow-2xl">
                 {heroBanner ? (
                   <SafeImage
                     src={heroBanner.imageUrl}
@@ -159,16 +172,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {/* 2. Visual Footwear Categories */}
       <RevealSection>
         <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex items-end justify-between gap-4 border-b border-[#16141A]/[0.08] pb-4">
+          <div className="flex items-end justify-between gap-4 border-b border-[#0F1A1F]/[0.08] pb-4">
             <div className="space-y-1">
-              <div className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۱ — دسته‌ها</div>
+              <div className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{categoriesKickerNum} — دسته‌ها</div>
               <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">دسته‌بندی تخصصی کفش و کتونی</h2>
-              <p className="text-xs sm:text-sm text-[#6A6670]">انتخاب دقیق بر اساس کاربری روزمره، ورزشی و رسمی</p>
+              <p className="text-xs sm:text-sm text-[#5F6B70]">انتخاب دقیق بر اساس کاربری روزمره، ورزشی و رسمی</p>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('/shop')}
-              className="text-xs sm:text-sm font-medium text-[var(--adonis-primary)] hover:text-[#B01D39] inline-flex items-center gap-1 whitespace-nowrap"
+              className="text-xs sm:text-sm font-medium text-[var(--adonis-primary)] hover:text-[#0A6B54] inline-flex items-center gap-1 whitespace-nowrap"
             >
               <span>همه محصولات</span>
               <ArrowLeft className="w-4 h-4" />
@@ -181,7 +194,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 key={cat.id}
                 type="button"
                 onClick={() => onNavigate(`/shop?category=${cat.id}`)}
-                className="group text-start flex flex-col bg-white border border-[#16141A]/[0.08] rounded-sm overflow-hidden hover:shadow-md hover:border-[var(--adonis-accent)]/40 transition-all"
+                className="group text-start flex flex-col bg-white border border-[#0F1A1F]/[0.08] rounded-sm overflow-hidden hover:shadow-md hover:border-[var(--adonis-accent)]/40 transition-all"
               >
                 <div className="arch-frame aspect-[4/5] m-3 mb-0 overflow-hidden bg-[#E2E0DB]">
                   <SafeImage
@@ -191,10 +204,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   />
                 </div>
                 <div className="p-3 sm:p-3.5">
-                  <h3 className="text-sm font-semibold text-[var(--adonis-primary)] group-hover:text-[#B01D39] transition-colors truncate">
+                  <h3 className="text-sm font-semibold text-[var(--adonis-primary)] group-hover:text-[#0A6B54] transition-colors truncate">
                     {cat.name}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-[#85818A] mt-0.5 line-clamp-1">
+                  <p className="text-[11px] sm:text-xs text-[#7C888D] mt-0.5 line-clamp-1">
                     {cat.description}
                   </p>
                 </div>
@@ -207,11 +220,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {/* 3. Curated Collection Grid (New, Bestsellers, Special Offers) */}
       <RevealSection>
         <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#16141A]/[0.08] pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#0F1A1F]/[0.08] pb-4">
             <div className="space-y-1">
-              <div className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۲ — ویترین</div>
+              <div className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{showcaseKickerNum} — ویترین</div>
               <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">ویترین کفش و کتونی آدونیس</h2>
-              <p className="text-xs sm:text-sm text-[#6A6670]">
+              <p className="text-xs sm:text-sm text-[#5F6B70]">
                 منتخب جدیدترین مدل‌ها، پرفروش‌ترین کتونی‌ها و پیشنهادهای ویژه فصل
               </p>
             </div>
@@ -235,7 +248,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   className={`px-3.5 py-2 text-xs font-medium rounded-sm transition-colors whitespace-nowrap shrink-0 ${
                     activeTab === tab.id
                       ? 'bg-white text-[var(--adonis-primary)] font-semibold shadow-sm'
-                      : 'text-[#6A6670] hover:text-[var(--adonis-primary)]'
+                      : 'text-[#5F6B70] hover:text-[var(--adonis-primary)]'
                   }`}
                 >
                   {tab.label}
@@ -245,7 +258,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           {tabProducts.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-sm border border-[#16141A]/[0.08] text-sm text-[#85818A]">
+            <div className="py-12 text-center bg-white rounded-sm border border-[#0F1A1F]/[0.08] text-sm text-[#7C888D]">
               در این بخش هنوز محصولی ثبت نشده است.
             </div>
           ) : (
@@ -269,7 +282,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {promoBanner && (
         <RevealSection>
           <section className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch bg-white border border-[#16141A]/[0.08] rounded-sm overflow-hidden shadow-xs">
+            <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch bg-white border border-[#0F1A1F]/[0.08] rounded-sm overflow-hidden shadow-xs">
               <div className="lg:col-span-7 aspect-[16/9] lg:aspect-auto lg:min-h-[340px] bg-[#E2E0DB]">
                 <SafeImage
                   src={promoBanner.imageUrl}
@@ -278,11 +291,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 />
               </div>
               <div className="lg:col-span-5 p-7 sm:p-10 flex flex-col justify-center space-y-4">
-                <span className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۳ — پیشنهادها</span>
+                <span className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{promoKickerNum} — پیشنهادها</span>
                 <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)] text-balance">
                   {promoBanner.title}
                 </h2>
-                <p className="text-sm text-[#6A6670] leading-relaxed">{promoBanner.subtitle}</p>
+                <p className="text-sm text-[#5F6B70] leading-relaxed">{promoBanner.subtitle}</p>
                 <div className="pt-2">
                   <button
                     type="button"
@@ -303,16 +316,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {discountedProducts.length > 0 && (
         <RevealSection>
           <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-            <div className="flex items-end justify-between gap-4 border-b border-[#16141A]/[0.08] pb-4">
+            <div className="flex items-end justify-between gap-4 border-b border-[#0F1A1F]/[0.08] pb-4">
               <div className="space-y-1">
-                <div className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۳ — پیشنهادها</div>
+                <div className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{discountKickerNum} — تخفیف‌ها</div>
                 <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">محصولات تخفیف‌دار</h2>
-                <p className="text-xs sm:text-sm text-[#6A6670]">مدل‌های منتخب کفش و کتونی با قیمت ویژه فصل</p>
+                <p className="text-xs sm:text-sm text-[#5F6B70]">مدل‌های منتخب کفش و کتونی با قیمت ویژه فصل</p>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('/shop?discount=1')}
-                className="text-xs sm:text-sm font-medium text-[var(--adonis-primary)] hover:text-[#B01D39] inline-flex items-center gap-1 whitespace-nowrap"
+                className="text-xs sm:text-sm font-medium text-[var(--adonis-primary)] hover:text-[#0A6B54] inline-flex items-center gap-1 whitespace-nowrap"
               >
                 <span>مشاهده همه تخفیف‌ها</span>
                 <ArrowLeft className="w-4 h-4" />
@@ -338,33 +351,33 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {/* 6. Store Advantages */}
       <RevealSection>
         <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="border-b border-[#16141A]/[0.08] pb-4 space-y-1">
-            <div className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۴ — خدمات</div>
+          <div className="border-b border-[#0F1A1F]/[0.08] pb-4 space-y-1">
+            <div className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{advantagesKickerNum} — خدمات</div>
             <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">استانداردها و ضمانت آدونیس</h2>
           </div>
 
-          <div className="bg-white border border-[#16141A]/[0.08] rounded-sm p-6 sm:p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-6 sm:p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-2">
               <Award className="w-5 h-5 text-[var(--adonis-accent)]" strokeWidth={1.75} />
               <h3 className="text-sm sm:text-base font-semibold text-[var(--adonis-primary)]">کیفیت تضمین‌شده و ارگونومیک</h3>
-              <p className="text-xs text-[#6A6670] leading-relaxed">
+              <p className="text-xs text-[#5F6B70] leading-relaxed">
                 کنترل دقیق رویه، دوخت زیره و کفی طبی پیش از ارسال هر جفت کفش.
               </p>
             </div>
             <div className="space-y-2">
               <RefreshCw className="w-5 h-5 text-[var(--adonis-accent)]" strokeWidth={1.75} />
               <h3 className="text-sm sm:text-base font-semibold text-[var(--adonis-primary)]">تعویض سایز تا ۷ روز</h3>
-              <p className="text-xs text-[#6A6670] leading-relaxed">{settings?.returnPolicy}</p>
+              <p className="text-xs text-[#5F6B70] leading-relaxed">{settings?.returnPolicy}</p>
             </div>
             <div className="space-y-2">
               <Truck className="w-5 h-5 text-[var(--adonis-accent)]" strokeWidth={1.75} />
               <h3 className="text-sm sm:text-base font-semibold text-[var(--adonis-primary)]">ارسال با بسته‌بندی ایمن</h3>
-              <p className="text-xs text-[#6A6670] leading-relaxed">{settings?.shippingPolicy}</p>
+              <p className="text-xs text-[#5F6B70] leading-relaxed">{settings?.shippingPolicy}</p>
             </div>
             <div className="space-y-2">
               <ShieldCheck className="w-5 h-5 text-[var(--adonis-accent)]" strokeWidth={1.75} />
               <h3 className="text-sm sm:text-base font-semibold text-[var(--adonis-primary)]">مشاوره تخصصی انتخاب سایز</h3>
-              <p className="text-xs text-[#6A6670] leading-relaxed">
+              <p className="text-xs text-[#5F6B70] leading-relaxed">
                 تطبیق دقیق سایز بر اساس سانتی‌متر طول پا و راهنمای استاندارد اروپا.
               </p>
             </div>
@@ -376,10 +389,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {reviews.length > 0 && (
         <RevealSection>
           <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-            <div className="border-b border-[#16141A]/[0.08] pb-4 space-y-1">
-              <div className="text-[11px] font-semibold tracking-widest text-[#B01D39]">۰۵ — دیدگاه‌ها</div>
+            <div className="border-b border-[#0F1A1F]/[0.08] pb-4 space-y-1">
+              <div className="text-[11px] font-semibold tracking-widest text-[#0A6B54]">{reviewsKickerNum} — دیدگاه‌ها</div>
               <h2 className="text-2xl sm:text-3xl text-[var(--adonis-primary)]">تجربه و نظرات خریداران</h2>
-              <p className="text-xs sm:text-sm text-[#6A6670]">
+              <p className="text-xs sm:text-sm text-[#5F6B70]">
                 دیدگاه مشتریان درباره کیفیت ساخت، راحتی قالب و سایزبندی کفش‌ها
               </p>
             </div>
@@ -388,7 +401,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               {reviews.slice(0, 4).map((review) => (
                 <div
                   key={review.id}
-                  className="bg-white border border-[#16141A]/[0.08] rounded-sm p-5 flex flex-col justify-between gap-4"
+                  className="bg-white border border-[#0F1A1F]/[0.08] rounded-sm p-5 flex flex-col justify-between gap-4"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
@@ -405,16 +418,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                         <span className="text-[11px] text-emerald-700 font-medium">خریدار تاییدشده</span>
                       )}
                     </div>
-                    <p className="text-xs sm:text-sm text-[#4B4752] leading-relaxed">{review.comment}</p>
+                    <p className="text-xs sm:text-sm text-[#44525A] leading-relaxed">{review.comment}</p>
                   </div>
 
-                  <div className="pt-3 border-t border-[#16141A]/[0.06] text-xs space-y-1">
+                  <div className="pt-3 border-t border-[#0F1A1F]/[0.06] text-xs space-y-1">
                     <div className="font-semibold text-[var(--adonis-primary)]">{review.authorName}</div>
                     {review.productName && review.productSlug && (
                       <button
                         type="button"
                         onClick={() => onNavigate(`/product/${review.productSlug}`)}
-                        className="text-[11px] text-[#B01D39] hover:underline truncate block max-w-full text-start"
+                        className="text-[11px] text-[#0A6B54] hover:underline truncate block max-w-full text-start"
                       >
                         {review.productName}
                       </button>

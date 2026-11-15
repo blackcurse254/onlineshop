@@ -30,12 +30,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const hasAddress = Boolean(settings?.address?.trim());
 
   return (
-    <footer className="bg-[#2B1A2E] text-[#EFEEEA] mt-16">
+    <footer className="bg-[#0B1F2E] text-[#EFEEEA] mt-16">
       <div className="meander meander-light" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div className="md:col-span-1 space-y-4">
           <div className="font-display-serif text-2xl tracking-[0.28em] text-white flex items-center gap-2">
-            <span className="w-2 h-2 rotate-45 bg-[#C21E3C] shrink-0" aria-hidden="true" />
+            <span className="w-2 h-2 rotate-45 bg-[#C9A24B] shrink-0" aria-hidden="true" />
             <span>{storeName}</span>
           </div>
           {settings?.aboutText ? (
@@ -46,13 +46,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#F2B6C0]">دسترسی سریع</h3>
+          <h3 className="text-sm font-semibold text-[#8FE3C8]">دسترسی سریع</h3>
           <ul className="space-y-2 text-xs sm:text-sm text-[#D9D7D2]">
             <li>
               <button
                 type="button"
                 onClick={() => onNavigate('/shop')}
-                className="hover:text-[#F2B6C0] transition-colors"
+                className="hover:text-[#8FE3C8] transition-colors"
               >
                 همه کفش‌ها و کتونی‌ها
               </button>
@@ -61,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => onNavigate('/shop?discount=1')}
-                className="hover:text-[#F2B6C0] transition-colors"
+                className="hover:text-[#8FE3C8] transition-colors"
               >
                 تخفیف‌های ویژه فصل
               </button>
@@ -70,7 +70,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => onNavigate('/account?tab=wishlist')}
-                className="hover:text-[#F2B6C0] transition-colors"
+                className="hover:text-[#8FE3C8] transition-colors"
               >
                 لیست علاقه‌مندی‌ها
               </button>
@@ -79,7 +79,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => onNavigate('/account?tab=track')}
-                className="hover:text-[#F2B6C0] transition-colors"
+                className="hover:text-[#8FE3C8] transition-colors"
               >
                 پیگیری سفارش
               </button>
@@ -89,7 +89,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => onNavigate(`/shop?category=${cat.id}`)}
-                  className="hover:text-[#F2B6C0] transition-colors"
+                  className="hover:text-[#8FE3C8] transition-colors"
                 >
                   {cat.name}
                 </button>
@@ -99,7 +99,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#F2B6C0]">ارسال و ضمانت تعویض سایز</h3>
+          <h3 className="text-sm font-semibold text-[#8FE3C8]">ارسال و ضمانت تعویض سایز</h3>
           {settings?.shippingPolicy ? (
             <p className="text-xs text-[#D9D7D2] leading-relaxed">{settings.shippingPolicy}</p>
           ) : null}
@@ -109,7 +109,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#F2B6C0]">ارتباط با فروشگاه</h3>
+          <h3 className="text-sm font-semibold text-[#8FE3C8]">ارتباط با فروشگاه</h3>
           {contactItems.length > 0 || hasAddress ? (
             <ul className="space-y-2 text-xs sm:text-sm text-[#D9D7D2]">
               {contactItems.map((item) => (
@@ -124,19 +124,19 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </li>
               ))}
               {hasAddress && (
-                <li className="text-xs text-[#A4A0A8] pt-1 leading-relaxed">{settings?.address}</li>
+                <li className="text-xs text-[#9BA6AB] pt-1 leading-relaxed">{settings?.address}</li>
               )}
             </ul>
           ) : (
-            <p className="text-xs text-[#A4A0A8] leading-relaxed">
+            <p className="text-xs text-[#9BA6AB] leading-relaxed">
               راه‌های ارتباطی و نشانی فروشگاه پس از تنظیم در بخش مدیریت نمایش داده می‌شوند.
             </p>
           )}
         </div>
       </div>
 
-      <div className="border-t border-[#F2B6C0]/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#A4A0A8]">
+      <div className="border-t border-[#8FE3C8]/15">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#9BA6AB]">
           <span>© {new Date().getFullYear()} {storeName}. تمامی حقوق محفوظ است.</span>
           <span>فروشگاه تخصصی کفش و کتونی</span>
         </div>
